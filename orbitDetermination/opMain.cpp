@@ -5,7 +5,7 @@
 #include <fstream>
 using namespace std;
 
-void Main()
+void main()
 {
 	/* initial condition for differential equation*/
 	/* Option 1: ECEF ICs from POD */

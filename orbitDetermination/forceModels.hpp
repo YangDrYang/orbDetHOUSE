@@ -7,7 +7,7 @@
 using std::map;
 
 #include "satRefSys.hpp"
-#include "acsConfig.hpp"
+// #include "acsConfig.hpp"
 #include "gravity.hpp"
 #include "algebra.hpp"
 #include "jplEph.hpp"

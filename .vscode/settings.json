@@ -15,7 +15,10 @@
   "C_Cpp_Runner.warningsAsError": true,
   "C_Cpp_Runner.compilerArgs": [],
   "C_Cpp_Runner.linkerArgs": [],
-  "C_Cpp_Runner.includePaths": [],
+  "C_Cpp_Runner.includePaths": [
+    "${workspaceFolder}/orbitDetermination/3rdparty",
+    "${workspaceFolder}/orbitDetermination"
+  ],
   "C_Cpp_Runner.includeSearch": [
     "*",
     "**/*"
