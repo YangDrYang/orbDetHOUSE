@@ -16,8 +16,9 @@
   "C_Cpp_Runner.compilerArgs": [],
   "C_Cpp_Runner.linkerArgs": [],
   "C_Cpp_Runner.includePaths": [
+    "${workspaceFolder}/orbitDetermination",
     "${workspaceFolder}/orbitDetermination/3rdparty",
-    "${workspaceFolder}/orbitDetermination"
+    "${workspaceFolder}/orbitDetermination/sofa"
   ],
   "C_Cpp_Runner.includeSearch": [
     "*",

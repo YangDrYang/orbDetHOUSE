@@ -9,7 +9,6 @@ using std::map;
 #include "satRefSys.hpp"
 // #include "acsConfig.hpp"
 #include "gravity.hpp"
-#include "algebra.hpp"
 #include "jplEph.hpp"
 #include "common.hpp"
 #include "enums.h"

@@ -16,6 +16,7 @@
 #define SGN(x)      ((x)<=0.0?-1.0:1.0)
 
 #include "eigenIncluder.hpp"
+#include "satRefSys.hpp"
 #include "gTime.hpp"
 #include "enums.h"
 
@@ -32,7 +33,26 @@ void eci2ecef(
 	const GTime		tutc,	
 	const double*	erpv,	
 	Matrix3d&		U,		
-	double*			gmst = nullptr);	
+	Matrix3d*		dU		= nullptr,		
+	double*			gmst	= nullptr);
+
+void eci2ecef_sofa(
+	const double	mjdUTC,
+	IERS&			iersIns,	
+	Matrix3d&		U,		
+	Matrix3d&		dU);
+
+void eci2ecefVec_sofa(
+	const double	mjdUTC,
+	IERS&			iersIns,	
+	Vector6d&		rvSat_eci,
+	Vector6d&		rvSat_ecef);					
+
+void ecef2eciVec_sofa(
+	const double	mjdUTC,
+	IERS&			iersIns,	
+	Vector6d&		rvSat_ecef,
+	Vector6d&		rvSat_eci);
 
 void ecef2pos(const double *r, double *pos);
 void ecef2pos(Vector3d& r, double *pos);
@@ -71,13 +91,16 @@ void dops(int ns, const double *azel, double elmin, double *dop);
 int  readblq(string file, const char *sta, double *otlDisplacement);
 int  readerp(string file, erp_t *erp);
 int  geterp (const erp_t *erp, GTime time, double *val);
+int  geterp_from_utc (const erp_t *erp, double leapSec, double mjdUTC, double *val);
 
 
 int satexclude(SatSys& sat, E_Svh svh);
 
-
 extern int		epoch;
 extern GTime	tsync;
 
+void replaceTimes(
+	string&						str,		///< String to replace macros within
+	boost::posix_time::ptime	time_time);	///< Time to use for replacements
 
 #endif
