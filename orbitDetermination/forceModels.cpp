@@ -7,7 +7,6 @@ using namespace boost::numeric::odeint;
 #include "forceModels.hpp"
 #include "satRefSys.hpp"
 #include "constants.hpp"
-#include "acsConfig.hpp"
 #include "common.hpp"
 #include "jplEph.hpp"
 #include "enums.h"

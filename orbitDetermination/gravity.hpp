@@ -4,7 +4,6 @@
 #include "eigenIncluder.hpp"
 #include "satRefSys.hpp"
 #include "jplEph.hpp"
-#include "enums.h"
 #include <string>
 using std::string;
 

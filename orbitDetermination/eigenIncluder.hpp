@@ -11,30 +11,30 @@
 #include <eigen3/Eigen/Cholesky>
 #include <eigen3/Eigen/Geometry>
 #include <eigen3/Eigen/OrderingMethods>
-using Eigen::SimplicialLLT;
-using Eigen::SimplicialLDLT;
 using Eigen::COLAMDOrdering;
 using Eigen::LDLT;
 using Eigen::LLT;
-using Eigen::PartialPivLU;
 using Eigen::Matrix;
-using Eigen::MatrixXd;
 using Eigen::Matrix2d;
 using Eigen::Matrix3d;
+using Eigen::MatrixXd;
+using Eigen::PartialPivLU;
+using Eigen::SimplicialLDLT;
+using Eigen::SimplicialLLT;
 using Eigen::VectorXd;
-using Vector6d = Eigen::Vector<double, 6>;
-using Eigen::Vector3d;
-using Eigen::Vector2d;
-using Eigen::MatrixXi;
-using Eigen::SparseMatrix;
-using Eigen::SparseVector;
-using Eigen::SparseQR;
-using Eigen::Map;
-using Eigen::Quaterniond;
-using Eigen::Triplet;
+typedef Eigen::Matrix<double, 6, 1> Vector6d;
 using Eigen::ArrayXd;
+using Eigen::Map;
+using Eigen::MatrixXi;
+using Eigen::Quaterniond;
+using Eigen::SparseMatrix;
+using Eigen::SparseQR;
+using Eigen::SparseVector;
+using Eigen::Triplet;
+using Eigen::Vector2d;
+using Eigen::Vector3d;
 using Eigen::placeholders::all;
-typedef Eigen::Array<bool,Eigen::Dynamic,1> ArrayXb;
+typedef Eigen::Array<bool, Eigen::Dynamic, 1> ArrayXb;
 
 template <typename Type, int Size>
 using Vector = Matrix<Type, Size, 1>;
