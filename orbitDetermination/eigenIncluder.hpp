@@ -22,7 +22,7 @@ using Eigen::PartialPivLU;
 using Eigen::SimplicialLDLT;
 using Eigen::SimplicialLLT;
 using Eigen::VectorXd;
-typedef Eigen::Matrix<double, 6, 1> Vector6d;
+using Vector6d = Eigen::Vector<double, 6>;
 using Eigen::ArrayXd;
 using Eigen::Map;
 using Eigen::MatrixXi;

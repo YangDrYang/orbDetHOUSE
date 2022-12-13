@@ -4,6 +4,7 @@
 #include "eigenIncluder.hpp"
 #include "satRefSys.hpp"
 #include "jplEph.hpp"
+#include "config.hpp"
 #include <string>
 using std::string;
 

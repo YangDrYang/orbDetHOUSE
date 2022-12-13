@@ -102,7 +102,9 @@
     "typeinfo": "cpp",
     "unordered_map": "cpp",
     "variant": "cpp",
-    "vector": "cpp"
+    "vector": "cpp",
+    "dense": "cpp",
+    "orderingmethods": "cpp"
   },
   "cmake.configureOnOpen": true
 }

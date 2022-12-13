@@ -1,5 +1,7 @@
 #include "auxillaryData.hpp"
+#include "constants.hpp"
 #include <string>
+using namespace std;
 
 /* read earth rotation parameters ----------------------------------------------
  * read earth rotation parameters

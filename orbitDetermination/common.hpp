@@ -57,9 +57,6 @@ struct erp_t;
 struct StationOptions;
 struct SatSys;
 
-/* positioning models --------------------------------------------------------*/
-void dops(int ns, const double *azel, double elmin, double *dop);
-
 int readerp(string file, erp_t *erp);
 int geterp_from_utc(const erp_t *erp, double leapSec, double mjdUTC, double *val);
 

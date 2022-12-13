@@ -6,10 +6,12 @@
 
 using std::map;
 
+#include "eigenIncluder.hpp"
 #include "satRefSys.hpp"
 #include "gravity.hpp"
 #include "jplEph.hpp"
 #include "common.hpp"
+#include "config.hpp"
 
 Vector3d calculateAcceleration(
 	double mjdTT,

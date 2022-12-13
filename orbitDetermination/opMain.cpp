@@ -1,3 +1,4 @@
+#include "eigenIncluder.hpp"
 #include "auxillaryData.hpp"
 #include "forceModels.hpp"
 #include "jplEph.hpp"
@@ -7,7 +8,7 @@
 #include <fstream>
 using namespace std;
 
-void main()
+int main()
 {
 	erp_t *erpt;
 	/* initial condition for differential equation*/
@@ -52,7 +53,7 @@ void main()
 		}
 	}
 
-	ForceModels forceModelsOpt = {};
+	ForceModels forceModelsOpt = {true, E_GravMdl::GGM03SModel, false, false, false, false, false, false, false, false, false, false, false, false, 100, E_SRPModels::CANNONBALL, 5, 1, 4, 4, 4, 4, "rkf78"};
 	/* setting options for the propagator */
 	orbitProp.setPropOption(forceModelsOpt);
 
@@ -69,4 +70,6 @@ void main()
 	}
 	else
 		cout << "Error openinng results file!\n";
+
+	return 0;
 }
