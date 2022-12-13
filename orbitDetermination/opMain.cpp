@@ -8,6 +8,37 @@
 #include <fstream>
 using namespace std;
 
+// /** Options associated with orbital force models
+//  */
+// struct ForceModels
+// {
+// 	bool earth_gravity = true;
+// 	E_GravMdl gravity_model = E_GravMdl::GGM03SModel;
+// 	bool solid_earth_tide = false;
+// 	bool ocean_tide_loading = false;
+// 	bool third_body_attraction = false;
+// 	bool third_body_sun = false;
+// 	bool third_body_moon = false;
+// 	bool third_body_planet = false;
+// 	bool relativity_effect = false;
+// 	bool solar_radiation_pressure = false;
+// 	bool thermal_emission = false;
+// 	bool earth_albedo = false;
+// 	bool infrared_radiation = false;
+// 	bool antenna_thrust = false;
+// 	bool empirical_acceleration = false;
+// 	bool satellite_manoeuvre = false;
+// 	double satMass = 100;
+// 	E_SRPModels srpMdlName = E_SRPModels::CANNONBALL;
+// 	double srpArea = 5;
+// 	double srpCoef = 1;
+// 	int egmAccDeg = 12;
+// 	int egmAccOrd = 12;
+// 	int egmSTMDeg = 4;
+// 	int egmSTMOrd = 4;
+// 	string odeInteg = "rkf78";
+// };
+
 int main()
 {
 	erp_t *erpt;
@@ -53,7 +84,8 @@ int main()
 		}
 	}
 
-	ForceModels forceModelsOpt = {true, E_GravMdl::GGM03SModel, false, false, false, false, false, false, false, false, false, false, false, false, 100, E_SRPModels::CANNONBALL, 5, 1, 4, 4, 4, 4, "rkf78"};
+	ForceModels forceModelsOpt = {};
+
 	/* setting options for the propagator */
 	orbitProp.setPropOption(forceModelsOpt);
 

@@ -65,8 +65,11 @@ public:
 
 	E_GravMdl getModelType();
 
-	EarthGravityDeg mEarthGravAccDeg = {15, 15};
-	EarthGravityDeg mEarthGravSTMDeg = {2, 2};
+	// EarthGravityDeg mEarthGravAccDeg = {15, 15};
+	EarthGravityDeg mEarthGravAccDeg;
+
+	// EarthGravityDeg mEarthGravSTMDeg = {2, 2};
+	EarthGravityDeg mEarthGravSTMDeg;
 
 public:
 	/* Computes the acceleration due to the central body gravity field of the central body
