@@ -66,11 +66,7 @@ void HOUSE::update(const VectorXd& z) {
 void HOUSE::run(const VectorXd& tz, const MatrixXd& Z) {
     for (int i = 0; i < tz.size(); i++) {
         predict(tz(i));
-        // skip update step if no measurement data available
-        // TODO: use a non numerical representation for this
-        if (abs(Z(0, i)) <= 2 * M_PI){
-            update(Z.col(i));
-        }
+        update(Z.col(i));
     }
 }
 
