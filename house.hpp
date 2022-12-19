@@ -5,6 +5,8 @@
 
 #include <vector>
 
+#define NO_MEASUREMENT 9999
+
 class HOUSE {
 
     public:

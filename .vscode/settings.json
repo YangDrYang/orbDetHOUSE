@@ -106,7 +106,8 @@
     "variant": "cpp",
     "vector": "cpp",
     "dense": "cpp",
-    "orderingmethods": "cpp"
+    "orderingmethods": "cpp",
+    "random": "cpp"
   },
   "cmake.configureOnOpen": true,
   "C_Cpp.errorSquiggles": "disabled"
