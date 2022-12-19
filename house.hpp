@@ -1,12 +1,12 @@
 #ifndef HOUSE_H
 #define HOUSE_H
+#define NO_MEASUREMENT 100
+
 
 #include <Eigen/Dense>
 
 #include <vector>
 
-
-// 
 class HOUSE {
 
     public:
