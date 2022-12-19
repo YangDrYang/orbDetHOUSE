@@ -1,7 +1,7 @@
 # Compile main library
 
 echo "Compiling main library..."
-g++ -c *.cpp -I./eigen/Eigen -I. -Wall -pedantic -g -O3 
+g++ -c *.cpp -I./eigen -I. -Wall -pedantic -g -O3 
 
 rm -f house.a
 
