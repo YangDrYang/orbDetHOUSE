@@ -1,4 +1,4 @@
-#include "eigenIncluder.hpp"
+
 #include "auxillaryData.hpp"
 #include "forceModels.hpp"
 #include "jplEph.hpp"
@@ -67,7 +67,13 @@ int main()
 	// Vector6d rvECI;
 	// ecef2eciVec_sofa(mjdUTC, iersInstance, rvECEF, rvECI);
 
-	Vector6d rvECI = {14226165.4977822, 20021922.7850642, -9875597.15080248, -1254.27669098652, 2274.30031195604, 2891.66233001166};
+	VectorXd rvECI(5);
+	rvECI(0) = 14226165.4977822;
+	rvECI(1) = 20021922.7850642;
+	rvECI(2) = -9875597.15080248;
+	rvECI(3) = -1254.27669098652;
+	rvECI(4) = 2274.30031195604;
+	rvECI(5) = 2891.66233001166;
 
 	/* initial condition for variational equation*/
 

@@ -1,7 +1,6 @@
 #ifndef __GRAVITY_HPP__
 #define __GRAVITY_HPP__
 
-#include "eigenIncluder.hpp"
 #include "satRefSys.hpp"
 #include "jplEph.hpp"
 #include "config.hpp"

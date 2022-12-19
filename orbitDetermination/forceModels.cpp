@@ -1,7 +1,6 @@
 
 
 #include <boost/numeric/odeint.hpp> // odeint function definitions
-
 using namespace boost::numeric::odeint;
 
 #include "forceModels.hpp"

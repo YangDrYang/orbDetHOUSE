@@ -2,15 +2,15 @@
 #ifndef __EIGEN_INCLUDER_HPP__
 #define __EIGEN_INCLUDER_HPP__
 
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Dense>
-#include <eigen3/Eigen/Sparse>
-#include <eigen3/Eigen/SparseCholesky>
-#include <eigen3/Eigen/SparseQR>
-#include <eigen3/Eigen/LU>
-#include <eigen3/Eigen/Cholesky>
-#include <eigen3/Eigen/Geometry>
-#include <eigen3/Eigen/OrderingMethods>
+#include "../eigen-3.4.0/Eigen/Core"
+#include "../eigen-3.4.0/Eigen/Dense"
+#include "../eigen-3.4.0/Eigen/Sparse"
+#include "../eigen-3.4.0/Eigen/SparseCholesky"
+#include "../eigen-3.4.0/Eigen/SparseQR"
+#include "../eigen-3.4.0/Eigen/LU"
+#include "../eigen-3.4.0/Eigen/Cholesky"
+#include "../eigen-3.4.0/Eigen/Geometry"
+#include "../eigen-3.4.0/Eigen/OrderingMethods"
 using Eigen::COLAMDOrdering;
 using Eigen::LDLT;
 using Eigen::LLT;
@@ -22,7 +22,6 @@ using Eigen::PartialPivLU;
 using Eigen::SimplicialLDLT;
 using Eigen::SimplicialLLT;
 using Eigen::VectorXd;
-using Vector6d = Eigen::Vector<double, 6>;
 using Eigen::ArrayXd;
 using Eigen::Map;
 using Eigen::MatrixXi;
@@ -35,6 +34,7 @@ using Eigen::Vector2d;
 using Eigen::Vector3d;
 using Eigen::placeholders::all;
 typedef Eigen::Array<bool, Eigen::Dynamic, 1> ArrayXb;
+typedef Eigen::Matrix<double, 6, 1> Vector6d;
 
 template <typename Type, int Size>
 using Vector = Matrix<Type, Size, 1>;

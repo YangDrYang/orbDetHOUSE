@@ -3,7 +3,8 @@
 #ifndef JPLEPH_HPP
 #define JPLEPH_HPP
 
-#include "eigenIncluder.hpp"
+// #include "eigenIncluder.hpp"
+#include "Eigen/Dense"
 
 /*
 *                          

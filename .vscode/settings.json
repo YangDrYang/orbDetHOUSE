@@ -2,8 +2,8 @@
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",
   "C_Cpp_Runner.debuggerPath": "gdb",
-  "C_Cpp_Runner.cStandard": "gnu17",
-  "C_Cpp_Runner.cppStandard": "gnu++17",
+  "C_Cpp_Runner.cStandard": "gnu11",
+  "C_Cpp_Runner.cppStandard": "gnu++11",
   "C_Cpp_Runner.msvcBatchPath": "",
   "C_Cpp_Runner.useMsvc": false,
   "C_Cpp_Runner.warnings": [
@@ -16,7 +16,9 @@
   "C_Cpp_Runner.compilerArgs": [],
   "C_Cpp_Runner.linkerArgs": [],
   "C_Cpp_Runner.includePaths": [
-    "${workspaceFolder}/orbitDetermination",
+    "${workspaceFolder}/",
+    "${workspaceFolder}/eigen/",
+    "${workspaceFolder}/orbitDetermination/",
     "${workspaceFolder}/orbitDetermination/3rdparty",
     "${workspaceFolder}/orbitDetermination/sofa"
   ],

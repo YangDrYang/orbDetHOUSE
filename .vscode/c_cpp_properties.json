@@ -3,14 +3,16 @@
         {
             "name": "macos-gcc-x64",
             "includePath": [
+                "${workspaceFolder}/eigen",
+                "${workspaceFolder}/eigen/Eigen/Dense",
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/orbitDetermination",
                 "${workspaceFolder}/orbitDetermination/3rdparty",
                 "${workspaceFolder}/orbitDetermination/sofa"
             ],
             "compilerPath": "/usr/bin/gcc",
-            "cStandard": "gnu17",
-            "cppStandard": "gnu++17",
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++11",
             "intelliSenseMode": "macos-gcc-x64",
             "compilerArgs": [
                 ""

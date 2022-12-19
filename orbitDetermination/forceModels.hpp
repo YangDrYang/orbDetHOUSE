@@ -6,7 +6,6 @@
 
 using std::map;
 
-#include "eigenIncluder.hpp"
 #include "satRefSys.hpp"
 #include "gravity.hpp"
 #include "jplEph.hpp"
@@ -156,7 +155,7 @@ struct Propagator
 		ForceModels forceMdl);
 
 	void initPropagator(
-		Vector6d rSatECI,
+		VectorXd rSatECI,
 		VectorXd rvPhiS,
 		double mjdUTC = 0,
 		double leapSec = 0,

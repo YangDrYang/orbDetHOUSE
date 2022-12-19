@@ -6,7 +6,6 @@
 #ifndef INC_SATREFSYS_HPP
 #define INC_SATREFSYS_HPP
 
-#include "eigenIncluder.hpp"
 #include "constants.hpp"
 
 /** Management of IERS time and polar motion data
