@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "complex": "cpp",
+        "functional": "cpp",
+        "iostream": "cpp",
+        "*.ipp": "cpp",
+        "any": "cpp",
+        "bitset": "cpp",
+        "memory": "cpp",
+        "random": "cpp",
+        "optional": "cpp"
+    }
+}
