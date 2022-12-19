@@ -5,6 +5,8 @@
 
 #include <vector>
 
+
+// 
 class HOUSE {
 
     public:
