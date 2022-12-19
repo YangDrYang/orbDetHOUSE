@@ -1,3 +1,6 @@
 [submodule "eigen"]
 	path = eigen
 	url = https://gitlab.com/libeigen/eigen.git
+[submodule "CUTpoints"]
+	path = CUTpoints
+	url = https://github.com/nadurthi/CUTpoints.git
