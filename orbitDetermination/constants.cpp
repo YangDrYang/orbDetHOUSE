@@ -8,7 +8,7 @@
 using std::map;
 
 #include "constants.hpp"
-#include "enums.h"
+#include "enum.h"
 
 #include <boost/assign.hpp>
 

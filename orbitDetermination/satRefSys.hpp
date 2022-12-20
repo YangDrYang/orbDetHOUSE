@@ -7,7 +7,8 @@
 #define INC_SATREFSYS_HPP
 
 #include "constants.hpp"
-
+#include <Eigen/Dense>
+using namespace Eigen;
 /** Management of IERS time and polar motion data
  */
 

@@ -51,7 +51,7 @@ int main()
 	double leapSec = 32;
 	double mjdUTC = 53300; // random number
 	// double erpv[0] = {};
-	// geterp_from_utc(&erpt, leapSec, mjdUTC, erpv);
+	geterp_from_utc(&erpt, leapSec, mjdUTC, erpv);
 
 	// double dUT1_UTC = erpv[2];
 	// double dUTC_TAI = -(19 + leapSec);

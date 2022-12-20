@@ -2,6 +2,19 @@
 #include "sofam.hpp"
 #include "sofa.hpp"
 
+void arrayMat2eigenMat(
+	const double	arrayMat[3][3],	///< c++ 2D array
+	Matrix3d&		eigenMat)	///< eigen 2d matrix
+{
+	for(int i = 0; i < 3; i++)
+	{
+		for(int j = 0; j < 3; j++)
+		{
+			eigenMat(i, j) = arrayMat[i][j];
+		}
+	}
+}
+
 /** eci to ecef transformation matrix using the sofa library
 */
 void eci2ecef_sofa(
@@ -81,3 +94,4 @@ void ecef2eciVec_sofa(
 	rvSat_eci.head(3) = matECI2ECEF.transpose() * rvSat_ecef.head(3);
 	rvSat_eci.tail(3) = matECI2ECEF.transpose() * rvSat_ecef.tail(3) + matdECI2ECEF.transpose() * rvSat_ecef.head(3);
 }
+

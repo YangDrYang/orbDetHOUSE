@@ -7,6 +7,15 @@
 
 #include <Eigen/Dense>
 
+// model headers
+#include "auxillaryData.hpp"
+#include "satRefSys.hpp"
+#include "common.hpp"
+#include "forceModels.hpp"
+// #include "jplEph.hpp"
+// #include "config.hpp"
+
+// filter headers
 #include "house.hpp"
 #include "ukf.hpp"
 #include "dyn.hpp"
@@ -15,7 +24,10 @@
 #include "eigen_csv.hpp"
 #include "timer.hpp"
 
-#define MU 6.6743E-11 * 5.972E24
+#define MJD_EPOCH 59945
+
+
+// #define MU 6.6743E-11 * 5.972E24
 #define NUM_ORBITS 10
 
 #define R_EARTH 6371E3
@@ -87,10 +99,35 @@ void run(bool gauss) {
         -> VectorXd {
             Vector2d z;
             Vector3d p;
-            Vector3d rs;
+            VectorXd rsECEF = VectorXd::Zero(6);
+            VectorXd rsECI = VectorXd::Zero(6);
+
+        	erp_t *erpt;
+
             // ground station
-            rs << GROUND_STATION_X, GROUND_STATION_Y, GROUND_STATION_Z;
-            p = X.head(3) - rs;
+            rsECEF << GROUND_STATION_X, GROUND_STATION_Y, GROUND_STATION_Z;
+
+            // transform ground station from 
+            double leapSec = 32;
+	        double mjdUTC = 53300;
+
+            double *erpv;
+            geterp_from_utc(erpt, leapSec, mjdUTC, erpv);
+
+            double dUT1_UTC = erpv[2];
+            double dUTC_TAI = -(19 + leapSec);
+            double xp = erpv[0];
+            double yp = erpv[1];
+            double lod = erpv[3];
+            IERS iersInstance;
+            iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
+            // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
+
+            eci2ecefVec_sofa(mjdUTC + t, iersInstance, rsECEF, rsECI);
+            // end transformation code
+
+
+            p = X.head(3) - rsECI.head(3);
 
             z(0) = atan2(p(1), -p(0));
             z(1) = asin(p(2)/p.norm());

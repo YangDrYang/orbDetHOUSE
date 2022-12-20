@@ -1,3 +1,7 @@
+#include <string>
+#include "constants.hpp"
+using namespace std;
+
 struct erpd_t
 {
     /// earth rotation parameter data type
@@ -13,3 +17,11 @@ struct erp_t
     int n, nmax;  ///< number and max number of data
     erpd_t *data; ///< earth rotation parameter data
 };
+
+
+int readerp(string file, erp_t *erp);
+int geterp_from_utc(
+    const erp_t *erp,
+    double leapSec,
+    double mjd,
+    double *erpv);

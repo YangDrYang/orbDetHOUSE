@@ -24,6 +24,9 @@
 
 #include "satRefSys.hpp"
 
+#include <Eigen/Dense>
+using namespace Eigen;
+using namespace std;
 /* coordinates transformation ------------------------------------------------*/
 
 void eci2ecef_sofa(
@@ -35,14 +38,14 @@ void eci2ecef_sofa(
 void eci2ecefVec_sofa(
 	const double mjdUTC,
 	IERS &iersIns,
-	Vector6d &rvSat_eci,
-	Vector6d &rvSat_ecef);
+	VectorXd &rvSat_eci,
+	VectorXd &rvSat_ecef);
 
 void ecef2eciVec_sofa(
 	const double mjdUTC,
 	IERS &iersIns,
-	Vector6d &rvSat_ecef,
-	Vector6d &rvSat_eci);
+	VectorXd &rvSat_ecef,
+	VectorXd &rvSat_eci);
 
 void ecef2pos(const double *r, double *pos);
 void ecef2pos(Vector3d &r, double *pos);

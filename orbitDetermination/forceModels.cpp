@@ -8,7 +8,7 @@ using namespace boost::numeric::odeint;
 #include "constants.hpp"
 #include "common.hpp"
 #include "jplEph.hpp"
-#include "enums.h"
+#include "enum.h"
 
 /*
  * Class type: The class of the third body attraction
