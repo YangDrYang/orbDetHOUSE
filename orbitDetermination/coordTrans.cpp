@@ -66,8 +66,8 @@ void eci2ecef_sofa(
 void eci2ecefVec_sofa(
 	const double	mjdUTC,		///< UTC, modified Julian date
 	IERS&			iersIns,	///< IERS instance	
-	Vector6d&		rvSat_eci,	///< satellite state vector in eci
-	Vector6d&		rvSat_ecef) ///< satellite state vector in ecef
+	VectorXd&		rvSat_eci,	///< satellite state vector in eci
+	VectorXd&		rvSat_ecef) ///< satellite state vector in ecef
 {
 
 	Matrix3d matECI2ECEF = Matrix3d::Zero();
@@ -83,8 +83,8 @@ void eci2ecefVec_sofa(
 void ecef2eciVec_sofa(
 	const double	mjdUTC,		///< UTC, modified Julian date
 	IERS&			iersIns,	///< IERS instance	
-	Vector6d&		rvSat_ecef,	///< satellite state vector in ecef
-	Vector6d&		rvSat_eci) ///< satellite state vector in eci
+	VectorXd&		rvSat_ecef,	///< satellite state vector in ecef
+	VectorXd&		rvSat_eci) ///< satellite state vector in eci
 {
 
 	Matrix3d matECI2ECEF = Matrix3d::Zero();
