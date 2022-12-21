@@ -74,8 +74,8 @@ void eci2ecefVec_sofa(
 	Matrix3d matdECI2ECEF = Matrix3d::Zero();
 	eci2ecef_sofa(mjdUTC, iersIns, matECI2ECEF, matdECI2ECEF);
 
-	rvSat_ecef.head(3) = matECI2ECEF * rvSat_eci.head(3);
-	rvSat_ecef.tail(3) = matECI2ECEF * rvSat_eci.tail(3) + matdECI2ECEF * rvSat_eci.head(3);
+	rvSat_ecef.head(3) = matECI2ECEF * posECI;
+	rvSat_ecef.tail(3) = matECI2ECEF * velECI + matdECI2ECEF * posECI;
 }
 
 /** vector transformed from ecef to eci using the sofa library
@@ -90,7 +90,7 @@ void ecef2eciVec_sofa(
 	Matrix3d matECI2ECEF = Matrix3d::Zero();
 	Matrix3d matdECI2ECEF = Matrix3d::Zero();
 	eci2ecef_sofa(mjdUTC, iersIns, matECI2ECEF, matdECI2ECEF);
-
+	
 	rvSat_eci.head(3) = matECI2ECEF.transpose() * rvSat_ecef.head(3);
 	rvSat_eci.tail(3) = matECI2ECEF.transpose() * rvSat_ecef.tail(3) + matdECI2ECEF.transpose() * rvSat_ecef.head(3);
 }
