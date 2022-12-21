@@ -99,20 +99,18 @@ void run(bool gauss) {
         -> VectorXd {
             Vector2d z;
             Vector3d p;
-            VectorXd rsECEF = VectorXd::Zero(6);
-            VectorXd rsECI = VectorXd::Zero(6);
 
-        	erp_t *erpt;
+        	erp_t erpt = {.n = 14};
 
-            // ground station
-            rsECEF << GROUND_STATION_X, GROUND_STATION_Y, GROUND_STATION_Z;
+            readerp("IGS_ERP.txt", &erpt);
+
 
             // transform ground station from 
             double leapSec = 32;
 	        double mjdUTC = 53300;
 
-            double *erpv;
-            geterp_from_utc(erpt, leapSec, mjdUTC, erpv);
+            double erpv[0] = {};
+            geterp_from_utc(&erpt, leapSec, mjdUTC, erpv);
 
             double dUT1_UTC = erpv[2];
             double dUTC_TAI = -(19 + leapSec);
@@ -123,7 +121,13 @@ void run(bool gauss) {
             iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
             // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
 
-            eci2ecefVec_sofa(mjdUTC + t, iersInstance, rsECEF, rsECI);
+            VectorXd rsECEF(6); // = VectorXd::Zero(6);
+            VectorXd rsECI = VectorXd::Zero(6);
+
+            // ground station
+            rsECEF << GROUND_STATION_X, GROUND_STATION_Y, GROUND_STATION_Z, 0, 0, 0;
+
+            ecef2eciVec_sofa(mjdUTC + t, iersInstance, rsECEF, rsECI);
             // end transformation code
 
 
@@ -266,9 +270,11 @@ void run(bool gauss) {
         cut4.reset(0, X0m, Pxx0);
         cut6.reset(0, X0m, Pxx0);
 
+
+
+        // Generate true vectors
         vector<VectorXd> Xtru;
         double time;
-        // vector<double> times;
         do {
             cout << "       Trying" << endl;
             time = 0;
@@ -294,36 +300,48 @@ void run(bool gauss) {
             
             } while (time < tmin);
         } while  (0);//(time < tmin);
-
         int steps = Xtru.size();
         // Map<VectorXd> t(&times[0], times.size());
-
         // linear spaced times
         VectorXd t;
         t.setLinSpaced(steps, 0, (steps-1)*dt);
 
 
-
-
-        MatrixXd table(steps, 7);
-        table.col(0) = t;
+        // Save true vectors
+        MatrixXd tableTrue(steps, 7);
+        tableTrue.col(0) = t;
         for (int k = 0; k < steps; k++)
-            table.row(k).tail(6) = Xtru[k];
-
+            tableTrue.row(k).tail(6) = Xtru[k];
         string xtrufile = "out/tru_";
         xtrufile += (gauss ? "gauss_" : "pearson_");
         xtrufile += to_string(j);
         xtrufile += ".csv";
+        EigenCSV::write(tableTrue, header, xtrufile);
 
-        EigenCSV::write(table, header, xtrufile);
 
-        // matrix of measurements
+        // Generate and Save Measurement vectors
+        vector<string> headerMeasure(3);
+        headerMeasure[0] = "t";
+        headerMeasure[1] = "alpha";
+        headerMeasure[2] = "delta";
+        MatrixXd tableMeasure(steps, 3);
+        int numMeasure = 0;
         MatrixXd Ztru(2, steps);
         for (int k = 0; k < steps; k++) {
+            // plane condition
             if (is_visible(Xtru[k])){
+                // generate true measurement
                 Ztru.col(k) = h(t(k), Xtru[k]);
+
+                // corrupt measurement with noise
                 Ztru(0,k) += genn();
                 Ztru(1,k) += genn();
+
+                // store corrupted measurement & time
+                tableMeasure(numMeasure, 0) = t(k);
+                tableMeasure(numMeasure, 1) = Ztru(0,k);
+                tableMeasure(numMeasure, 2) = Ztru(1,k);
+                numMeasure++;
             }
             else {
                 Ztru(0,k) = NO_MEASUREMENT; // std::numeric_limits<double>::quiet_NaN();
@@ -332,19 +350,28 @@ void run(bool gauss) {
             }
         }
 
+        string xmeasurefile = "out/meas_";
+        xmeasurefile += (gauss ? "gauss_" : "pearson_");
+        xmeasurefile += to_string(j);
+        xmeasurefile += ".csv";
 
+        EigenCSV::write(tableMeasure.topRows(numMeasure), headerMeasure, xmeasurefile);
+
+        // Run HOUSE Filter
         cout << "   HOUSE" << endl;
         timer.tick();
         house.run(t, Ztru);
         run_times(j-1, 0) = timer.tock();
         house.save(filter_file(gauss, "house", j));
 
+        // Run UKF Filter
         cout << "   UKF" << endl;
         timer.tick();
         ukf.run(t, Ztru);
         run_times(j-1, 1) = timer.tock();
         ukf.save(filter_file(gauss, "ukf", j));
 
+        // Run CUT-4 Filter (variation of UKF)
         cout << "   CUT-4" << endl;
         timer.tick();
         cut4.run(t, Ztru);
@@ -359,6 +386,7 @@ void run(bool gauss) {
 
     }
 
+    // Save Filter run times
     vector<string> filters;
     filters.push_back("house");
     filters.push_back("ukf");
