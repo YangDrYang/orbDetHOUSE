@@ -28,7 +28,7 @@
 
 
 // #define MU 6.6743E-11 * 5.972E24
-#define NUM_ORBITS 10
+#define NUM_ORBITS 25
 
 #define R_EARTH 6371E3
 #define DEG M_PI / 180
@@ -48,8 +48,9 @@ using namespace Eigen;
 using namespace std;
 
 
-
+// planar test to check if current position is visible
 int is_visible(VectorXd& X){
+    return 1;
     Vector3d x = X.head(3);
     Vector3d rs;
     rs << GROUND_STATION_X, GROUND_STATION_Y, GROUND_STATION_Z;
@@ -80,6 +81,65 @@ void run(bool gauss) {
             VectorXd Xf(6);
             VectorXd r(3);
             VectorXd v(3);
+            VectorXd rvECI(6);
+            rvECI = X;
+            // START MOD
+
+            erp_t erpt = {.n = 14};
+
+            readerp("IGS_ERP.txt", &erpt);
+
+            // transform ground station from 
+            double leapSec = 32;
+	        double mjdUTC = 53300;
+
+            double erpv[0] = {};
+            geterp_from_utc(&erpt, leapSec, mjdUTC, erpv);
+
+            double dUT1_UTC = erpv[2];
+            double dUTC_TAI = -(19 + leapSec);
+            double xp = erpv[0];
+            double yp = erpv[1];
+            double lod = erpv[3];
+            IERS iersInstance;
+            iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
+            // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
+
+            /* initial condition for variational equation*/
+
+            int nState = 6;
+            int nVar = 7; // 6 state variables and one orbital parameter Cr
+            VectorXd rvPhiS = VectorXd::Zero(nState + nState * nVar);
+            // Create combined vector from epoch state, epoch transition matrix (=1) and epoch sensitivity matrix (=0)
+            for (int i = 0; i < nState; i++)
+            {
+                rvPhiS(i) = rvECI(i);
+                for (int j = 0; j < nVar; j++)
+                {
+                    rvPhiS(nState * (j + 1) + i) = (i == j ? 1 : 0);
+                }
+            }
+
+            EGMCoef egm;
+            void *pJPLEph;
+
+	        ForceModels forceModelsOpt = {};
+            Propagator orbitProp;
+	        /* setting options for the propagator */
+	        orbitProp.setPropOption(forceModelsOpt);
+
+	        /* initialising the propagator */
+	        orbitProp.initPropagator(rvECI, rvPhiS, mjdUTC, leapSec, &erpt, egm, pJPLEph);
+	        orbitProp.updPropagator(mjdUTC + t);
+
+            Matrix3d mECI2ECEF = Matrix3d::Identity();
+            Matrix3d mdECI2ECEF = Matrix3d::Identity();
+
+            eci2ecef_sofa(mjdUTC, iersInstance, mECI2ECEF, mdECI2ECEF);
+
+            Vector3d acceleration = orbitProp.calculateAcceleration(rvECI.head(3), rvECI.tail(3), mECI2ECEF);
+            cout << "acceleration  = " << acceleration << endl;
+            // END MOD
             r = X.head(3);
             v = X.tail(3);
 
@@ -110,7 +170,7 @@ void run(bool gauss) {
 	        double mjdUTC = 53300;
 
             double erpv[0] = {};
-            geterp_from_utc(&erpt, leapSec, mjdUTC, erpv);
+            geterp_from_utc(&erpt, leapSec, mjdUTC + t, erpv);
 
             double dUT1_UTC = erpv[2];
             double dUTC_TAI = -(19 + leapSec);
@@ -132,10 +192,19 @@ void run(bool gauss) {
 
 
             p = X.head(3) - rsECI.head(3);
-
-            z(0) = atan2(p(1), -p(0));
-            z(1) = asin(p(2)/p.norm());
-
+            
+            // TODO: update to conical model (accounting for elevation of observatory)
+            // planar visibilty conidition
+            // is visible
+            if (p.dot(rsECI.head(3)) >= 0){
+                z(0) = atan2(p(1), -p(0));
+                z(1) = asin(p(2)/p.norm());
+            }
+            // not visible
+            else {
+                z(0) = NO_MEASUREMENT;
+                z(1) = NO_MEASUREMENT;
+            }
 
             return z;
         };
@@ -328,11 +397,12 @@ void run(bool gauss) {
         int numMeasure = 0;
         MatrixXd Ztru(2, steps);
         for (int k = 0; k < steps; k++) {
-            // plane condition
-            if (is_visible(Xtru[k])){
-                // generate true measurement
-                Ztru.col(k) = h(t(k), Xtru[k]);
+            // planar condition for visibility 
+            // generate true measurement
+            Ztru.col(k) = h(t(k), Xtru[k]);
 
+            // if !NO_MEASUREMENT
+            if (Ztru(0, k) != NO_MEASUREMENT){
                 // corrupt measurement with noise
                 Ztru(0,k) += genn();
                 Ztru(1,k) += genn();
@@ -342,11 +412,6 @@ void run(bool gauss) {
                 tableMeasure(numMeasure, 1) = Ztru(0,k);
                 tableMeasure(numMeasure, 2) = Ztru(1,k);
                 numMeasure++;
-            }
-            else {
-                Ztru(0,k) = NO_MEASUREMENT; // std::numeric_limits<double>::quiet_NaN();
-                Ztru(1,k) = NO_MEASUREMENT; // std::numeric_limits<double>::quiet_NaN();
-
             }
         }
 

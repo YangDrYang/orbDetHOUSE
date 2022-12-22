@@ -34,3 +34,4 @@
 # Output data files
 *.csv
 *.eps
+*.svg

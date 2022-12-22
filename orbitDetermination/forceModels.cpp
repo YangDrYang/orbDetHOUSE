@@ -10,6 +10,11 @@ using namespace boost::numeric::odeint;
 #include "jplEph.hpp"
 #include "enum.h"
 
+// check that this is correct
+#define PI2 M_PI * 2
+#define PSOL 1367/CLIGHT 		/* solar radiation pressure at 1 AU, [N/m^2] (1367 W/m^2); IERS 96 */
+#define CLIGHT      299792458.0	/* speed of light (m/s) */
+
 /*
  * Class type: The class of the third body attraction
  */
@@ -179,6 +184,8 @@ Vector3d Sun(
 
 	/* Mean anomaly, ecliptic longitude and radius
 	 */
+
+	// PI2, this this meant to be PI * 2, 
 	double M = PI2 * Frac(0.9931267 + 99.9973583 * T);												 // [rad]
 	double L = PI2 * Frac(0.7859444 + M / PI2 + (6892.0 * sin(M) + 72.0 * sin(2.0 * M)) / 1296.0e3); // [rad]
 	double r = 149.619e9 - 2.499e9 * cos(M) - 0.021e9 * cos(2 * M);									 // [m]
@@ -329,7 +336,7 @@ void Propagator::setPropOption(
  *
  */
 void Propagator::initPropagator(
-	Vector6d rvSatECI,
+	VectorXd rvSatECI,
 	VectorXd rvPhiS,
 	double mjdUTC,
 	double leapSec,

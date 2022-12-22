@@ -67,7 +67,9 @@ int main()
 	// Vector6d rvECI;
 	// ecef2eciVec_sofa(mjdUTC, iersInstance, rvECEF, rvECI);
 
-	VectorXd rvECI(5);
+
+
+	VectorXd rvECI(5); // should be 6D not 5D
 	rvECI(0) = 14226165.4977822;
 	rvECI(1) = 20021922.7850642;
 	rvECI(2) = -9875597.15080248;

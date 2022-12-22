@@ -5,7 +5,7 @@
 
 // #include "eigenIncluder.hpp"
 #include "Eigen/Dense"
-
+using namespace Eigen;
 /*
 *                          
 *   5 = jupiter          12 = solar-system barycenter             

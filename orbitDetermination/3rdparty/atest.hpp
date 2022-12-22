@@ -3,8 +3,9 @@
  */
 
 #include <math.h>
-#include "eigenIncluder.hpp"
-
+// #include "eigenIncluder.hpp"
+#include <Eigen/Dense>
+using namespace Eigen;
 /*
  *   global definitions and variables
  */

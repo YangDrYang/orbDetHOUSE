@@ -1,10 +1,12 @@
-#include "navigation.hpp"
+// #include "navigation.hpp"
 #include "constants.hpp"
 #include "satRefSys.hpp"
 #include "gravity.hpp"
 #include "jplEph.hpp"
 #include "common.hpp"
 #include "sofa.hpp"
+
+// typedef std::ostream Trace;
 
 Vector3d CalcPolarAngles(Vector3d mVec)
 {
@@ -162,7 +164,6 @@ GravityModel::GravityModel(
 }
 
 void GravityModel::solidEarthTidesCorrection(
-	Trace &trace,
 	double mjdUTC,				///< UTC in modified julian date format
 	EGMCoef &egmCoef,			///< Struct of Earth gravity coefficients
 	IERS iersIns,				///< Instance of IERS class
@@ -337,7 +338,6 @@ void GravityModel::solidEarthTidesCorrection(
 }
 
 void GravityModel::oceanTidesCorrection(
-	Trace &trace,
 	double mjdUTC,				///< UTC in modified julian date format
 	EGMCoef &egmCoef,			///< Struct of Earth gravity coefficients
 	const Vector3d &vecRAESun,	///< Rho, azimuth and altitude information of Sun
@@ -473,7 +473,6 @@ void GravityModel::oceanTidesCorrection(
 }
 
 Vector3d GravityModel::centralBodyGravityAcc(
-	Trace &trace,
 	const double mjdUTC,
 	const double *erpv,		 ///< xp, yp, ut1_utc, lod and leapsecond
 	const Vector3d &rSat,	 ///< Satellite position vector in the inertial system
@@ -523,12 +522,12 @@ Vector3d GravityModel::centralBodyGravityAcc(
 
 	if (mEarthTidesOpt.flagSolidEarthTides)
 	{
-		solidEarthTidesCorrection(trace, mjdUTC, egmCoef, iersIns, vecRAESun, vecRAEMoon);
+		solidEarthTidesCorrection(mjdUTC, egmCoef, iersIns, vecRAESun, vecRAEMoon);
 	}
 
 	if (mEarthTidesOpt.flagOceanTides)
 	{
-		oceanTidesCorrection(trace, mjdUTC, egmCoef, vecRAESun, vecRAEMoon);
+		oceanTidesCorrection(mjdUTC, egmCoef, vecRAESun, vecRAEMoon);
 	}
 
 	Vector3d rSat_bf = mECI2BF * rSat; // Body-fixed position
@@ -579,7 +578,6 @@ Vector3d GravityModel::centralBodyGravityAcc(
  *
  */
 Vector3d GravityModel::relativityEffectsAcc(
-	Trace &trace,		  ///< Trace to output to (similar to cout)
 	const Vector3d &rSat, ///< Inertial position of satellite (m)
 	const Vector3d &vSat) ///< Inertial velocity of satellite (m/s)
 {
