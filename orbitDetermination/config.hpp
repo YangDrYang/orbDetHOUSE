@@ -33,8 +33,8 @@ struct ForceModels
     bool solid_earth_tide = false;
     bool ocean_tide_loading = false;
     bool third_body_attraction = false;
-    bool third_body_sun = false;
-    bool third_body_moon = false;
+    bool third_body_sun = true;
+    bool third_body_moon = true;
     bool third_body_planet = false;
     bool relativity_effect = false;
     bool solar_radiation_pressure = false;

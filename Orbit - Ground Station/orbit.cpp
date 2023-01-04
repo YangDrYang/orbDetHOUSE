@@ -317,7 +317,7 @@ void run(bool gauss) {
 
     // time steps of 1s for N orbits
     double dt = 30;
-    double tmin = 120; // 6360 * NUM_ORBITS;
+    double tmin = 6360 * NUM_ORBITS;
 
     int trials = 1;
 
@@ -450,14 +450,15 @@ void run(bool gauss) {
         run_times(j-1, 1) = timer.tock();
         ukf.save(filter_file(gauss, "ukf", j));
 
-        // Run CUT-4 Filter (variation of UKF)
-        orbitProp.initPropagator(X0m, rvPhiS, mjdUTC, leapSec, &erpt, egm, pJPLEph); // reset propagator
-        cout << "   CUT-4" << endl;
-        timer.tick();
-        cut4.run(t, Ztru);
-        run_times(j-1, 2) = timer.tock();
-        cut4.save(filter_file(gauss, "cut4", j));
+        // // Run CUT-4 Filter (variation of UKF)
+        // orbitProp.initPropagator(X0m, rvPhiS, mjdUTC, leapSec, &erpt, egm, pJPLEph); // reset propagator
+        // cout << "   CUT-4" << endl;
+        // timer.tick();
+        // cut4.run(t, Ztru);
+        // run_times(j-1, 2) = timer.tock();
+        // cut4.save(filter_file(gauss, "cut4", j));
 
+        // // Run CUT-6 Filter (variation of UKF)
         // cout << "   CUT-6" << endl;
         // timer.tick();
         // cut6.run(t, Ztru);
@@ -470,7 +471,7 @@ void run(bool gauss) {
     vector<string> filters;
     filters.push_back("house");
     filters.push_back("ukf");
-    filters.push_back("cut4");
+    // filters.push_back("cut4");
     // filters.push_back("cut6");
 
     string time_file = "out/run_times_";
