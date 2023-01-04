@@ -8,124 +8,125 @@
 using std::map;
 
 #include "constants.hpp"
-#include "enum.h"
+#include "enums.h"
 
 #include <boost/assign.hpp>
+#include <boost/bimap.hpp>
+#define MAXLEAPS 18
+
+// const E_FType ftypes[E_ObsCode::NUM_CODES] =
+// {
+// 	[E_ObsCode::NONE] = FTYPE_NONE,
+// 	[E_ObsCode::L1C] = F1,
+// 	[E_ObsCode::L1P] = F1,
+// 	[E_ObsCode::L1W] = F1,
+// 	[E_ObsCode::L1Y] = F1,
+// 	[E_ObsCode::L1M] = F1,
+// 	[E_ObsCode::L1N] = F1,
+// 	[E_ObsCode::L1S] = F1,
+// 	[E_ObsCode::L1L] = F1,
+// 	[E_ObsCode::L1E] = F1,
+// 	[E_ObsCode::L1A] = F1,
+// 	[E_ObsCode::L1B] = F1,
+// 	[E_ObsCode::L1X] = F1,
+// 	[E_ObsCode::L1Z] = F1,
+// 	[E_ObsCode::L2C] = F2,
+// 	[E_ObsCode::L2D] = F2,
+// 	[E_ObsCode::L2S] = F2,
+// 	[E_ObsCode::L2L] = F2,
+// 	[E_ObsCode::L2X] = F2,
+// 	[E_ObsCode::L2P] = F2,
+// 	[E_ObsCode::L2W] = F2,
+// 	[E_ObsCode::L2Y] = F2,
+// 	[E_ObsCode::L2M] = F2,
+// 	[E_ObsCode::L2N] = F2,
+// 	[E_ObsCode::L5I] = F5,
+// 	[E_ObsCode::L5Q] = F5,
+// 	[E_ObsCode::L5X] = F5,
+// 	[E_ObsCode::L7I] = F7,
+// 	[E_ObsCode::L7Q] = F7,
+// 	[E_ObsCode::L7X] = F7,
+// 	[E_ObsCode::L6A] = F6,
+// 	[E_ObsCode::L6B] = F6,
+// 	[E_ObsCode::L6C] = F6,
+// 	[E_ObsCode::L6X] = F6,
+// 	[E_ObsCode::L6Z] = F6,
+// 	[E_ObsCode::L6S] = F6,
+// 	[E_ObsCode::L6L] = F6,
+// 	[E_ObsCode::L8I] = F8,
+// 	[E_ObsCode::L8Q] = F8,
+// 	[E_ObsCode::L8X] = F8,
+// 	[E_ObsCode::L2I] = F2,
+// 	[E_ObsCode::L2Q] = F2,
+// 	[E_ObsCode::L6I] = F6,
+// 	[E_ObsCode::L6Q] = F6,
+// 	[E_ObsCode::L3I] = F3,
+// 	[E_ObsCode::L3Q] = F3,
+// 	[E_ObsCode::L3X] = F3,
+// 	[E_ObsCode::L1I] = F1,
+// 	[E_ObsCode::L1Q] = F1
+// };
 
 
-const E_FType ftypes[E_ObsCode::NUM_CODES] =
-{
-	[E_ObsCode::NONE] = FTYPE_NONE,
-	[E_ObsCode::L1C] = F1,
-	[E_ObsCode::L1P] = F1,
-	[E_ObsCode::L1W] = F1,
-	[E_ObsCode::L1Y] = F1,
-	[E_ObsCode::L1M] = F1,
-	[E_ObsCode::L1N] = F1,
-	[E_ObsCode::L1S] = F1,
-	[E_ObsCode::L1L] = F1,
-	[E_ObsCode::L1E] = F1,
-	[E_ObsCode::L1A] = F1,
-	[E_ObsCode::L1B] = F1,
-	[E_ObsCode::L1X] = F1,
-	[E_ObsCode::L1Z] = F1,
-	[E_ObsCode::L2C] = F2,
-	[E_ObsCode::L2D] = F2,
-	[E_ObsCode::L2S] = F2,
-	[E_ObsCode::L2L] = F2,
-	[E_ObsCode::L2X] = F2,
-	[E_ObsCode::L2P] = F2,
-	[E_ObsCode::L2W] = F2,
-	[E_ObsCode::L2Y] = F2,
-	[E_ObsCode::L2M] = F2,
-	[E_ObsCode::L2N] = F2,
-	[E_ObsCode::L5I] = F5,
-	[E_ObsCode::L5Q] = F5,
-	[E_ObsCode::L5X] = F5,
-	[E_ObsCode::L7I] = F7,
-	[E_ObsCode::L7Q] = F7,
-	[E_ObsCode::L7X] = F7,
-	[E_ObsCode::L6A] = F6,
-	[E_ObsCode::L6B] = F6,
-	[E_ObsCode::L6C] = F6,
-	[E_ObsCode::L6X] = F6,
-	[E_ObsCode::L6Z] = F6,
-	[E_ObsCode::L6S] = F6,
-	[E_ObsCode::L6L] = F6,
-	[E_ObsCode::L8I] = F8,
-	[E_ObsCode::L8Q] = F8,
-	[E_ObsCode::L8X] = F8,
-	[E_ObsCode::L2I] = F2,
-	[E_ObsCode::L2Q] = F2,
-	[E_ObsCode::L6I] = F6,
-	[E_ObsCode::L6Q] = F6,
-	[E_ObsCode::L3I] = F3,
-	[E_ObsCode::L3Q] = F3,
-	[E_ObsCode::L3X] = F3,
-	[E_ObsCode::L1I] = F1,
-	[E_ObsCode::L1Q] = F1
-};
+// const double lambdas[E_ObsCode::NUM_CODES] =
+// {
+// 	[E_ObsCode::NONE] = 0,
+// 	[E_ObsCode::L1C] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1P] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1W] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1Y] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1M] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1N] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1S] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1L] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1E] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1A] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1B] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1X] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1Z] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L2C] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2D] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2S] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2L] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2X] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2P] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2W] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2Y] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2M] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2N] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L5I] = CLIGHT/FREQ5,
+// 	[E_ObsCode::L5Q] = CLIGHT/FREQ5,
+// 	[E_ObsCode::L5X] = CLIGHT/FREQ5,
+// 	[E_ObsCode::L7I] = CLIGHT/FREQ7,
+// 	[E_ObsCode::L7Q] = CLIGHT/FREQ7,
+// 	[E_ObsCode::L7X] = CLIGHT/FREQ7,
+// 	[E_ObsCode::L6A] = CLIGHT/FREQ6,
+// 	[E_ObsCode::L6B] = CLIGHT/FREQ6,
+// 	[E_ObsCode::L6C] = CLIGHT/FREQ6,
+// 	[E_ObsCode::L6X] = CLIGHT/FREQ6,
+// 	[E_ObsCode::L6Z] = CLIGHT/FREQ6,
+// 	[E_ObsCode::L6S] = CLIGHT/FREQ6,
+// 	[E_ObsCode::L6L] = CLIGHT/FREQ6,
+// 	[E_ObsCode::L8I] = CLIGHT/FREQ8,
+// 	[E_ObsCode::L8Q] = CLIGHT/FREQ8,
+// 	[E_ObsCode::L8X] = CLIGHT/FREQ8,
+// 	[E_ObsCode::L2I] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L2Q] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L6I] = CLIGHT/FREQ6,
+// 	[E_ObsCode::L6Q] = CLIGHT/FREQ6,
+// 	[E_ObsCode::L3I] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L3Q] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L3X] = CLIGHT/FREQ2,
+// 	[E_ObsCode::L1I] = CLIGHT/FREQ1,
+// 	[E_ObsCode::L1Q] = CLIGHT/FREQ1
+// };
 
+// moved to header file so gTime can access them
+// const double gpst0[]={1980,1, 6,0,0,0}; /* gps time reference */
+// const double gst0 []={1999,8,22,0,0,0}; /* galileo system time reference */
+// const double bdt0 []={2006,1, 1,0,0,0}; /* beidou time reference */
 
-const double lambdas[E_ObsCode::NUM_CODES] =
-{
-	[E_ObsCode::NONE] = 0,
-	[E_ObsCode::L1C] = CLIGHT/FREQ1,
-	[E_ObsCode::L1P] = CLIGHT/FREQ1,
-	[E_ObsCode::L1W] = CLIGHT/FREQ1,
-	[E_ObsCode::L1Y] = CLIGHT/FREQ1,
-	[E_ObsCode::L1M] = CLIGHT/FREQ1,
-	[E_ObsCode::L1N] = CLIGHT/FREQ1,
-	[E_ObsCode::L1S] = CLIGHT/FREQ1,
-	[E_ObsCode::L1L] = CLIGHT/FREQ1,
-	[E_ObsCode::L1E] = CLIGHT/FREQ1,
-	[E_ObsCode::L1A] = CLIGHT/FREQ1,
-	[E_ObsCode::L1B] = CLIGHT/FREQ1,
-	[E_ObsCode::L1X] = CLIGHT/FREQ1,
-	[E_ObsCode::L1Z] = CLIGHT/FREQ1,
-	[E_ObsCode::L2C] = CLIGHT/FREQ2,
-	[E_ObsCode::L2D] = CLIGHT/FREQ2,
-	[E_ObsCode::L2S] = CLIGHT/FREQ2,
-	[E_ObsCode::L2L] = CLIGHT/FREQ2,
-	[E_ObsCode::L2X] = CLIGHT/FREQ2,
-	[E_ObsCode::L2P] = CLIGHT/FREQ2,
-	[E_ObsCode::L2W] = CLIGHT/FREQ2,
-	[E_ObsCode::L2Y] = CLIGHT/FREQ2,
-	[E_ObsCode::L2M] = CLIGHT/FREQ2,
-	[E_ObsCode::L2N] = CLIGHT/FREQ2,
-	[E_ObsCode::L5I] = CLIGHT/FREQ5,
-	[E_ObsCode::L5Q] = CLIGHT/FREQ5,
-	[E_ObsCode::L5X] = CLIGHT/FREQ5,
-	[E_ObsCode::L7I] = CLIGHT/FREQ7,
-	[E_ObsCode::L7Q] = CLIGHT/FREQ7,
-	[E_ObsCode::L7X] = CLIGHT/FREQ7,
-	[E_ObsCode::L6A] = CLIGHT/FREQ6,
-	[E_ObsCode::L6B] = CLIGHT/FREQ6,
-	[E_ObsCode::L6C] = CLIGHT/FREQ6,
-	[E_ObsCode::L6X] = CLIGHT/FREQ6,
-	[E_ObsCode::L6Z] = CLIGHT/FREQ6,
-	[E_ObsCode::L6S] = CLIGHT/FREQ6,
-	[E_ObsCode::L6L] = CLIGHT/FREQ6,
-	[E_ObsCode::L8I] = CLIGHT/FREQ8,
-	[E_ObsCode::L8Q] = CLIGHT/FREQ8,
-	[E_ObsCode::L8X] = CLIGHT/FREQ8,
-	[E_ObsCode::L2I] = CLIGHT/FREQ2,
-	[E_ObsCode::L2Q] = CLIGHT/FREQ2,
-	[E_ObsCode::L6I] = CLIGHT/FREQ6,
-	[E_ObsCode::L6Q] = CLIGHT/FREQ6,
-	[E_ObsCode::L3I] = CLIGHT/FREQ2,
-	[E_ObsCode::L3Q] = CLIGHT/FREQ2,
-	[E_ObsCode::L3X] = CLIGHT/FREQ2,
-	[E_ObsCode::L1I] = CLIGHT/FREQ1,
-	[E_ObsCode::L1Q] = CLIGHT/FREQ1
-};
-
-
-const double gpst0[]={1980,1, 6,0,0,0}; /* gps time reference */
-const double gst0 []={1999,8,22,0,0,0}; /* galileo system time reference */
-const double bdt0 []={2006,1, 1,0,0,0}; /* beidou time reference */
-
-const double leaps[MAXLEAPS+1][7]=
+const double leaps[MAXLEAPS + 1][7]=
 {
 	/* leap seconds (y,m,d,h,m,s,utc-gpst) */
 	{2017,1,1,0,0,0,-18},
@@ -164,14 +165,14 @@ double chisqr_arr[100] =
 	138 ,139 ,140 ,142 ,143 ,144 ,145 ,147 ,148 ,149
 };
 
-map<int, double> lam_carr =
-{
-	{F1, CLIGHT/FREQ1},
-	{F2, CLIGHT/FREQ2},
-	{F5, CLIGHT/FREQ5},
-	{F6, CLIGHT/FREQ6},
-	{F8, CLIGHT/FREQ8}
-};
+// map<int, double> lam_carr =
+// {
+// 	{F1, CLIGHT/FREQ1},
+// 	{F2, CLIGHT/FREQ2},
+// 	{F5, CLIGHT/FREQ5},
+// 	{F6, CLIGHT/FREQ6},
+// 	{F8, CLIGHT/FREQ8}
+// };
 
 const unsigned int tbl_CRC24Q[]=
 {

@@ -12,8 +12,9 @@
 #include "satRefSys.hpp"
 #include "common.hpp"
 #include "forceModels.hpp"
-// #include "jplEph.hpp"
-// #include "config.hpp"
+#include "jplEph.hpp"
+#include "jpl_eph.hpp"
+#include "config.hpp"
 
 // filter headers
 #include "house.hpp"
@@ -28,7 +29,7 @@
 
 
 // #define MU 6.6743E-11 * 5.972E24
-#define NUM_ORBITS 25
+#define NUM_ORBITS 1
 
 #define R_EARTH 6371E3
 #define DEG M_PI / 180
@@ -47,6 +48,76 @@
 using namespace Eigen;
 using namespace std;
 
+erp_t erpt;
+double leapSec;
+double mjdUTC;
+IERS iersInstance;
+ForceModels forceModelsOpt = {};
+EGMCoef egm;
+void *pJPLEph;
+VectorXd rvPhiS(6);
+
+Propagator orbitProp;
+
+void initEGMCoef(string filename){
+    ifstream file(filename);
+    string line;
+    int n, m;
+    double cmn, smn;
+
+
+    while(getline(file, line)){
+        // line structure:
+        // n        m       Cnm     Snm     0      0 
+        istringstream buffer(line);
+        buffer >> n >> m >> cmn >> smn;
+
+        egm.cmn(n, m) = cmn;
+        egm.smn(n, m) = smn;
+    }
+
+
+}
+
+void initGlobalVariables(VectorXd rvECI) {
+// START MOD
+    initEGMCoef("GGM03S.txt");
+    erpt = {.n = 14};
+
+    readerp("IGS_ERP.txt", &erpt);
+
+    // transform ground station from 
+    leapSec = 32;
+    mjdUTC = 53300;
+
+    double erpv[0] = {};
+    geterp_from_utc(&erpt, leapSec, mjdUTC, erpv);
+
+    double dUT1_UTC = erpv[2];
+    double dUTC_TAI = -(19 + leapSec);
+    double xp = erpv[0];
+    double yp = erpv[1];
+    double lod = erpv[3];
+    
+    iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
+    // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
+
+    pJPLEph = jpl_init_ephemeris("./unxp2000.405", nullptr, nullptr);
+
+    // END MOD
+    int nState = 6;
+	int nVar = 7; // 6 state variables and one orbital parameter Cr
+	rvPhiS = VectorXd::Zero(nState + nState * nVar);
+	// Create combined vector from epoch state, epoch transition matrix (=1) and epoch sensitivity matrix (=0)
+	for (int i = 0; i < nState; i++)
+	{
+		rvPhiS(i) = rvECI(i);
+		for (int j = 0; j < nVar; j++)
+		{
+			rvPhiS(nState * (j + 1) + i) = (i == j ? 1 : 0);
+		}
+	}
+}
 
 // planar test to check if current position is visible
 int is_visible(VectorXd& X){
@@ -76,80 +147,32 @@ string filter_file(bool gauss, const string& filter, int trial) {
 }
 
 void run(bool gauss) {
+    // initialize global variables
+
     DynamicModel::stf g = [] (double t, const VectorXd& X, const VectorXd& fd)
         -> VectorXd {
             VectorXd Xf(6);
-            VectorXd r(3);
-            VectorXd v(3);
+            Vector3d r;
+            Vector3d v;
             VectorXd rvECI(6);
             rvECI = X;
-            // START MOD
-
-            erp_t erpt = {.n = 14};
-
-            readerp("IGS_ERP.txt", &erpt);
-
-            // transform ground station from 
-            double leapSec = 32;
-	        double mjdUTC = 53300;
-
-            double erpv[0] = {};
-            geterp_from_utc(&erpt, leapSec, mjdUTC, erpv);
-
-            double dUT1_UTC = erpv[2];
-            double dUTC_TAI = -(19 + leapSec);
-            double xp = erpv[0];
-            double yp = erpv[1];
-            double lod = erpv[3];
-            IERS iersInstance;
-            iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
-            // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
-
-            /* initial condition for variational equation*/
-
-            int nState = 6;
-            int nVar = 7; // 6 state variables and one orbital parameter Cr
-            VectorXd rvPhiS = VectorXd::Zero(nState + nState * nVar);
-            // Create combined vector from epoch state, epoch transition matrix (=1) and epoch sensitivity matrix (=0)
-            for (int i = 0; i < nState; i++)
-            {
-                rvPhiS(i) = rvECI(i);
-                for (int j = 0; j < nVar; j++)
-                {
-                    rvPhiS(nState * (j + 1) + i) = (i == j ? 1 : 0);
-                }
-            }
-
-            EGMCoef egm;
-            void *pJPLEph;
-
-	        ForceModels forceModelsOpt = {};
-            Propagator orbitProp;
-	        /* setting options for the propagator */
-	        orbitProp.setPropOption(forceModelsOpt);
-
-	        /* initialising the propagator */
-	        orbitProp.initPropagator(rvECI, rvPhiS, mjdUTC, leapSec, &erpt, egm, pJPLEph);
-	        orbitProp.updPropagator(mjdUTC + t);
 
             Matrix3d mECI2ECEF = Matrix3d::Identity();
             Matrix3d mdECI2ECEF = Matrix3d::Identity();
 
-            eci2ecef_sofa(mjdUTC, iersInstance, mECI2ECEF, mdECI2ECEF);
+            eci2ecef_sofa(mjdUTC + t, iersInstance, mECI2ECEF, mdECI2ECEF);
 
-            Vector3d acceleration = orbitProp.calculateAcceleration(rvECI.head(3), rvECI.tail(3), mECI2ECEF);
-            cout << "acceleration  = " << acceleration << endl;
-            // END MOD
-            r = X.head(3);
-            v = X.tail(3);
+            Vector3d acceleration;
+            orbitProp.updPropagator(mjdUTC + t);
+
+            acceleration = orbitProp.calculateAcceleration(X.head(3), X.tail(3), mECI2ECEF);
 
             // (d/dt) r = v
-            Xf.head(3) = v;
+            Xf.head(3) = X.tail(3);
+            Xf.tail(3) = acceleration;
 
             // (d/dt) v = -mu/|r|^3 * r
-            Xf(3) = -MU / pow(r.norm(), 3) * r(0);
-            Xf(4) = -MU / pow(r.norm(), 3) * r(1);
-            Xf(5) = -MU / pow(r.norm(), 3) * r(2);
+
             return Xf;
         };
     // errors were previously 1E-9
@@ -160,26 +183,6 @@ void run(bool gauss) {
             Vector2d z;
             Vector3d p;
 
-        	erp_t erpt = {.n = 14};
-
-            readerp("IGS_ERP.txt", &erpt);
-
-
-            // transform ground station from 
-            double leapSec = 32;
-	        double mjdUTC = 53300;
-
-            double erpv[0] = {};
-            geterp_from_utc(&erpt, leapSec, mjdUTC + t, erpv);
-
-            double dUT1_UTC = erpv[2];
-            double dUTC_TAI = -(19 + leapSec);
-            double xp = erpv[0];
-            double yp = erpv[1];
-            double lod = erpv[3];
-            IERS iersInstance;
-            iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
-            // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
 
             VectorXd rsECEF(6); // = VectorXd::Zero(6);
             VectorXd rsECI = VectorXd::Zero(6);
@@ -314,7 +317,7 @@ void run(bool gauss) {
 
     // time steps of 1s for N orbits
     double dt = 30;
-    double tmin = 6360 * NUM_ORBITS;
+    double tmin = 120; // 6360 * NUM_ORBITS;
 
     int trials = 1;
 
@@ -329,6 +332,9 @@ void run(bool gauss) {
 
     MatrixXd run_times(trials, 3);
     Timer timer;
+
+
+    initGlobalVariables(X0m);
 
     for (int j = 1; j <= trials; j++) {
 
@@ -356,6 +362,10 @@ void run(bool gauss) {
             // }
             Xtru.clear();
             
+            orbitProp.setPropOption(forceModelsOpt);
+
+            orbitProp.initPropagator(X0m, rvPhiS, mjdUTC, leapSec, &erpt, egm, pJPLEph);
+
             Xtru.push_back(X);
             // times.push_back(time);
             do {
@@ -363,7 +373,8 @@ void run(bool gauss) {
                 fd << genw(), genw(), genw();
                 X = f(time, time+dt, X, fd);
                 time += dt;
-                
+                cout << time << '\n';
+
                 Xtru.push_back(X);
                 // times.push_back(time);
             
@@ -422,7 +433,9 @@ void run(bool gauss) {
 
         EigenCSV::write(tableMeasure.topRows(numMeasure), headerMeasure, xmeasurefile);
 
+
         // Run HOUSE Filter
+        orbitProp.initPropagator(X0m, rvPhiS, mjdUTC, leapSec, &erpt, egm, pJPLEph); // reset propagator
         cout << "   HOUSE" << endl;
         timer.tick();
         house.run(t, Ztru);
@@ -430,6 +443,7 @@ void run(bool gauss) {
         house.save(filter_file(gauss, "house", j));
 
         // Run UKF Filter
+        orbitProp.initPropagator(X0m, rvPhiS, mjdUTC, leapSec, &erpt, egm, pJPLEph); // reset propagator
         cout << "   UKF" << endl;
         timer.tick();
         ukf.run(t, Ztru);
@@ -437,6 +451,7 @@ void run(bool gauss) {
         ukf.save(filter_file(gauss, "ukf", j));
 
         // Run CUT-4 Filter (variation of UKF)
+        orbitProp.initPropagator(X0m, rvPhiS, mjdUTC, leapSec, &erpt, egm, pJPLEph); // reset propagator
         cout << "   CUT-4" << endl;
         timer.tick();
         cut4.run(t, Ztru);

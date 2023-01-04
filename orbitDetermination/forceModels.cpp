@@ -425,7 +425,6 @@ Vector3d Propagator::calculateAcceleration(
 		{
 			cout << "Calculated accleration due to the Earth's central body gravity: " << std::setw(14) << mMJDUTC << std::setw(14) << earthgravityAcc.transpose() << std::endl;
 		}
-
 		acc += earthgravityAcc;
 	}
 

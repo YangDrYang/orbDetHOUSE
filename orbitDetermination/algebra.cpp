@@ -5,9 +5,10 @@
 
 using std::list;
 using std::pair;
+using namespace Eigen;
 
-
-#include "eigenIncluder.hpp"
+#include <Eigen/Dense>
+// #include "eigenIncluder.hpp"
 #include "algebraTrace.hpp"
 #include "streamTrace.hpp"
 #include "acsConfig.hpp"

@@ -117,6 +117,10 @@ using std::map;
 #define VenusMinRadius 6.05190000000000e+006
 #define Venus_J2 4.458e-6
 
+const double gpst0[]={1980,1, 6,0,0,0}; /* gps time reference */
+const double gst0 []={1999,8,22,0,0,0}; /* galileo system time reference */
+const double bdt0 []={2006,1, 1,0,0,0}; /* beidou time reference */
+
 #define mjdJ2000 51544.5         /* modified Julian date of J2000.0 */
 #define Arcs 3600.0 * 180.0 / PI /* Arcseconds per radian */
 #endif

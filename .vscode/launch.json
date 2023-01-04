@@ -6,7 +6,7 @@
     "name": "(gdb) Attach",
     "type": "cppdbg",
     "request": "attach",
-    "program": "${workspaceFolder}/'Orbit - Ground Station'/orbit.exe",
+    "program": "${workspaceFolder}/'Orbit - Ground Station'/orbit.cpp",
     "MIMode": "gdb",
     "miDebuggerPath": "C:\\msys64\\mingw64\\bin\\gdb.exe",
     "setupCommands": [

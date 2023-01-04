@@ -6,6 +6,8 @@
 #include "common.hpp"
 #include "sofa.hpp"
 
+
+#include <iostream>
 // typedef std::ostream Trace;
 
 Vector3d CalcPolarAngles(Vector3d mVec)
@@ -570,7 +572,7 @@ Vector3d GravityModel::centralBodyGravityAcc(
 	acc_bf.x() = (1 / rSat_bf.norm() * dUdr - rSat_bf(2) / (rSat_bf.squaredNorm() * sqrt(r2xy)) * dUdlatgc) * rSat_bf(0) - (1 / r2xy * dUdlongc) * rSat_bf(1);
 	acc_bf.y() = (1 / rSat_bf.norm() * dUdr - rSat_bf(2) / (rSat_bf.squaredNorm() * sqrt(r2xy)) * dUdlatgc) * rSat_bf(1) + (1 / r2xy * dUdlongc) * rSat_bf(0);
 	acc_bf.z() = (1 / rSat_bf.norm() * dUdr * rSat_bf(2)) + sqrt(r2xy) / rSat_bf.squaredNorm() * dUdlatgc;
-
+	
 	return mECI2BF.transpose() * acc_bf; // Inertial acceleration
 }
 
