@@ -7,7 +7,8 @@ sofa = $(wildcard ../orbitDetermination/sofa/*.cpp)
 orbit: constants.o coordTrans.o satRefSys.o jplEph.o gravity.o forceModels.o auxillaryData.o
 	$(CC) $(CFLAGS) $(3rdparty) $(sofa) $(wildcard *.o) orbit.cpp -o orbit.exe ../house.a -g
 
-
+validateModel: constants.o coordTrans.o satRefSys.o jplEph.o gravity.o forceModels.o auxillaryData.o
+	$(CC) $(CFLAGS) $(3rdparty) $(sofa) $(wildcard *.o) validateModel.cpp -o validateModel.exe ../house.a -g
 
 constants.o: ../orbitDetermination/constants.cpp
 	$(CC) $(CFLAGS) -c ../orbitDetermination/constants.cpp

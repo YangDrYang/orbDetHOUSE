@@ -9,6 +9,9 @@ public:                                        \
 #include <string>
 using std::string;
 
+#define GRAVITY_DEG_N 70
+#define GRAVITY_DEG_M 70
+
 BETTER_ENUM(E_SRPModels, int,
             CANNONBALL,
             BOXWING,
@@ -32,10 +35,9 @@ struct ForceModels
     E_GravMdl gravity_model = E_GravMdl::GGM03SModel;
     bool solid_earth_tide = false;
     bool ocean_tide_loading = false;
-    bool third_body_attraction = false;
+    bool third_body_attraction = true;
     bool third_body_sun = true;
     bool third_body_moon = true;
-    bool third_body_planet = false;
     bool relativity_effect = false;
     bool solar_radiation_pressure = false;
     bool thermal_emission = false;
@@ -48,10 +50,10 @@ struct ForceModels
     E_SRPModels srpMdlName = E_SRPModels::CANNONBALL;
     double srpArea = 5;
     double srpCoef = 1;
-    int egmAccDeg = 12;
-    int egmAccOrd = 12;
-    int egmSTMDeg = 4;
-    int egmSTMOrd = 4;
+    int egmAccDeg = GRAVITY_DEG_N;
+    int egmAccOrd = GRAVITY_DEG_M;
+    int egmSTMDeg = GRAVITY_DEG_N;
+    int egmSTMOrd = GRAVITY_DEG_M;
     string odeInteg = "rkf78";
 };
 #endif

@@ -7,12 +7,21 @@
 #include <string>
 using std::string;
 
+// ToDo: fix this, this is already defined in the config header file
+
+
 /** Struct to save Earth gravity coefficients
  */
+struct EarthGravityDeg
+{
+	int mMax = GRAVITY_DEG_M;
+	int nMax = GRAVITY_DEG_N;
+};
+
 struct EGMCoef
 {
-	MatrixXd smn = MatrixXd::Zero(361, 361);
-	MatrixXd cmn = MatrixXd::Zero(361, 361);
+	MatrixXd smn = MatrixXd::Zero(GRAVITY_DEG_N + 1, GRAVITY_DEG_N + 1);
+	MatrixXd cmn = MatrixXd::Zero(GRAVITY_DEG_M + 1, GRAVITY_DEG_N + 1);
 };
 
 MatrixXd Legendre(
@@ -26,11 +35,7 @@ MatrixXd LegendreD(
 	MatrixXd pnm, ///< Normalised Legendre polinomial matrix
 	double phi);  ///< Geocentric latitude in radian
 
-struct EarthGravityDeg
-{
-	int mMax = 15;
-	int nMax = 15;
-};
+
 
 struct EarthGravMdlOpt
 {

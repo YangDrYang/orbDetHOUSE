@@ -25,11 +25,11 @@
 #include "eigen_csv.hpp"
 #include "timer.hpp"
 
-#define MJD_EPOCH 59945
+#define MJD_EPOCH 53300 // 59945
 
 
 // #define MU 6.6743E-11 * 5.972E24
-#define NUM_ORBITS 1
+#define NUM_ORBITS 30
 
 #define R_EARTH 6371E3
 #define DEG M_PI / 180
@@ -64,16 +64,19 @@ void initEGMCoef(string filename){
     string line;
     int n, m;
     double cmn, smn;
-
+    
 
     while(getline(file, line)){
         // line structure:
-        // n        m       Cnm     Snm     0      0 
+        // m        n       Cnm     Snm     0      0 
         istringstream buffer(line);
-        buffer >> n >> m >> cmn >> smn;
+        buffer >> m >> n >> cmn >> smn;
 
-        egm.cmn(n, m) = cmn;
-        egm.smn(n, m) = smn;
+        // gravity model degree
+        if (m < GRAVITY_DEG_M && n < GRAVITY_DEG_M){
+            egm.cmn(m, n) = cmn;
+            egm.smn(m, n) = smn;
+        }     
     }
 
 
@@ -88,7 +91,7 @@ void initGlobalVariables(VectorXd rvECI) {
 
     // transform ground station from 
     leapSec = 32;
-    mjdUTC = 53300;
+    mjdUTC = MJD_EPOCH;
 
     double erpv[0] = {};
     geterp_from_utc(&erpt, leapSec, mjdUTC, erpv);
@@ -163,10 +166,10 @@ void run(bool gauss) {
             eci2ecef_sofa(mjdUTC + t, iersInstance, mECI2ECEF, mdECI2ECEF);
 
             Vector3d acceleration;
-            orbitProp.updPropagator(mjdUTC + t);
+            orbitProp.updPropagator(mjdUTC + t/86400, leapSec, &erpt);
 
             acceleration = orbitProp.calculateAcceleration(X.head(3), X.tail(3), mECI2ECEF);
-
+            // acceleration = -MU / pow(X.head(3).norm(), 3) * X.head(3);
             // (d/dt) r = v
             Xf.head(3) = X.tail(3);
             Xf.tail(3) = acceleration;
@@ -176,7 +179,7 @@ void run(bool gauss) {
             return Xf;
         };
     // errors were previously 1E-9
-    DynamicModel f(g, 6, 1E-9, 1E-9);
+    DynamicModel f(g, 6, 1E-3, 1E-3);
 
     UKF::meas_model h = [] (double t, const VectorXd& X)
         -> VectorXd {
@@ -373,7 +376,7 @@ void run(bool gauss) {
                 fd << genw(), genw(), genw();
                 X = f(time, time+dt, X, fd);
                 time += dt;
-                cout << time << '\n';
+                // cout << time << '\n';
 
                 Xtru.push_back(X);
                 // times.push_back(time);
@@ -432,7 +435,6 @@ void run(bool gauss) {
         xmeasurefile += ".csv";
 
         EigenCSV::write(tableMeasure.topRows(numMeasure), headerMeasure, xmeasurefile);
-
 
         // Run HOUSE Filter
         orbitProp.initPropagator(X0m, rvPhiS, mjdUTC, leapSec, &erpt, egm, pJPLEph); // reset propagator

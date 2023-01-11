@@ -543,6 +543,7 @@ Vector3d GravityModel::centralBodyGravityAcc(
 	double dUdr = 0;
 	double dUdlatgc = 0;
 	double dUdlongc = 0;
+
 	for (int m = 0; m <= nMax; m++)
 	{
 		int nd = m;

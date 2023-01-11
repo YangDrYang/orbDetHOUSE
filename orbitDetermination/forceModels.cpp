@@ -419,8 +419,9 @@ Vector3d Propagator::calculateAcceleration(
 	bool bVarEq = false;
 	if (propOpt.flagEarthGravity)
 	{
+		// Extremely expensive computation
 		earthgravityAcc = pmGravityModel->centralBodyGravityAcc(mMJDUTC, mERPv, rSat, mECI2ECEF, bVarEq);
-
+		// earthgravityAcc = -MU / (pow(rSat.norm(), 3)) * rSat;
 		if (0)
 		{
 			cout << "Calculated accleration due to the Earth's central body gravity: " << std::setw(14) << mMJDUTC << std::setw(14) << earthgravityAcc.transpose() << std::endl;
