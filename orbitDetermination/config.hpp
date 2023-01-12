@@ -38,6 +38,7 @@ struct ForceModels
     bool third_body_attraction = true;
     bool third_body_sun = true;
     bool third_body_moon = true;
+    bool third_body_planet = false;
     bool relativity_effect = false;
     bool solar_radiation_pressure = false;
     bool thermal_emission = false;
