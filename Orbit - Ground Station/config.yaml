@@ -1,0 +1,31 @@
+filters:
+  HOUSE: true
+  UKF: false
+  CUT-4: false
+  CUT-6: false
+
+orbtial_parameters:
+  # initial state of satillite (type ECEF or ECI)
+  initial_state: [2540685.04200000,	-2210122.18300000,	6346730.16400000,	6797.93258150000,	274.414411400000,	-2588.42618040000]
+  initial_state_type: ECEF
+
+  # ground station (as ECEF)
+  ground_station: 4.33781e6 -2.01181e6 -4.21011e6
+
+  # time step in seconds
+  time_step: 60
+  MJD_start: 5.757099980324074e+04
+  MJD_end: 5.757212410879634e+04
+
+
+propagator_settings:
+  third_body_attraction: true
+  third_body_sun: true
+  third_body_moon: true
+  solid_earth_tide: false
+  ocean_tide_loading: false
+  solar_radiation_pressure : true
+  relativity_effect: true
+  srpCoef: 1.23
+  # srpArea : 2 * M_PI  * pow(0.974 / 2, 2) * sin(0) + 1.034 * 0.132
+  satMass : 61.14
