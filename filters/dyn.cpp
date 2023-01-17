@@ -1,7 +1,9 @@
 #include "dyn.hpp"
 #include "ode.hpp"
 
+#include <boost/numeric/odeint.hpp>
 #include <iostream>
+#include <vector>
 
 using namespace Eigen;
 
@@ -15,8 +17,11 @@ Eigen::VectorXd DynamicModel::operator() (double ti, double tf,
         const Eigen::VectorXd& xi, const Eigen::VectorXd& w) {
 
     VectorXd x = xi;
-
+    // typedef std::vector< double > state_type;
     if (tf > ti) {
+        // auto state = [this](state_type &x, state_type &dxdt, const double t) -> void {
+        //     f(t, )
+        // };
 
         odefun fode = [this, &w] (double t, double* y, double* yd) -> void {
             Map<VectorXd> x(y,n), xd(yd,n);

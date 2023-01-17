@@ -134,7 +134,10 @@
     "stop_token": "cpp",
     "cinttypes": "cpp",
     "typeindex": "cpp",
-    "valarray": "cpp"
+    "valarray": "cpp",
+    "alignedvector3": "cpp",
+    "*.expression": "cpp",
+    "fft": "cpp"
   },
   "cmake.configureOnOpen": true,
   "C_Cpp.errorSquiggles": "disabled"

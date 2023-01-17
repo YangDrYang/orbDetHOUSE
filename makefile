@@ -5,9 +5,12 @@ OBJDIR = bin
 FILTER_DIR = filters
 ORBDET_DIR = orbitDetermination
 
+
+# ----- Don't modify below this point -----
 # for compiling house.a
 CPPFLAGS1 = -I./eigen -Wall -pedantic -g -O3 
 INCLUDE1 = -I./$(FILTER_DIR)
+
 # for compiling orbit determination
 CPPFLAGS2 =  -Wall -pedantic -g -O3 
 INCLUDE2 = -w -I. -I./eigen -I./$(FILTER_DIR) -I./$(ORBDET_DIR) -I./$(ORBDET_DIR)/sofa -I./$(ORBDET_DIR)/3rdparty -O3 -fmax-errors=5
@@ -26,11 +29,8 @@ ORBDET_OBJ = $(ORBDET_SRC:$(ORBDET_DIR)/%.cpp=$(OBJDIR)/%.o)
 OBJECTS = $(ORBDET_OBJ) $(FILTER_OBJ) $(OBJDIR)/house.a
 
 # ----- COMPILE ORBIT DETERMINTAION -----
-debug:
-	echo $(sofa)
-
-validateModel: validateModel.cpp validateModel.hpp $(ORBDET_OBJ) $(OBJDIR)/house.a
-	$(CC) $(CPPFLAGS2) $(INCLUDE2) $(OBJECTS) $(3rdparty) $(sofa) validateModel.cpp -o validateModel.exe
+filter_testing: filter_testing.cpp filter_testing.hpp $(ORBDET_OBJ) $(OBJDIR)/house.a
+	$(CC) $(CPPFLAGS2) $(INCLUDE2) $(OBJECTS) $(3rdparty) $(sofa) filter_testing.cpp -o filter_testing.exe -lyaml-cpp 
 	
 # compile orbit determination object files
 $(ORBDET_OBJ): $(OBJDIR)/%.o : $(ORBDET_DIR)/%.cpp
@@ -40,7 +40,7 @@ $(ORBDET_OBJ): $(OBJDIR)/%.o : $(ORBDET_DIR)/%.cpp
 # ----- COMPILE FILTERS -----
 
 # linking filters
-$(OBJDIR)/house.a: $(FILTER_OBJ) $(OBJDIR)/house.a
+$(OBJDIR)/house.a: $(FILTER_OBJ)
 	ar rcs $(OBJDIR)/house.a $(FILTER_OBJ)
 
 # compile filter object files

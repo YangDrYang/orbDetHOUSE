@@ -86,7 +86,7 @@ void UKF::run(const Eigen::VectorXd& tz, const Eigen::MatrixXd& Z) {
     for (int i = 0; i < tz.size(); i++) {
         predict(tz(i));
         // only update if given a measurment
-        if (abs(Z(0,i)) <= M_PI * 2){
+        if (abs(Z(0,i)) !=  M_PI * 2){
             update(Z.col(i));
         }
     }

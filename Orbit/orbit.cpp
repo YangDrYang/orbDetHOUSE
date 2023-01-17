@@ -72,7 +72,7 @@ void run(bool gauss) {
             return z;
         };
 
-    HOUSE::meas_model hh = [h] (double t, const VectorXd& X, const VectorXd& n)
+    HOUSE::meas_model hh = [h] (double t, const VectorXd& X, const VectorXd& n) -> VectorXd {
         -> VectorXd {
             return h(t, X) + n;
         };

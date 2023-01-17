@@ -12,7 +12,7 @@ objects = $(addprefix $(OBJDIR)/, $(SRC))
 sofa = $(wildcard ../orbitDetermination/sofa/*.cpp)
 
 # link object files
-orbit: constants.o coordTrans.o satRefSys.o jplEph.o gravity.o forceModels.o auxillaryData.o
+orbit: $(objects)
 	$(CC) $(CFLAGS) $(3rdparty) $(sofa) $(wildcard *.o) orbit.cpp -o orbit.exe ../house.a -g
 
 validateModel: $(objects)

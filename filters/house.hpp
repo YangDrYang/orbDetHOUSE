@@ -5,7 +5,7 @@
 
 #include <vector>
 
-#define NO_MEASUREMENT 9999
+#define NO_MEASUREMENT 99999999
 
 class HOUSE {
 

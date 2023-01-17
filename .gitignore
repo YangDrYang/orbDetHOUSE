@@ -27,9 +27,9 @@
 *.lib
 
 # Executables
-*.exe
-*.out
-*.app
+# *.exe
+# *.out
+# *.app
 
 # Output data files
 *.csv
