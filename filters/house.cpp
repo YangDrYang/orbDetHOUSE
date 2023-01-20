@@ -67,7 +67,7 @@ void HOUSE::run(const VectorXd& tz, const MatrixXd& Z) {
     for (int i = 0; i < tz.size(); i++) {
         predict(tz(i));
         // only update if given a measurment
-        if (abs(Z(0,i)) <= M_PI * 2){
+        if (abs(Z(1,i)) <= M_PI * 2){
             update(Z.col(i));
         }
     }

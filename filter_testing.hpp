@@ -37,7 +37,7 @@ struct EpochInfo {
 };
 
 struct Errors {
-    double elevationErr, azimuthErr, rangeErr;
+    double elevationErr, azimuthErr, rangeErr, rangeRateErr;
 };
 
 struct Filters {
@@ -50,9 +50,9 @@ struct Filters {
 // prototypes
 VectorXd orbitModel(double t, const VectorXd& X);
 void initEGMCoef(string filename);
-void initGlobalVariables(VectorXd rvECI);
+void initGlobalVariables(VectorXd& initialState, string stateType);
 Eigen::VectorXd stdVec2EigenVec(const std::vector<double>& stdVec);
-
 void readConfigFile(string fileName, ForceModels& options, struct EpochInfo& epoch, Eigen::VectorXd& initialState,
-                    Eigen::VectorXd& groundStation, struct Filters& filters, int& numTrials, struct Errors& errorStd);
+                    Eigen::VectorXd& groundStation, struct Filters& filters, int& numTrials, struct Errors& errorStd,
+                    string& iniatialStateType);
 Eigen::MatrixXd generateTrueResults(DynamicModel& f, struct EpochInfo epoch, VectorXd initialState);
