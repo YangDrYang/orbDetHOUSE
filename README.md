@@ -1,16 +1,25 @@
 # HOUSE: The Higher-Order Unscented Estimator
 
-Zvonimir Stojanovski and Dmitry Savransky
+Running:
+ - the repo includes an executable compiled for windows
+ - parameters can be set using the config.yaml file
+ - by default the program will read the "config.yaml" file, however
+   you can provide an argument to read a different yaml file (e.g. "./filter_testing other.yaml")
+ - Note file options in the yaml file do not yet affect the program, the program will read fromt the supplied
+   input file and output to the out directory
+
+Compiling:
+ - compilation is handled by the makefile, run make to rebuild (make must be installed)
+ - the binary object files are stored in the bin directory
 
 Dependencies
  - CUTpoints by N. Adurthi, P. Singla, and T. Singh: https://github.com/nadurthi/CUTpoints
  - Eigen: https://eigen.tuxfamily.org/
+ - Boost
+ - Yaml-cpp
 
 Note: ode.hpp and ode.cpp are released under the GNU Lesser General Public License
 (https://www.gnu.org/licenses/lgpl-3.0.en.html)  
 
-Compiling & Running
- - To compile main library and examples, run compile.sh (requires g++ compiler)
- - To generate CUT points (needed for examples), run cut_sigma_points.m (modify addpath if necessary)
- - To run examples, use the run.sh scripts in the subdirectories
+
 # HOUSE
