@@ -1,5 +1,6 @@
 # compiler
-CC = g++
+# CC = g++
+CC = c++
 
 OBJDIR = bin
 FILTER_DIR = filters
