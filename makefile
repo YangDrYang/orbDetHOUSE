@@ -8,11 +8,11 @@ ORBDET_DIR = orbitDetermination
 
 # ----- Don't modify below this point -----
 # for compiling house.a
-CPPFLAGS1 = -I./eigen -Wall -pedantic -g -O3 
+CPPFLAGS1 = -I./eigen --std=c++11 -Wall -pedantic -g -O3 
 INCLUDE1 = -I./$(FILTER_DIR)
 
 # for compiling orbit determination
-CPPFLAGS2 =  -Wall -pedantic -g -O3 
+CPPFLAGS2 = --std=c++11 -Wall -pedantic -g -O3 
 INCLUDE2 = -w -I. -I./eigen -I./$(FILTER_DIR) -I./$(ORBDET_DIR) -I./$(ORBDET_DIR)/sofa -I./$(ORBDET_DIR)/3rdparty -O3 -fmax-errors=5
 3rdparty = $(wildcard $(ORBDET_DIR)/3rdparty/*.cpp)
 sofa = $(wildcard $(ORBDET_DIR)/sofa/*.cpp)
