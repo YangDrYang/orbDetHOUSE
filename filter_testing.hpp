@@ -8,7 +8,7 @@
 #include <Eigen/Dense>
 #include <yaml-cpp/yaml.h>
 
-// model headers
+// orbit det. model headers
 #include "auxillaryData.hpp"
 #include "satRefSys.hpp"
 #include "common.hpp"
@@ -25,6 +25,9 @@
 #include "pearsonator.hpp"
 #include "eigen_csv.hpp"
 #include "timer.hpp"
+
+// atmospheric model header
+#include <nrlmsise-00.h>
 
 #define DEFAULT_CONFIG_FILENAME "config.yaml"
 #define JPL_EPHEMERIS_FILENAME "unxp2000.405"
