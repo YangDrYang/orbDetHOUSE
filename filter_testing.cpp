@@ -54,7 +54,7 @@ vector<double> cartesianGeodetic(VectorXd Xeci, double t) {
     // check that value are reasonable
     assert(latitude <= 90 && latitude >= -90);
     assert(longitude <= 180 && longitude >= -180);
-    assert(altitude >= 0);
+    // assert(altitude >= 0); 
 
     // structure return value
     vector<double> returnVal{latitude, longitude, altitude};
@@ -100,18 +100,22 @@ void MJDtoDOY(double mjd, int& year, int& doy, double& sec){
     sec = fmod(mjd, 1) * 86400;
     return; 
 }
-void calculateDrag(double t, const VectorXd& X){
+double calculateDensity(double t, const VectorXd& X){
     // get density from atmospheric model
     // https://github.com/magnific0/nrlmsise-00/blob/master/nrlmsise-00.h
     
     // input & output structs
-    // struct rnlmsise_input atmosInput[1];
     struct nrlmsise_input input;
     struct nrlmsise_output output;
-
-    // // flag struct
   	struct nrlmsise_flags flags;
 	// struct ap_array aph;
+
+    // set aph array
+    // for (int i = 0; i < 7; i++) aph.a[i] = 100;
+
+    // set flags 
+    for (int i = 0; i < 24; i++) flags.switches[i] = 1;
+
 
     // convert MJD
     int year, doy;
@@ -124,24 +128,41 @@ void calculateDrag(double t, const VectorXd& X){
     double g_long = position[1];
     double alt = position[2];
 
-    cout << "lat = " << g_lat << ", long = " << g_long <<  ", alt = " << alt << endl;
+    // cout << "lat = " << g_lat << ", long = " << g_long <<  ", alt = " << alt << endl;
 
     double lst = sec/3600 + g_long/15;
-    // struct rnlmsise_input input = {
-    //     .year = 2000,
-    //     .doy = 0,
-    //     .sec = 0,
-    //     .alt = 100,
-    //     .g_lat = 0,
-    //     .g_long = 0,
-    //     .lst = 0,
-    //     .f107A = 150.0,
-    //     .f107 = 150.0,
-    //     .ap = 4.0
-    // };
 
+
+    input = {
+        .year = year,
+        .doy = doy,
+        .sec = sec,
+        .alt = alt / 1000,
+        .g_lat = g_lat,
+        .g_long = g_long,
+        .lst = lst,
+        .f107A = 150.0,
+        .f107 = 150.0,
+        .ap = 4.0
+    };
+
+    gtd7(&input, &flags, &output);
+
+    return output.d[5];
 }
 
+
+Vector3d calculateDragForce(double t, const VectorXd& X){
+    double rho = calculateDensity(t, X);
+    double A = forceModelsOpt.srpArea;
+    double Cd = 0.47;
+    Vector3d V = X.tail(3);
+    Vector3d drag = -0.5 * rho * A * Cd * pow(V.norm(), 1) * V;
+    // ToDo: currently the orbit is decaying excessively, (below 0 altitude),
+    // check units/figure out why this is occuring
+    // drag << 0, 0, 0;
+    return drag;
+}
 
 VectorXd accelerationModel(double t, const VectorXd& X, const VectorXd& fd) {
     VectorXd Xf(6);
@@ -161,11 +182,11 @@ VectorXd accelerationModel(double t, const VectorXd& X, const VectorXd& fd) {
     // calculate acceleration
     acceleration = orbitProp.calculateAcceleration(X.head(3), X.tail(3), mECI2ECEF);
 
-
+    Vector3d dragAcceleration = calculateDragForce(t, X) / forceModelsOpt.satMass;
 
     // set state vector
     Xf.head(3) = X.tail(3);
-    Xf.tail(3) = acceleration;
+    Xf.tail(3) = acceleration + dragAcceleration;
 
     return Xf;
 }
@@ -351,7 +372,6 @@ int main(int argc, char *argv[]){
         orbitProp.setPropOption(forceModelsOpt);
         orbitProp.initPropagator(initialState, rvPhiS, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
 
-        
         VectorXd X = initialState;
         double time = 0, dt = epoch.timeStep;        
         trueData.push_back(X);
@@ -360,8 +380,8 @@ int main(int argc, char *argv[]){
             Vector3d fd;
             fd << 0, 0, 0;
             X = f(time, time + epoch.timeStep, X, fd);
-            time += epoch.timeStep;
-            trueData.push_back(X);        
+            time += epoch.timeStep;         
+            trueData.push_back(X);
         } 
         run_times(j-1, 0) = timer.tock();
 

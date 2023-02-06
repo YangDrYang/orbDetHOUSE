@@ -1,15 +1,15 @@
 # required
 filter_options:
-  HOUSE: true
+  HOUSE: false
   UKF: true
-  CUT4: true
-  CUT6: true
+  CUT4: false
+  CUT6: false
   num_trials: 1
 
 # requried
 orbtial_parameters:
   # initial state of satillite (type ECEF or ECI)
-  initial_state: [7007.2175e+3, 0, 0, 0, 0.6606e+3, 7.5509e+3]
+  initial_state: [2540685.04200000,	-2210122.18300000,	6346730.16400000,	6797.93258150000,	274.414411400000,	-2588.42618040000]
   initial_state_type: ECI
 
   # ground station (as ECEF, velocities assumed to be 0)
@@ -25,9 +25,9 @@ orbtial_parameters:
   
 
   # time step in seconds, MJD in days
-  time_step: 20
-  MJD_start: 55200.0 # 2010-JAN-04
-  MJD_end: 55200.1 #5.757212410879634e+4
+  time_step: 60
+  MJD_start:  57569.9998032407 # 2010-JAN-04
+  MJD_end:    57571.1241087963 #5.757212410879634e+4
 
 
 # optional, if not defined they will be set to default values

@@ -1,5 +1,5 @@
 
-path = './validate_data.csv';
+path = './orbDetHOUSE/out/tru_1.csv';
 genData = readmatrix(path);
 givenData = eph;
 length(genData);

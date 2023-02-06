@@ -27,7 +27,9 @@
 #include "timer.hpp"
 
 // atmospheric model header
-#include <nrlmsise-00.h>
+extern "C" {
+    #include <nrlmsise-00.h>
+}
 
 #define DEFAULT_CONFIG_FILENAME "config.yaml"
 #define JPL_EPHEMERIS_FILENAME "unxp2000.405"
