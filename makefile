@@ -2,18 +2,19 @@
 CC = g++
 
 OBJDIR = bin
+LOCAL_DIR = usr/local
 FILTER_DIR = filters
 ORBDET_DIR = orbitDetermination
 
 
 # ----- Don't modify below this point -----
 # for compiling house.a
-CPPFLAGS1 = -I./eigen -Wall -pedantic -g -O3 
-INCLUDE1 = -I./$(FILTER_DIR)
+CPPFLAGS1 = --std=c++11 -Wall -pedantic -g -O3 
+INCLUDE1 = -I/$(LOCAL_DIR)/include/eigen3/ -I/$(LOCAL_DIR)/boost_1_81_0 -I./$(FILTER_DIR)
 
 # for compiling orbit determination
-CPPFLAGS2 =  -Wall -pedantic -g -O3 
-INCLUDE2 = -w -I. -I./eigen -I./$(FILTER_DIR) -I./$(ORBDET_DIR) -I./$(ORBDET_DIR)/sofa \
+CPPFLAGS2 =  --std=c++11 -Wall -pedantic -g -O3 
+INCLUDE2 = -w -I. -I/$(LOCAL_DIR)/include/eigen3/ -I/$(LOCAL_DIR)/boost_1_81_0 -I./$(FILTER_DIR) -I./$(ORBDET_DIR) -I./$(ORBDET_DIR)/sofa \
 -I./$(ORBDET_DIR)/3rdparty -O3 -fmax-errors=5 -I./nrlmsise-00
 
 3rdparty = $(wildcard $(ORBDET_DIR)/3rdparty/*.cpp)
@@ -34,7 +35,7 @@ OBJECTS = $(ORBDET_OBJ) $(FILTER_OBJ) $(OBJDIR)/house.a $(OBJDIR)/nrlmsise-00.o 
 # ---------------------------------------
 filter_testing: filter_testing.cpp filter_testing.hpp $(ORBDET_OBJ) $(OBJDIR)/house.a \
 	$(OBJDIR)/nrlmsise-00.o $(OBJDIR)/nrlmsise-00_data.o 
-	$(CC) $(CPPFLAGS2) $(INCLUDE2) $(OBJECTS) $(3rdparty) $(sofa) filter_testing.cpp -o filter_testing.exe -lyaml-cpp 
+	$(CC) $(CPPFLAGS2) $(INCLUDE2) $(OBJECTS) $(3rdparty) $(sofa) filter_testing.cpp -o filter_testing -lyaml-cpp 
 	
 # compile orbit determination object files
 $(ORBDET_OBJ): $(OBJDIR)/%.o : $(ORBDET_DIR)/%.cpp

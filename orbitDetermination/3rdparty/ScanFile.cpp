@@ -133,7 +133,7 @@ int ScanFile(
         } else if( buf[0] == '*' ) {
             sscanf( buf+1, "%d %d %d %d %d %lf",
                 &year, &month, &day, &hour, &minute, &second );
-            double ep[6] = {year, month, day, hour, minute, second};    
+            double ep[6] = {1.0 * year, 1.0 * month, 1.0 * day, 1.0 * hour, 1.0 * minute};    
             epoch = ymdhms2jd(ep) - JD2MJD;
             // epoch = ymdmjd( year, month, day ) + hmsday( hour, minute, second );
 
