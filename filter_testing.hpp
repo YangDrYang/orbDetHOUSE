@@ -26,10 +26,6 @@
 #include "eigen_csv.hpp"
 #include "timer.hpp"
 
-// atmospheric model header
-extern "C" {
-    #include <nrlmsise-00.h>
-}
 
 #define DEFAULT_CONFIG_FILENAME "config.yaml"
 #define JPL_EPHEMERIS_FILENAME "unxp2000.405"
@@ -53,7 +49,7 @@ struct Filters {
 };
 
 // prototypes
-VectorXd orbitModel(double t, const VectorXd& X);
+VectorXd orbitModel(double t, const Eigen::VectorXd& X);
 void initEGMCoef(string filename);
 void initGlobalVariables(VectorXd& initialState, string stateType);
 Eigen::VectorXd stdVec2EigenVec(const std::vector<double>& stdVec);
