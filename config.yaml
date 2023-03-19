@@ -1,7 +1,7 @@
 # required
 filter_options:
   HOUSE: false
-  UKF: true
+  UKF: false
   CUT4: false
   CUT6: false
   num_trials: 1

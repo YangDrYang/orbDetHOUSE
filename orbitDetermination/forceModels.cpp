@@ -326,10 +326,16 @@ void Propagator::setPropOption(
 	propOpt.optEarthGravMdl.earthGravSTMDeg.mMax = forceMdl.egmSTMDeg;
 	propOpt.optEarthGravMdl.earthGravSTMDeg.nMax = forceMdl.egmSTMOrd;
 
+	// Solar radiation pressure Parameters
 	propOpt.paraSRP.srpMdlName = forceMdl.srpMdlName;
 	propOpt.paraSRP.satMass = forceMdl.satMass;
 	propOpt.paraSRP.srpArea = forceMdl.srpArea;
 	propOpt.paraSRP.srpCoef = forceMdl.srpCoef;
+
+	// Drag parameters
+	propOpt.paraDrag.satMass = forceMdl.satMass;
+	propOpt.paraDrag.dragArea = forceMdl.dragArea;
+	propOpt.paraDrag.dragCoef = forceMdl.dragCoef;
 }
 
 /* initialise the propagator with time, state and necessary parameters
@@ -412,6 +418,11 @@ Vector3d Propagator::calculateAcceleration(
 	const Matrix3d &mECI2ECEF) ///< Transformation matrix from ECI coordinate to ECEF
 {
 	Vector3d acc = Vector3d::Zero();
+
+	// Calculate drag
+	acc += calculateDragForce(rSat, vSat, *mIERS, 
+			propOpt.paraDrag.dragArea, propOpt.paraDrag.dragCoef, orbitProp.mMJDUTC) / propOpt.paraDrag.satMass;
+
 
 	/*calculate acceleration components
 	 */

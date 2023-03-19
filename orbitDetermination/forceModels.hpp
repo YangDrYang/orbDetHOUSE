@@ -11,6 +11,8 @@ using std::map;
 #include "jplEph.hpp"
 #include "common.hpp"
 #include "config.hpp"
+#include "atmosphereModel.hpp"
+
 
 Vector3d calculateAcceleration(
 	double mjdTT,
@@ -84,6 +86,13 @@ struct SRPPara
 	E_SRPModels srpMdlName = E_SRPModels::CANNONBALL;
 };
 
+struct DragPara
+{
+	double satMass = 0;
+	double dragArea = 0;
+	double dragCoef = 0;
+};
+
 /*
  * Class type: The class of solar radiation pressure
  */
@@ -132,6 +141,8 @@ struct PropOpt
 	bool flagAntennaThrust;
 	bool flagEmpiricalAcceleration;
 	bool flagSatelliteManoeuvre;
+	DragPara paraDrag;
+
 	string odeInteg; ///< Integrator
 };
 
