@@ -9,7 +9,6 @@ static long ymd_to_mjd (int year, int month, int day);
 static void mjd_to_ymd (long mjd, int *year, int *month, int *day);
 static std::vector<double> cartesianGeodetic(Eigen::VectorXd Xeci, double t, IERS iersInstance);
 
-
 void eci2ecefVec_sofa(
 	const double	mjdUTC,
 	IERS&			iersIns,

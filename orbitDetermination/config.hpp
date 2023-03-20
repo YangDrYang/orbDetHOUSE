@@ -51,6 +51,8 @@ struct ForceModels
     E_SRPModels srpMdlName = E_SRPModels::CANNONBALL;
     double srpArea = 5;
     double srpCoef = 1;
+    double dragArea = 5;
+    double dragCoef = 0.4;
     int egmAccDeg = GRAVITY_DEG_N;
     int egmAccOrd = GRAVITY_DEG_M;
     int egmSTMDeg = GRAVITY_DEG_N;

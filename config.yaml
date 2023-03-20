@@ -25,9 +25,9 @@ orbtial_parameters:
   
 
   # time step in seconds, MJD in days
-  time_step: 60
-  MJD_start:  57569.9998032407 # 2010-JAN-04
-  MJD_end:    57571.1241087963 #5.757212410879634e+4
+  time_step: 120
+  MJD_start:  57569 # 2010-JAN-04
+  MJD_end:    57579.25 #5.757212410879634e+4
 
 
 # optional, if not defined they will be set to default values

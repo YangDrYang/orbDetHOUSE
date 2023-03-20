@@ -6,7 +6,7 @@
  */
 
 #include <stdio.h>
-#include <sys/malloc.h>
+// #include <sys/malloc.h>
 #include <math.h>
 
 void polint( double *xa, double *ya, int n, double x, double *y, double *dy );

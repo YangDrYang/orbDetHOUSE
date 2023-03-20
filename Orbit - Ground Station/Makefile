@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS = -w -I.. -I./../eigen -I./../orbitDetermination -I./../orbitDetermination/sofa -I./../orbitDetermination/3rdparty  -I./../yaml-cpp/include -O3 -fmax-errors=5
+CFLAGS = -w -I.. -I./../filters -I./../eigen -I./../orbitDetermination -I./../orbitDetermination/sofa -I./../orbitDetermination/3rdparty  -I./../yaml-cpp/include -O3 -fmax-errors=5
 
 # source is orbitDetermination folder
 SRCDIR = ./../orbitDetermination
@@ -13,7 +13,7 @@ sofa = $(wildcard ../orbitDetermination/sofa/*.cpp)
 
 # link object files
 orbit: $(objects)
-	$(CC) $(CFLAGS) $(3rdparty) $(sofa) $(wildcard *.o) orbit.cpp -o orbit.exe ../house.a -g
+	$(CC) $(CFLAGS) $(3rdparty) $(sofa) $(wildcard *.o) orbit.cpp -o orbit.exe ./bin/house.a -g
 
 validateModel: $(objects)
 	$(CC) $(CFLAGS) $(3rdparty) $(sofa) $(objects) validateModel.cpp -o validateModel.exe ../house.a -g
