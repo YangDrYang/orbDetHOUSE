@@ -14,12 +14,13 @@ ForceModels forceModelsOpt = {};
 EGMCoef egm;
 void *pJPLEph;
 Propagator orbitProp;
-struct EpochInfo epoch; 
+struct EpochInfo epoch;
 
 using namespace Eigen;
 using namespace std;
 
-VectorXd simpleAccerationModel(double t, const VectorXd& X, const VectorXd& fd) {
+VectorXd simpleAccerationModel(double t, const VectorXd &X, const VectorXd &fd)
+{
     VectorXd Xf(6);
     Vector3d r, v, a;
     r = X.head(3);
@@ -33,13 +34,14 @@ VectorXd simpleAccerationModel(double t, const VectorXd& X, const VectorXd& fd) 
     return Xf;
 }
 
-VectorXd accelerationModel(double t, const VectorXd& X, const VectorXd& fd) {
+VectorXd accelerationModel(double t, const VectorXd &X, const VectorXd &fd)
+{
     VectorXd Xf(6);
     Vector3d r;
     Vector3d v;
     VectorXd rvECI(6);
     rvECI = X;
-    
+
     Matrix3d mECI2ECEF = Matrix3d::Identity();
     Matrix3d mdECI2ECEF = Matrix3d::Identity();
 
@@ -53,12 +55,13 @@ VectorXd accelerationModel(double t, const VectorXd& X, const VectorXd& fd) {
 
     // set state vector
     Xf.head(3) = X.tail(3);
-    Xf.tail(3) = acceleration;// + dragAcceleration;
+    Xf.tail(3) = acceleration; // + dragAcceleration;
 
     return Xf;
 }
 
-Vector2d simpleMeasurementModel(double t, const VectorXd& X){
+Vector2d simpleMeasurementModel(double t, const VectorXd &X)
+{
     Vector2d z;
     Vector3d p;
     VectorXd rsECEF(6); // = VectorXd::Zero(6);
@@ -71,24 +74,27 @@ Vector2d simpleMeasurementModel(double t, const VectorXd& X){
     // end transformation code
     p = X.head(3) - rsECI.head(3);
 
-    if (p.dot(rsECI.head(3)) >= 0){
+    if (p.dot(rsECI.head(3)) >= 0)
+    {
         // range
         // azimuth angle
         z(0) = atan2(p(1), p(0));
         // elevation angle
-        z(1) = asin(p(2)/p.norm());
+        z(1) = asin(p(2) / p.norm());
     }
     // not visible
-    else {
+    else
+    {
         z(0) = NO_MEASUREMENT;
         z(1) = NO_MEASUREMENT;
     }
     return z;
 }
 
-Vector4d measurementModel(double t, const VectorXd& X){
+Vector4d measurementModel(double t, const VectorXd &X)
+{
     Vector4d z;
-    Vector3d p, r, v; 
+    Vector3d p, r, v;
     VectorXd rsECEF(6); // = VectorXd::Zero(6);
     VectorXd rsECI = VectorXd::Zero(6);
 
@@ -99,18 +105,20 @@ Vector4d measurementModel(double t, const VectorXd& X){
     // end transformation code
     p = X.head(3) - rsECI.head(3);
     v = X.tail(3) - rsECI.tail(3);
-    if (p.dot(rsECI.head(3)) >= 0){
+    if (p.dot(rsECI.head(3)) >= 0)
+    {
         // azimuth angle
         z(0) = atan2(p(1), p(0));
         // elevation angle
-        z(1) = asin(p(2)/p.norm());
+        z(1) = asin(p(2) / p.norm());
         // range
         z(2) = p.norm();
         // range rate
         z(3) = p.dot(v) / p.norm();
     }
     // not visible
-    else {
+    else
+    {
         z(0) = NO_MEASUREMENT;
         z(1) = NO_MEASUREMENT;
         z(2) = NO_MEASUREMENT;
@@ -119,17 +127,19 @@ Vector4d measurementModel(double t, const VectorXd& X){
     return z;
 }
 
-int main(int argc, char *argv[]){    
+int main(int argc, char *argv[])
+{
     string configFilename;
     // input config .yaml file
-    switch (argc) {
-    case 1:     // Read default file
+    switch (argc)
+    {
+    case 1: // Read default file
         configFilename = DEFAULT_CONFIG_FILENAME;
         break;
-    case 2:     // Read supplied file
+    case 2: // Read supplied file
         configFilename = argv[1];
         break;
-    default:    // wrong number of args
+    default: // wrong number of args
         cerr << "Accepts up to 1 argument (.yaml input file).\nIf no argument given, the default config file will be read (config.yaml)" << endl;
         exit(1);
         break;
@@ -157,10 +167,11 @@ int main(int argc, char *argv[]){
     UKF::meas_model h = measurementModel;
 
     // HOUSE measurement model
-    HOUSE::meas_model hh = [] (double t, const VectorXd& x, const VectorXd& n)
-        -> VectorXd {
-            return measurementModel(t, x) + n;
-        };
+    HOUSE::meas_model hh = [](double t, const VectorXd &x, const VectorXd &n)
+        -> VectorXd
+    {
+        return measurementModel(t, x) + n;
+    };
 
     // Constants
     // double sr, sth, l1, l2;
@@ -176,22 +187,22 @@ int main(int argc, char *argv[]){
     //      0, 0, pow(errorStd.elevationErr, 2);
 
     Matrix4d R;
-    R << pow(errorStd.azimuthErr  * ARC_SEC, 2), 0, 0, 0,
-        0, pow(errorStd.azimuthErr  * ARC_SEC, 2), 0, 0,
+    R << pow(errorStd.azimuthErr * ARC_SEC, 2), 0, 0, 0,
+        0, pow(errorStd.azimuthErr * ARC_SEC, 2), 0, 0,
         0, 0, pow(errorStd.rangeErr, 2), 0,
         0, 0, 0, pow(errorStd.rangeRateErr, 2);
 
     // Prior mean & covariance
     VectorXd mxi(6), cxx(6);
     cxx << 1, 1, 1, 1e-5, 1e-5, 1e-5; // prior state standard deviation
-    mxi = initialState; // prior state mean
-    MatrixXd Pxxi(6,6);
-    Pxxi << 1.481e2,    0,        0,         0,         -9.237e-2, -5.333e-2,
-            0,          2.885e1,  9.994,     -3.121e-2, 0,         0,
-            0,          9.994,    5.770,     -1.242,    0,         0,
-            0,         -3.121e-2, -1.242e-2, 3.687e-5,  0,         0,
-            -9.237e-3,  0,        0,         0,         6.798e-5,  3.145e-5,
-            -5333e-3,   0,        0,         0,         3.145e-5,  3.166e-5;
+    mxi = initialState;               // prior state mean
+    MatrixXd Pxxi(6, 6);
+    Pxxi << 1.481e2, 0, 0, 0, -9.237e-2, -5.333e-2,
+        0, 2.885e1, 9.994, -3.121e-2, 0, 0,
+        0, 9.994, 5.770, -1.242, 0, 0,
+        0, -3.121e-2, -1.242e-2, 3.687e-5, 0, 0,
+        -9.237e-3, 0, 0, 0, 6.798e-5, 3.145e-5,
+        -5333e-3, 0, 0, 0, 3.145e-5, 3.166e-5;
     Pxxi *= 1e6;
 
     // Pxxi = MatrixXd::Identity(6,6) * cxx;
@@ -205,17 +216,17 @@ int main(int argc, char *argv[]){
     vector<string> header({"t", "x", "y", "z", "vx", "vy", "vz"});
     MatrixXd run_times(numTrials, 5);
 
-
-    MatrixXd Q = MatrixXd::Zero(6,6);
+    MatrixXd Q = MatrixXd::Zero(6, 6);
     // rx, ry, rz, vx, vy, vz
-    for (int i = 0; i < 6; i++){
-        Q(i,i) = 1e-9;
+    for (int i = 0; i < 6; i++)
+    {
+        Q(i, i) = 1e-9;
     }
 
     HOUSE::Dist distw(Q);
 
     // Initialize UKF & CUT filters
-    UKF ukf (f, h, true, 0, mxi, Pxxi, Q, R, UKF::sig_type::JU,   1);
+    UKF ukf(f, h, true, 0, mxi, Pxxi, Q, R, UKF::sig_type::JU, 1);
     UKF cut4(f, h, true, 0, mxi, Pxxi, Q, R, UKF::sig_type::CUT4, 1);
     UKF cut6(f, h, true, 0, mxi, Pxxi, Q, R, UKF::sig_type::CUT6, 1);
     UKF cut8(f, h, true, 0, mxi, Pxxi, Q, R, UKF::sig_type::CUT8, 1);
@@ -225,7 +236,8 @@ int main(int argc, char *argv[]){
 
     Timer timer;
     // perform trials
-    for (int j = 1; j <= numTrials; j++) {
+    for (int j = 1; j <= numTrials; j++)
+    {
         cout << "Trial " << j << endl;
         house.reset(0, distXi);
         ukf.reset(0, initialState, Pxxi);
@@ -240,27 +252,29 @@ int main(int argc, char *argv[]){
         orbitProp.initPropagator(initialState, rvPhiS, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
 
         VectorXd X = initialState;
-        double time = 0, dt = epoch.timeStep;        
+        double time = 0, dt = epoch.timeStep;
         trueData.push_back(X);
         timer.tick();
-        while (time < (epoch.endMJD - epoch.startMJD) * 86400) {
+        while (time < (epoch.endMJD - epoch.startMJD) * 86400)
+        {
             Vector3d fd;
             fd << 0, 0, 0;
             X = f(time, time + epoch.timeStep, X, fd);
-            time += epoch.timeStep;         
+            time += epoch.timeStep;
             trueData.push_back(X);
-        } 
-        run_times(j-1, 0) = timer.tock();
+        }
+        run_times(j - 1, 0) = timer.tock();
 
         int steps = trueData.size();
         // linear spaced times
         VectorXd t;
-        t.setLinSpaced(steps, 0, (steps - 1)*dt);
+        t.setLinSpaced(steps, 0, (steps - 1) * dt);
 
         // Save true vectors
         MatrixXd tableTrue(steps, 7);
         tableTrue.col(0) = t;
-        for (int k = 0; k < steps; k++){
+        for (int k = 0; k < steps; k++)
+        {
             tableTrue.row(k).tail(6) = trueData[k];
         };
         string xtrufile = "out/tru_";
@@ -274,27 +288,29 @@ int main(int argc, char *argv[]){
         MatrixXd tableMeasure(steps, nMeasure + 1);
         int numMeasure = 0;
         MatrixXd Ztru(nMeasure, steps);
-        
+
         // for each time step
-        for (int k = 0; k < steps; k++) {
-            // planar condition for visibility 
+        for (int k = 0; k < steps; k++)
+        {
+            // planar condition for visibility
             // generate true measurement
             Ztru.col(k) = h(t(k), trueData[k]);
 
             // if !NO_MEASUREMENT
-            if (Ztru(0, k) != NO_MEASUREMENT){
+            if (Ztru(0, k) != NO_MEASUREMENT)
+            {
                 // corrupt measurement with noise
                 // Ztru(0,k) += errorStd.rangeErr * nd(mt);
-                Ztru(0,k) += errorStd.azimuthErr * ARC_SEC * nd(mt);
-                Ztru(1,k) += errorStd.elevationErr * ARC_SEC * nd(mt);
-                Ztru(2,k) += errorStd.rangeErr * nd(mt);
-                Ztru(3,k) += errorStd.rangeRateErr * nd(mt);
+                Ztru(0, k) += errorStd.azimuthErr * ARC_SEC * nd(mt);
+                Ztru(1, k) += errorStd.elevationErr * ARC_SEC * nd(mt);
+                Ztru(2, k) += errorStd.rangeErr * nd(mt);
+                Ztru(3, k) += errorStd.rangeRateErr * nd(mt);
                 // store corrupted measurement & time
                 tableMeasure(numMeasure, 0) = t(k);
-                tableMeasure(numMeasure, 1) = Ztru(0,k);
-                tableMeasure(numMeasure, 2) = Ztru(1,k);
-                tableMeasure(numMeasure, 3) = Ztru(2,k);
-                tableMeasure(numMeasure, 4) = Ztru(3,k);
+                tableMeasure(numMeasure, 1) = Ztru(0, k);
+                tableMeasure(numMeasure, 2) = Ztru(1, k);
+                tableMeasure(numMeasure, 3) = Ztru(2, k);
+                tableMeasure(numMeasure, 4) = Ztru(3, k);
                 // tableMeasure(numMeasure, 3) = Ztru(2,k);
 
                 numMeasure++;
@@ -307,28 +323,29 @@ int main(int argc, char *argv[]){
         EigenCSV::write(tableMeasure.topRows(numMeasure), headerMeasure, xmeasurefile);
 
         string outputFile;
-        if (filters.house){
+        if (filters.house)
+        {
             cout << "\tHOUSE" << '\n';
             orbitProp.initPropagator(initialState, rvPhiS, epoch.startMJD, leapSec, &erpt, egm, pJPLEph); // reset propagator
             timer.tick();
             house.run(t, Ztru);
-            run_times(j-1, 1) = timer.tock();
+            run_times(j - 1, 1) = timer.tock();
 
             outputFile = "out";
             outputFile += "/house_";
             outputFile += to_string(j);
             outputFile += ".csv";
             house.save(outputFile);
-
         }
 
         // UKF Filter
-        if (filters.ukf){
+        if (filters.ukf)
+        {
             cout << "\tUKF" << '\n';
             orbitProp.initPropagator(initialState, rvPhiS, epoch.startMJD, leapSec, &erpt, egm, pJPLEph); // reset propagator
             timer.tick();
             ukf.run(t, Ztru);
-            run_times(j-1, 2) = timer.tock();
+            run_times(j - 1, 2) = timer.tock();
 
             outputFile = "out";
             outputFile += "/ukf_";
@@ -338,12 +355,13 @@ int main(int argc, char *argv[]){
         }
 
         // CUT-4 Filter
-        if (filters.cut4){
+        if (filters.cut4)
+        {
             cout << "\tCUT-4" << '\n';
             orbitProp.initPropagator(initialState, rvPhiS, epoch.startMJD, leapSec, &erpt, egm, pJPLEph); // reset propagator
             timer.tick();
             cut4.run(t, Ztru);
-            run_times(j-1, 3) = timer.tock();
+            run_times(j - 1, 3) = timer.tock();
 
             outputFile = "out";
             outputFile += "/cut4_";
@@ -353,12 +371,13 @@ int main(int argc, char *argv[]){
         }
 
         // Cut-6 Filter
-        if (filters.cut6){
+        if (filters.cut6)
+        {
             cout << "\tCUT-6" << '\n';
             orbitProp.initPropagator(initialState, rvPhiS, epoch.startMJD, leapSec, &erpt, egm, pJPLEph); // reset propagator
             timer.tick();
             cut6.run(t, Ztru);
-            run_times(j-1, 4) = timer.tock();
+            run_times(j - 1, 4) = timer.tock();
 
             outputFile = "out";
             outputFile += "/cut6_";
@@ -380,12 +399,10 @@ int main(int argc, char *argv[]){
     time_file += ".csv";
 
     EigenCSV::write(run_times, filterStrings, time_file);
-    
 }
 
-
-
-Eigen::MatrixXd generateTrueResults(DynamicModel& f, struct EpochInfo epoch, VectorXd initialState){
+Eigen::MatrixXd generateTrueResults(DynamicModel &f, struct EpochInfo epoch, VectorXd initialState)
+{
     // create results matrix
     int length = floor((epoch.endMJD - epoch.startMJD) / (epoch.timeStep / 86400.0)) + 1;
     MatrixXd results(length, 7);
@@ -401,24 +418,25 @@ Eigen::MatrixXd generateTrueResults(DynamicModel& f, struct EpochInfo epoch, Vec
     result << time, X;
     results.row(0) = result;
     // TODO: remove variation is forces model (the w vector)
-    for (int i = 1; i < length; i++){
+    for (int i = 1; i < length; i++)
+    {
         X = f(time, time + step, X, W);
         time += step;
         result << time, X;
         results.row(i) = result;
-        
     }
 
     return results;
 }
 
-void readConfigFile(string fileName, ForceModels& options, struct EpochInfo& epoch, Eigen::VectorXd& initialState,
-                    Eigen::VectorXd& groundStation, struct Filters& filters, int& numTrials, struct Errors& errorStd,
-                    string& iniatialStateType){
+void readConfigFile(string fileName, ForceModels &options, struct EpochInfo &epoch, Eigen::VectorXd &initialState,
+                    Eigen::VectorXd &groundStation, struct Filters &filters, int &numTrials, struct Errors &errorStd,
+                    string &iniatialStateType)
+{
     // load file
     YAML::Node config = YAML::LoadFile(fileName);
     YAML::Node parameter;
-    
+
     // read filter options (required)
     YAML::Node filterOpts = config["filter_options"];
     filters.house = filterOpts["HOUSE"].as<bool>();
@@ -445,7 +463,6 @@ void readConfigFile(string fileName, ForceModels& options, struct EpochInfo& epo
     initialState = stdVec2EigenVec(tempVec);
     tempVec = orbitParams["ground_station"].as<std::vector<double>>();
     groundStation = stdVec2EigenVec(tempVec);
-
 
     // read propagator settings (optional)
     YAML::Node propSettings = config["propagator_settings"];
@@ -485,12 +502,10 @@ void readConfigFile(string fileName, ForceModels& options, struct EpochInfo& epo
         options.srpArea = parameter.as<double>();
     if (parameter = propSettings["srpCoef"])
         options.srpCoef = parameter.as<double>();
-
-
-
 }
 
-Eigen::VectorXd stdVec2EigenVec(const std::vector<double>& stdVec){
+Eigen::VectorXd stdVec2EigenVec(const std::vector<double> &stdVec)
+{
     Eigen::VectorXd eigenVec(stdVec.size());
     for (int i = 0; i < 6; i++)
     {
@@ -499,37 +514,38 @@ Eigen::VectorXd stdVec2EigenVec(const std::vector<double>& stdVec){
     return eigenVec;
 }
 
-void initEGMCoef(string filename){
+void initEGMCoef(string filename)
+{
     ifstream file(filename);
     string line;
     int n, m;
     double cmn, smn;
-    
 
-    while(getline(file, line)){
+    while (getline(file, line))
+    {
         // line structure:
-        // m        n       Cnm     Snm     0      0 
+        // m        n       Cnm     Snm     0      0
         istringstream buffer(line);
         buffer >> m >> n >> cmn >> smn;
 
         // gravity model degree
-        if (m < GRAVITY_DEG_M && n < GRAVITY_DEG_M){
+        if (m < GRAVITY_DEG_M && n < GRAVITY_DEG_M)
+        {
             egm.cmn(m, n) = cmn;
             egm.smn(m, n) = smn;
-        }     
+        }
     }
-
-
 }
 
-void initGlobalVariables(VectorXd& initialState, string stateType) {
-// START MOD
+void initGlobalVariables(VectorXd &initialState, string stateType)
+{
+    // START MOD
     initEGMCoef("GGM03S.txt");
     erpt = {.n = 14};
 
-    readerp("cof19037.erp", &erpt);
+    readerp("cod15657.erp", &erpt);
 
-    // transform ground station from 
+    // transform ground station from
     leapSec = 0;
 
     double erpv[0] = {};
@@ -540,35 +556,37 @@ void initGlobalVariables(VectorXd& initialState, string stateType) {
     double xp = erpv[0];
     double yp = erpv[1];
     double lod = erpv[3];
-    
+
     iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
     // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
 
     pJPLEph = jpl_init_ephemeris(JPL_EPHEMERIS_FILENAME, nullptr, nullptr);
-    
+
     VectorXd rvECI = VectorXd::Zero(6);
     string ecefTag = "ECEF";
-    if (stateType == ecefTag){
+    if (stateType == ecefTag)
+    {
         cout << "Converted state from ECEF to ECI\n";
         VectorXd rvECI = VectorXd::Zero(6);
         ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialState, rvECI);
         initialState = rvECI;
     }
-    else{
+    else
+    {
         rvECI = initialState;
     }
 
     // END MOD
     int nState = 6;
-	int nVar = 7; // 6 state variables and one orbital parameter Cr
-	rvPhiS = VectorXd::Zero(nState + nState * nVar);
-	// Create combined vector from epoch state, epoch transition matrix (=1) and epoch sensitivity matrix (=0)
-	for (int i = 0; i < nState; i++)
-	{
-		rvPhiS(i) = rvECI(i);
-		for (int j = 0; j < nVar; j++)
-		{
-			rvPhiS(nState * (j + 1) + i) = (i == j ? 1 : 0);
-		}
-	}
+    int nVar = 7; // 6 state variables and one orbital parameter Cr
+    rvPhiS = VectorXd::Zero(nState + nState * nVar);
+    // Create combined vector from epoch state, epoch transition matrix (=1) and epoch sensitivity matrix (=0)
+    for (int i = 0; i < nState; i++)
+    {
+        rvPhiS(i) = rvECI(i);
+        for (int j = 0; j < nVar; j++)
+        {
+            rvPhiS(nState * (j + 1) + i) = (i == j ? 1 : 0);
+        }
+    }
 }

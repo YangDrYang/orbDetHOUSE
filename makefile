@@ -1,74 +1,74 @@
 # compiler
 CC = g++
 
+# create directories
+$(shell mkdir -p bin/orbmdl)
+$(shell mkdir -p bin/orbmdl/3rdparty)
+$(shell mkdir -p bin/orbmdl/sofa)
+$(shell mkdir -p bin/orbmdl/nrlmsise-00)
+$(shell mkdir -p bin/filter)
+
 OBJDIR = bin
-FILTER_DIR = filters
-ORBDET_DIR = orbitDetermination
+LOCAL_DIR = usr/local
 
+# for compiling orbmdl and filter
+CPPFLAGS = --std=c++11 -Wall -pedantic -g -O3 
+INCLUDE = -I/$(LOCAL_DIR)/include/eigen3/ -I/$(LOCAL_DIR)/boost_1_81_0 -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
 
-# ----- Don't modify below this point -----
-# for compiling house.a
-CPPFLAGS1 = -I./eigen -Wall -pedantic -g -O3 
-INCLUDE1 = -I./$(FILTER_DIR)
+# orbmdl files
+ORBMDL_SRC = $(wildcard orbmdl/*.cpp) $(wildcard orbmdl/3rdparty/*.cpp) $(wildcard orbmdl/sofa/*.cpp)
+ORBMDL_OBJ = $(ORBMDL_SRC:orbmdl/%.cpp=$(OBJDIR)/orbmdl/%.o)
+ORBMDL_AR = $(OBJDIR)/orbmdl/liborbmdl.a
+# NRLMSISE00 (DRAG DENSITY MODEL) files
+NRLMSISE00_SRC = $(wildcard orbmdl/nrlmsise-00/*.c)
+NRLMSISE00_OBJ = $(NRLMSISE00_SRC:orbmdl/nrlmsise-00/%.c=$(OBJDIR)/orbmdl/nrlmsise-00/%.o)
+#gcc -c -o bin/orbmdl/nrlmsise-00/nrlmsise-00.o orbmdl/nrlmsise-00/nrlmsise-00.c -I./orbmdl/nrlmsise-00/
 
-# for compiling orbit determination
-CPPFLAGS2 =  -Wall -pedantic -g -O3 
-INCLUDE2 = -w -I. -I./eigen -I./$(FILTER_DIR) -I./$(ORBDET_DIR) -I./$(ORBDET_DIR)/sofa \
--I./$(ORBDET_DIR)/3rdparty -O3 -fmax-errors=5
-# -I./nrlmsise-00
+# filter files
+FILTER_SRC = $(wildcard filter/*.cpp)
+FILTER_OBJ = $(FILTER_SRC:filter/%.cpp=$(OBJDIR)/filter/%.o)
+FILTER_AR = $(OBJDIR)/filter/libfilter.a
 
-3rdparty = $(wildcard $(ORBDET_DIR)/3rdparty/*.cpp)
-sofa = $(wildcard $(ORBDET_DIR)/sofa/*.cpp)
+# ORBDET files
+ORBDET_SRC = testOrbDet.cpp
+ORBDET_OBJ = $(ORBDET_SRC:%.cpp=$(OBJDIR)/%.o)
 
+OBJECTS = $(ORBMDL_AR) $(FILTER_AR)
 
-FILTER_SRC = $(wildcard $(FILTER_DIR)/*.cpp)
-FILTER_OBJ = $(FILTER_SRC:$(FILTER_DIR)/%.cpp=$(OBJDIR)/%.o)
+# ----- COMPILE ORBDET -----
+testOrbDet: $(ORBDET_OBJ) $(OBJECTS)
+	$(CC) $(CPPFLAGS) $(INCLUDE) $(OBJECTS) $(ORBDET_OBJ) -L$(OBJDIR)/orbmdl -lorbmdl -L$(OBJDIR)/filter -lfilter -lyaml-cpp -o testOrbDet
 
-# only required files, so manually including them
-ORBDET_SRC_FILES = constants.cpp coordTrans.cpp satRefSys.cpp jplEph.cpp gravity.cpp forceModels.cpp auxillaryData.cpp atmosphereModel.cpp
-ORBDET_SRC = $(addprefix $(ORBDET_DIR)/,$(ORBDET_SRC_FILES))
-ORBDET_OBJ = $(ORBDET_SRC:$(ORBDET_DIR)/%.cpp=$(OBJDIR)/%.o)
+# compile ORBDET object file
+$(ORBDET_OBJ): $(OBJDIR)/%.o : %.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE) -c $< -o $@ 
 
-OBJECTS = $(ORBDET_OBJ) $(FILTER_OBJ) $(OBJDIR)/house.a $(OBJDIR)/nrlmsise-00.o $(OBJDIR)/nrlmsise-00_data.o
-# ---------------------------------------
-# ----- COMPILE ORBIT DETERMINTAION -----
-# ---------------------------------------
-filter_testing: filter_testing.cpp filter_testing.hpp $(ORBDET_OBJ) $(OBJDIR)/house.a \
-	$(OBJDIR)/nrlmsise-00.o $(OBJDIR)/nrlmsise-00_data.o 
-	$(CC) $(CPPFLAGS2) $(INCLUDE2) $(OBJECTS) $(3rdparty) $(sofa) filter_testing.cpp -o filter_testing.exe -lyaml-cpp 
-	
-# compile orbit determination object files
-$(ORBDET_OBJ): $(OBJDIR)/%.o : $(ORBDET_DIR)/%.cpp
-	$(CC) $(CPPFLAGS2) $(INCLUDE2) -c $< -o $@ 
+# ----- COMPILE orbmdl -----
+# compile orbmdl object files
+$(ORBMDL_OBJ): $(OBJDIR)/orbmdl/%.o : orbmdl/%.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE) -c $< -o $@	
 
-# --------------------------------------------------	
-# ----- COMPILE NRLMSISE-00 (atmosphere model) -----
-# --------------------------------------------------
+# gcc -c -o bin/orbmdl/nrlmsise-00/nrlmsise-00.o orbmdl/nrlmsise-00/nrlmsise-00.c -I./orbmdl/nrlmsise-00/
+# # ----- COMPILE NRLMSISE-00 -----
+# # compile NRLMSISE-00 object files
+# $(NRLMSISE00_OBJ): $(OBJDIR)/nrlmsise-00/%.o : orbmdl/nrlmsise-00/%.c
+# 	gcc $(INCLUDE) -c $< -o $@
 
-$(OBJDIR)/nrlmsise-00.o: $(ORBDET_DIR)/nrlmsise-00.c $(ORBDET_DIR)/nrlmsise-00.h
-	gcc $(ORBDET_DIR)/nrlmsise-00.c -c -o $(OBJDIR)/nrlmsise-00.o
+# create orbmdl library
+$(ORBMDL_AR): $(ORBMDL_OBJ)
+	ar rcs $(ORBMDL_AR) $(ORBMDL_OBJ)
 
-$(OBJDIR)/nrlmsise-00_data.o: $(ORBDET_DIR)/nrlmsise-00_data.c $(ORBDET_DIR)/nrlmsise-00.h
-	gcc $(ORBDET_DIR)/nrlmsise-00_data.c -c -o $(OBJDIR)/nrlmsise-00_data.o
-
-# $(OBJDIR)/atmosphereModel.o: $(ORBDET_DIR)/atmosphereModel.cpp $(OBJDIR)/nrlmsise-00.o $(OBJDIR)/nrlmsise-00_data.o
-# 	$(CC) $(CPPFLAGS2) $(INCLUDE2) $(sofa) $(ORBDET_DIR)/atmosphereModel.cpp -c -o $(OBJDIR)/atmosphereModel.o 
-
-# ---------------------------	
-# ----- COMPILE FILTERS -----
-# ---------------------------	
-
-# linking filters
-$(OBJDIR)/house.a: $(FILTER_OBJ)
-	ar rcs $(OBJDIR)/house.a $(FILTER_OBJ)
+# ----- COMPILE filter -----
+# create filter library
+$(FILTER_AR): $(FILTER_OBJ)
+	ar rcs $(FILTER_AR) $(FILTER_OBJ)
 
 # compile filter object files
-$(FILTER_OBJ): $(OBJDIR)/%.o : $(FILTER_DIR)/%.cpp
-	$(CC) $(CPPFLAGS1) $(INCLUDE1) -c $< -o $@ 
-
-
+$(FILTER_OBJ): $(OBJDIR)/filter/%.o : filter/%.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE) -c $< -o $@ 
 
 # ----- CLEAN -----
 .PHONY: clean
 clean:
-	rm -f $(OBJDIR)/*.o $(OBJDIR)/*.a *.exe
+	# rm -f $(OBJDIR)/*.o $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(OBJDIR)/orbmdl/nrlmsise-00/*.o $(ORBMDL_AR) $(OBJDIR)/filter/*.o $(FILTER_AR) testOrbtProp
+	rm -f $(OBJDIR)/*.o $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(ORBMDL_AR) $(OBJDIR)/filter/*.o $(FILTER_AR) testOrbtProp
