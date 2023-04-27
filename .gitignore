@@ -37,3 +37,4 @@
 *.svg
 
 ./odvenv
+./.vscode
