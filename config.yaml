@@ -1,9 +1,9 @@
 # required
 filter_options:
-  HOUSE: false
+  HOUSE: true
   UKF: true
-  CUT4: false
-  CUT6: false
+  CUT4: true
+  CUT6: true
   num_trials: 100
 
 # requried

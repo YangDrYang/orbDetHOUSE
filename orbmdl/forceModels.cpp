@@ -1,13 +1,11 @@
 
-
-#include <boost/numeric/odeint.hpp> // odeint function definitions
-using namespace boost::numeric::odeint;
-
 #include "forceModels.hpp"
 #include "satRefSys.hpp"
 #include "constants.hpp"
 #include "jplEph.hpp"
 #include "enum.h"
+
+#include <iomanip>
 
 // check that this is correct
 #define PI2 M_PI * 2

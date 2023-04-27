@@ -15,18 +15,18 @@ folder_path = "out_/"
 fig_pos, ax_pos = plt.subplots()
 
 for filter_type in filters:
-    processing.process_each_filter(filter_type, folder_path)
+    processing.process_rmse_each_filter(filter_type, folder_path)
 
     # Read CSV file into a pandas dataframe
     df = pd.read_csv("plots/" + filter_type + "_trajectory_error.csv")
 
     # Plot the data on the axes
-    ax_pos.semilogy(df["time_lapse"], df["pos_err_rms"], label=filter_type)
+    ax_pos.semilogy(df["tSec"], df["pos_err_rms"], label=filter_type)
 
 # Add labels and title
 ax_pos.set_xlabel("time_lapse (s)")
 ax_pos.set_ylabel("position errors (m)")
-ax_pos.set_ylim([-1000, 5000])
+# ax_pos.set_ylim([-1000, 5000])
 ax_pos.set_title("logarithmic 3D position rmse")
 ax_pos.legend()
 fig_pos.savefig("plots/all_pos_rmse.pdf")
@@ -45,7 +45,7 @@ ax_pos.violinplot(pos_rmse, showmeans=False, showmedians=True)
 # Add labels and title
 ax_pos.set_xlabel("time_lapse (s)")
 ax_pos.set_ylabel("position errors (m)")
-ax_pos.set_ylim([-1000, 5000])
+# ax_pos.set_ylim([-1000, 5000])
 ax_pos.legend(title=filters, loc="upper right")
 ax_pos.set_title("distribution 3D position error")
 fig_pos.savefig("plots/all_pos_rmse_violin.pdf")
@@ -58,7 +58,7 @@ for filter_type in filters:
     df = pd.read_csv("plots/" + filter_type + "_trajectory_error.csv")
 
     # Plot the data on the axes
-    ax_vel.plot(df["time_lapse"], df["vel_err_rms"], label=filter_type)
+    ax_vel.plot(df["tSec"], df["vel_err_rms"], label=filter_type)
 
 # Add labels and title
 ax_vel.set_xlabel("time_lapse (s)")

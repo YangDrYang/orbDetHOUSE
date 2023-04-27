@@ -4,7 +4,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 
 # Read the CSV file into a Pandas DataFrame
-df = pd.read_csv("out_/trajectory_truth.csv")
+folder_path = "out_/"  # replace with the path to your folder
+df = pd.read_csv(folder_path + "trajectory_truth.csv")
 
 # Extract the x, y, and z columns from the DataFrame
 x = df["x"]
@@ -26,5 +27,7 @@ ax.set_title("3D Scatter Plot", fontsize=16)
 legend = ax.legend(title="Z Values", fontsize=12)
 legend.get_title().set_fontsize(12)
 
-# Show the plot
-plt.show()
+# # Show the plot
+# plt.show()
+
+fig.savefig("plots/traj_3d_truth.pdf")

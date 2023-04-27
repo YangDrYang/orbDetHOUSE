@@ -183,35 +183,34 @@ Vector4d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &s
     p = satECI.head(3) - stnECI.head(3);
     v = satECI.tail(3) - stnECI.tail(3);
 
-    if (p.dot(stnECI.head(3)) >= 0)
-    {
-        // azimuth angle
-        z(0) = atan2(p(1), p(0));
-        // elevation angle
-        z(1) = asin(p(2) / p.norm());
-        // range
-        z(2) = p.norm();
-        // range rate
-        z(3) = p.dot(v) / p.norm();
-    }
-    // not visible
-    else
-    {
-        z(0) = NO_MEASUREMENT;
-        z(1) = NO_MEASUREMENT;
-        z(2) = NO_MEASUREMENT;
-        z(3) = NO_MEASUREMENT;
-    }
+    // if (p.dot(stnECI.head(3)) >= 0)
+    // {
+    //     // azimuth angle
+    //     z(0) = atan2(p(1), p(0));
+    //     // elevation angle
+    //     z(1) = asin(p(2) / p.norm());
+    //     // range
+    //     z(2) = p.norm();
+    //     // range rate
+    //     z(3) = p.dot(v) / p.norm();
+    // }
+    // // not visible
+    // else
+    // {
+    //     z(0) = NO_MEASUREMENT;
+    //     z(1) = NO_MEASUREMENT;
+    //     z(2) = NO_MEASUREMENT;
+    //     z(3) = NO_MEASUREMENT;
+    // }
 
-    // // azimuth angle
-    // z(0) = atan2(p(1), p(0));
-    // // elevation angle
-    // z(1) = asin(p(2) / p.norm());
-    // // range
-    // z(2) = p.norm();
-    // // range rate
-    // z(3) = p.dot(v) / p.norm();
-
+    // azimuth angle
+    z(0) = atan2(p(1), p(0));
+    // elevation angle
+    z(1) = asin(p(2) / p.norm());
+    // range
+    z(2) = p.norm();
+    // range rate
+    z(3) = p.dot(v) / p.norm();
     return z;
 }
 

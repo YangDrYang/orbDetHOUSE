@@ -4,37 +4,40 @@
 #include <Eigen/Dense>
 #include <functional>
 
-class DynamicModel {
+using namespace std;
+using namespace Eigen;
 
-    public:
+class DynamicModel
+{
 
-        // State function type
-        typedef std::function<Eigen::VectorXd
-            (double, const Eigen::VectorXd&, const Eigen::VectorXd&)> stf;
+public:
+    // State function type
+    typedef function<VectorXd(double, const VectorXd &, const VectorXd &)> stf;
 
-        // State function: dx/dt = f(t,x,w)
-        const stf f;
+    // State function: dx/dt = f(t,x,w)
+    const stf f;
 
-        // State dimension
-        const int n;
+    // State dimension
+    const int n;
 
-        // Absolute & relative tolerance
-        const double abstol, reltol;
+    // Absolute & relative tolerance
+    const double abstol, reltol;
 
-        // Constructor
-        DynamicModel(const stf& f_, int n_,
-            double abstol_, double reltol_);
+    // Constructor
+    DynamicModel(const stf &f_, int n_,
+                 double abstol_, double reltol_);
 
-        // Propagate state from ti to tf with noise w
-        Eigen::VectorXd operator() (double ti, double tf,
-            const Eigen::VectorXd& xi, const Eigen::VectorXd& w);
+    // // define my ODE system
+    // void my_system(const state_type &x, state_type &dxdt, const double t);
 
-    private:
+    // Propagate state from ti to tf with noise w
+    VectorXd operator()(double ti, double tf,
+                        const VectorXd &xi, const VectorXd &w);
 
-        // Workspace
-        Eigen::VectorXd work;
-        int iwork[5];
-
+private:
+    // Workspace
+    VectorXd work;
+    int iwork[5];
 };
 
 #endif
