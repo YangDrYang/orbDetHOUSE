@@ -4,7 +4,7 @@ filter_options:
   UKF: false
   CUT4: false
   CUT6: false
-  num_trials: 100
+  num_trials: 10
 
 # requried
 simulation_parameters:

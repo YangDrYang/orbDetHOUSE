@@ -48,12 +48,24 @@ DynamicModel::DynamicModel(const stf &f_, int n_, double abstol_,
 VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, const VectorXd &w)
 {
 
-    // Error stepper, used to create the controlled stepper
-    typedef runge_kutta_fehlberg78<state_type> rkf78;
-    // Controlled stepper:
-    // it's built on an error stepper and allows us to have the output at each
-    // internally defined (refined) timestep, via integrate_adaptive call
-    typedef controlled_runge_kutta<rkf78> ctrl_rkck78;
+    // // Error stepper, used to create the controlled stepper
+    // typedef runge_kutta_fehlberg78<state_type> rkf78;
+    // // Controlled stepper:
+    // // it's built on an error stepper and allows us to have the output at each
+    // // internally defined (refined) timestep, via integrate_adaptive call
+    // typedef controlled_runge_kutta<rkf78> ctrl_rkck78;
+
+    // // Error stepper, used to create the controlled stepper
+    // typedef runge_kutta_cash_karp54<state_type> rkck54;
+
+    // // Controlled stepper:
+    // // it's built on an error stepper and allows us to have the output at each
+    // // internally defined (refined) timestep, via integrate_adaptive call
+    // typedef controlled_runge_kutta<rkck54> ctrl_rkck54;
+
+    // Define the error stepper
+    typedef runge_kutta_cash_karp54<state_type> error_stepper_rkck54;
+
     auto my_system = [&](const state_type &x, state_type &dxdt, const double t)
     {
         VectorXd ww = VectorXd::Zero(x.size());
@@ -61,9 +73,18 @@ VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, cons
         VectorXd dxdt0 = f(t, xx, ww);
         dxdt = *(new vector<double>(dxdt0.data(), dxdt0.data() + dxdt0.size()));
     };
+    // Observer, prints time and state when called (during integration)
+    auto my_observer = [&](const state_type &x, const double t)
+    {
+        cout << t << "   " << x[0] << "   " << x[1] << "   " << x[2] << "   " << x[3] << "   " << x[4] << "   " << x[5] << endl;
+    };
     double dt = tf - ti;
     state_type xd(xi.data(), xi.data() + xi.size());
-    integrate_adaptive(ctrl_rkck78(), my_system, xd, ti, tf, dt);
+    double rel_tol = 1e-6;
+    double abs_tol = 1e-6;
+    // integrate_adaptive(ctrl_rkck78(rel_tol, abs_tol), my_system, xd, ti, tf, dt, my_observer);
+    // integrate_adaptive(rkf78(), my_system, xd, ti, tf, dt, my_observer);
+    integrate_adaptive(make_controlled(abs_tol, rel_tol, error_stepper_rkck54()), my_system, xd, ti, tf, dt, my_observer);
     return VectorXd::Map(&xd[0], xd.size());
     // VectorXd x = xi;
     // if (tf > ti)
