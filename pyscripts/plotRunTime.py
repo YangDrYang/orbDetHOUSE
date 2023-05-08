@@ -16,6 +16,6 @@ fig, ax = plt.subplots(ncols=2, figsize=(10, 5))
 run_times = []
 for filter_type in filters:
     # Read CSV file into a pandas dataframe
-    df = pd.read_csv(folder_path + filter_type + "_run_times.csv")
+    df = pd.read_csv(folder_path + "run_times_" + filter_type + ".csv")
 
     run_times.append(df[filter_type])

@@ -817,28 +817,28 @@ int main(int argc, char *argv[])
     {
         // Save Filter run times
         vector<string> filterStrings({"house"});
-        string timeFile = simInfo.file.outDir + "/house_run_times.csv";
+        string timeFile = simInfo.file.outDir + "/run_times_house.csv";
         EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
     }
     if (filters.ukf)
     {
         // Save Filter run times
         vector<string> filterStrings({"ukf"});
-        string timeFile = simInfo.file.outDir + "/ukf_run_times.csv";
+        string timeFile = simInfo.file.outDir + "/run_times_ukf.csv";
         EigenCSV::write(runTimesMC.col(1), filterStrings, timeFile);
     }
     if (filters.cut4)
     {
         // Save Filter run times
         vector<string> filterStrings({"cut4"});
-        string timeFile = simInfo.file.outDir + "/cut4_run_times.csv";
+        string timeFile = simInfo.file.outDir + "/run_times_cut4.csv";
         EigenCSV::write(runTimesMC.col(2), filterStrings, timeFile);
     }
     if (filters.cut6)
     {
         // Save Filter run times
         vector<string> filterStrings({"cut6"});
-        string timeFile = simInfo.file.outDir + "/cut6_run_times.csv";
+        string timeFile = simInfo.file.outDir + "/run_times_cut6.csv";
         EigenCSV::write(runTimesMC.col(3), filterStrings, timeFile);
     }
 }
