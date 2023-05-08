@@ -81,12 +81,13 @@ def process_rmse_each_filter(filter_type, folder_path):
 
     # print all NaN files
     print(nan_file_names)
-    # print all large value files
-    print(large_value_file_names)
+    # # print all large value files
+    # print(large_value_file_names)
     # average of all trials
-    df = df.div(
-        len(trial_file_names) - len(nan_file_names) - len(large_value_file_names)
-    )
+    # df = df.div(
+    #     len(trial_file_names) - len(nan_file_names) - len(large_value_file_names)
+    # )
+    df = df.div(len(trial_file_names) - len(nan_file_names))
 
     df["tSec"] = truth_df["tSec"]
     # df["time_lapse"] = truth_df["t"]
@@ -144,7 +145,7 @@ def process_err_each_filter(filter_type, folder_path):
     nan_file_names = []
 
     # Create the plot
-    fig, ax = plt.subplots(3, 2)
+    fig, ax = plt.subplots(3, 2, figsize=(5, 4))
     # Loop through each file
     for file_name in trial_file_names:
         # Create an empty dataframe to store the data
@@ -187,19 +188,39 @@ def process_err_each_filter(filter_type, folder_path):
                 df.to_csv(err_file_name, index=False)
 
                 label = segments[1]
-                ax[0, 0].plot(df["tSec"], df["pos_err_x"], label=label)
-                ax[0, 0].set_ylim(-60000, 20000)
-                ax[1, 0].plot(df["tSec"], df["pos_err_y"], label=label)
-                ax[1, 0].set_ylim(-60000, 20000)
-                ax[2, 0].plot(df["tSec"], df["pos_err_z"], label=label)
-                ax[2, 0].set_ylim(-60000, 20000)
-                ax[0, 1].plot(df["tSec"], df["vel_err_x"], label=label)
-                ax[1, 1].plot(df["tSec"], df["vel_err_y"], label=label)
-                ax[2, 1].plot(df["tSec"], df["vel_err_z"], label=label)
+                ax[0, 0].plot(
+                    df["tSec"], df["pos_err_x"] / 1000, linewidth=1, label=label
+                )
+                ax[0, 0].set_ylim(-10, 10)
+                ax[0, 0].set_ylabel("x [km]")
+                ax[1, 0].plot(
+                    df["tSec"], df["pos_err_y"] / 1000, linewidth=1, label=label
+                )
+                ax[1, 0].set_ylim(-5, 5)
+                ax[1, 0].set_ylabel("y [km]")
+                ax[2, 0].plot(
+                    df["tSec"], df["pos_err_z"] / 1000, linewidth=1, label=label
+                )
+                ax[2, 0].set_ylim(-10, 10)
+                ax[2, 0].set_ylabel("z [km]")
+                ax[2, 0].set_xlabel("time lapse [s]")
+                ax[0, 1].plot(df["tSec"], df["vel_err_x"], linewidth=1, label=label)
+                ax[0, 1].set_ylim(-5, 5)
+                ax[0, 1].set_ylabel("x [m/s]")
+                ax[1, 1].plot(df["tSec"], df["vel_err_y"], linewidth=1, label=label)
+                ax[1, 1].set_ylim(-3, 3)
+                ax[1, 1].set_ylabel("y [m/s]")
+                ax[2, 1].plot(df["tSec"], df["vel_err_z"], linewidth=1, label=label)
+                ax[2, 1].set_ylim(-5, 5)
+                ax[2, 1].set_ylabel("z [m/s]")
+                ax[2, 1].set_xlabel("time lapse [s]")
 
     # # print all NaN files
     # print(nan_file_names)
     fig.suptitle(filter_type + " MCS errors")
+
+    plt.tight_layout()
+
     # plt.show()
     fig.savefig("plots/" + filter_type + "_MCS_err.pdf")
 

@@ -56,6 +56,7 @@ struct Filters
     bool ukf;
     bool cut4;
     bool cut6;
+    bool initNoise;
     int numTrials;
 };
 

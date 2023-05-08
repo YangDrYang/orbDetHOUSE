@@ -137,9 +137,15 @@
     "valarray": "cpp",
     "alignedvector3": "cpp",
     "*.expression": "cpp",
-    "fft": "cpp"
+    "fft": "cpp",
+    "filesystem": "cpp"
   },
   "cmake.configureOnOpen": true,
   "C_Cpp.errorSquiggles": "disabled",
-  "C_Cpp_Runner.useAddressSanitizer": false
+  "C_Cpp_Runner.useAddressSanitizer": false,
+  "C_Cpp_Runner.showCompilationTime": false,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "python.formatting.provider": "none"
 }

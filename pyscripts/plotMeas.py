@@ -26,7 +26,7 @@ range_rate = df["range_rate"]
 
 
 # Create the subplots
-fig, axs = plt.subplots(2, 2, figsize=(10, 10))
+fig, axs = plt.subplots(2, 2, figsize=(10, 8))
 
 # Plot ra vs tSec
 axs[0, 0].scatter(tSec, ra / np.pi * 180, s=2)
@@ -52,6 +52,7 @@ axs[1, 1].set_xlim(0, tSec[len(tSec) - 1])
 axs[1, 1].set_xlabel("tSec (seconds)")
 axs[1, 1].set_ylabel("range_rate (km/s)")
 
+plt.tight_layout()
 # # Show the plot
 # plt.show()
 

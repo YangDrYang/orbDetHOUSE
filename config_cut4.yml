@@ -4,7 +4,8 @@ filter_options:
   UKF: false
   CUT4: true
   CUT6: false
-  num_trials: 10
+  init_noise: false  
+  num_trials: 100
 
 # requried
 simulation_parameters:
@@ -15,8 +16,8 @@ simulation_parameters:
   MJD_start: 55200.0 # 2010-JAN-04
   MJD_end: 55200.2 #5.757212410879634e+4
   # this directory must exist
-  # output_directory: out
-  output_directory: out_
+  output_directory: out
+  # output_directory: out_
 
 # requried
 initial_orbtial_parameters:
@@ -38,18 +39,18 @@ initial_orbtial_parameters:
     # - [-9.237, 0, 0, 0, 6.798e-3, 3.145e-3]
     # - [-5.333, 0, 0, 0, 3.145e-3, 3.166e-3]
   process_noise_covariance:
-    # - [4, 0, 0, 0, 0, 0]
-    # - [0, 4, 0, 0, 0, 0]
-    # - [0, 0, 4, 0, 0, 0]
-    # - [0, 0, 0, 0.04, 0, 0]
-    # - [0, 0, 0, 0, 0.04, 0]
-    # - [0, 0, 0, 0, 0, 0.04]
-    - [1.0e-9, 0, 0, 0, 0, 0]
-    - [0, 1.0e-9, 0, 0, 0, 0]
-    - [0, 0, 1.0e-9, 0, 0, 0]
-    - [0, 0, 0, 1.0e-9, 0, 0]
-    - [0, 0, 0, 0, 1.0e-9, 0]
-    - [0, 0, 0, 0, 0, 1.0e-9]    
+    - [4, 0, 0, 0, 0, 0]
+    - [0, 4, 0, 0, 0, 0]
+    - [0, 0, 4, 0, 0, 0]
+    - [0, 0, 0, 0.04, 0, 0]
+    - [0, 0, 0, 0, 0.04, 0]
+    - [0, 0, 0, 0, 0, 0.04]
+    # - [1.0e-9, 0, 0, 0, 0, 0]
+    # - [0, 1.0e-9, 0, 0, 0, 0]
+    # - [0, 0, 1.0e-9, 0, 0, 0]
+    # - [0, 0, 0, 1.0e-9, 0, 0]
+    # - [0, 0, 0, 0, 1.0e-9, 0]
+    # - [0, 0, 0, 0, 0, 1.0e-9]    
 
 # requried
 measurement_parameters:
