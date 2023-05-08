@@ -258,18 +258,17 @@ void HOUSE::save(const std::string &filename)
 
         table.row(k).segment(1, nx) = distx[k].mean;
 
-        cout << "full covariance matrix" << distx[k].cov << endl;
-        table.row(k).tail(nx * nx) = distx[k].cov;
+        table.row(k).tail(nx * nx) = distx[k].cov.reshaped(1, nx * nx);
     }
 
-    vector<string> header(2 * nx + 1);
+    vector<string> header(nx * (nx + 1) + 1);
     header[0] = "TIME";
     for (int i = 1; i <= nx; i++)
     {
         header[i] = "EST X";
-        header[i + nx] = "STD X";
+        header[i + nx * i] = "STD X";
         header[i] += to_string(i);
-        header[i + nx] += to_string(i);
+        header[i + nx * i] += to_string(i);
     }
 
     EigenCSV::write(table, header, filename);

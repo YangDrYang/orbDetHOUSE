@@ -261,7 +261,7 @@ void UKF::save(const string &filename)
         table.row(k).tail(nx * nx) = Pxx[k].reshaped(1, nx * nx);
     }
 
-    vector<string> header(nx * nx + 1);
+    vector<string> header(nx * (nx + 1) + 1);
     header[0] = "TIME";
     for (int i = 1; i <= nx; i++)
     {
