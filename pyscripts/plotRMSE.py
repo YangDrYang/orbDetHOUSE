@@ -60,7 +60,9 @@ for filter_type in filters:
 
 
 # Create the violin plot for pos errors
-sns.violinplot(data=pos_rmse, inner="box", linewidth=1, ax=ax[0])
+sns.violinplot(
+    data=pos_rmse, inner="box", linewidth=1, ax=ax[0], scale="count", scale_hue=False
+)
 
 # Add x and y axis labels and a title
 ax[0].set_xlabel("filters")
@@ -84,7 +86,9 @@ for i in range(len(medians)):
     )
 
 # Create the violin plot for pos errors
-sns.violinplot(data=vel_rmse, inner="box", linewidth=1, ax=ax[1])
+sns.violinplot(
+    data=vel_rmse, inner="box", linewidth=1, ax=ax[1], scale="count", scale_hue=False
+)
 
 ax[1].set_xlabel("filters")
 ax[1].set_ylabel("3d vel rmse")

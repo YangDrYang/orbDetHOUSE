@@ -676,22 +676,24 @@ int main(int argc, char *argv[])
         cout << "Trial " << j << endl;
 
         int seed = j;
-        MatrixXd matProcessNoise = generateNoiseMatrix(seed, 1, initialCov);
+        MatrixXd matInitNoise = generateNoiseMatrix(seed, 1, initialCov);
         MatrixXd matMeasNoise = generateNoiseMatrix(seed, nTotalSteps, measNoiseCov);
         // string noiseFile = simInfo.file.outDir + "/noise.csv";
         // vector<string> proNoiseString;
         // proNoiseString.push_back("process noise");
-        // EigenCSV::write(matProcessNoise, proNoiseString, noiseFile);
+        // EigenCSV::write(matInitNoise, proNoiseString, noiseFile);
         // // Open the file for appending
         // vector<string> measNoiseString;
         // measNoiseString.push_back("measurement noise");
         // EigenCSV::write(matMeasNoise, measNoiseString, noiseFile, true);
 
-        VectorXd initialState_;
+        // VectorXd initialState_;
+        // cout << filters.initNoise << endl
+        //      << matInitNoise.col(0) << endl;
         if (filters.initNoise)
         {
             // corrupt initial state
-            initialState_ = initialStateVec + matProcessNoise.col(0);
+            initialState_ = initialStateVec + matInitNoise.col(0);
             distXi.mean = initialState_;
         }
         else
