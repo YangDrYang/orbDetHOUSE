@@ -84,7 +84,8 @@ VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, cons
     double abs_tol = 1e-6;
     // integrate_adaptive(ctrl_rkck78(rel_tol, abs_tol), my_system, xd, ti, tf, dt, my_observer);
     // integrate_adaptive(rkf78(), my_system, xd, ti, tf, dt, my_observer);
-    integrate_adaptive(make_controlled(abs_tol, rel_tol, error_stepper_rkck54()), my_system, xd, ti, tf, dt, my_observer);
+    // integrate_adaptive(make_controlled(abs_tol, rel_tol, error_stepper_rkck54()), my_system, xd, ti, tf, dt, my_observer);
+    integrate_adaptive(make_controlled(abs_tol, rel_tol, error_stepper_rkck54()), my_system, xd, ti, tf, dt);
     return VectorXd::Map(&xd[0], xd.size());
     // VectorXd x = xi;
     // if (tf > ti)

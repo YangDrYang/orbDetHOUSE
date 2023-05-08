@@ -10,9 +10,10 @@ using namespace std;
 using namespace Eigen;
 
 // Prediction step
-void UKF::predict(double tp) {
+void UKF::predict(double tp)
+{
 
-    MatrixXd Pxxi(nx,nx), Pxxp(nx,nx), Xi(nx,nsp), Xp(nx,nsp), W(nw,nsp);
+    MatrixXd Pxxi(nx, nx), Pxxp(nx, nx), Xi(nx, nsp), Xp(nx, nsp), W(nw, nsp);
     VectorXd xesti, xestp;
 
     xesti = xest.back();
@@ -20,7 +21,8 @@ void UKF::predict(double tp) {
 
     double ti = t.back();
 
-    if (tp > ti) {
+    if (tp > ti)
+    {
 
         Xi = xesti.rowwise().replicate(nsp) + Pxxi.llt().matrixL() * Sp.topRows(nx);
 
@@ -42,16 +44,15 @@ void UKF::predict(double tp) {
         t.push_back(tp);
         xest.push_back(xestp);
         Pxx.push_back(Pxxp);
-
     }
-
 }
 
 // Update step with one measurement
-void UKF::update(const Eigen::VectorXd& z) {
+void UKF::update(const Eigen::VectorXd &z)
+{
 
-    MatrixXd Pxxp(nx,nx), Pxxu(nx,nx), X(nx,nsu), Z(nz,nsu), Pzz(nz,nz),
-        Pzx(nz,nx), K(nx,nz);
+    MatrixXd Pxxp(nx, nx), Pxxu(nx, nx), X(nx, nsu), Z(nz, nsu), Pzz(nz, nz),
+        Pzx(nz, nx), K(nx, nz);
     VectorXd xestp(nx), xestu(nx), zm(nz);
 
     xestp = xest.back();
@@ -78,69 +79,72 @@ void UKF::update(const Eigen::VectorXd& z) {
 
     xest.back() = xestu;
     Pxx.back() = Pxxu;
-
 }
 
 // Run filter for sequence of measurements
-void UKF::run(const Eigen::VectorXd& tz, const Eigen::MatrixXd& Z) {
-    for (int i = 0; i < tz.size(); i++) {
+void UKF::run(const Eigen::VectorXd &tz, const Eigen::MatrixXd &Z)
+{
+    for (int i = 0; i < tz.size(); i++)
+    {
         predict(tz(i));
         // only update if given a measurment
-        if (abs(Z(1,i)) <=  M_PI * 2) {
+        if (abs(Z(1, i)) <= M_PI * 2)
+        {
             update(Z.col(i));
         }
     }
 }
 
 // Constructor
-UKF::UKF (
-        const dyn_model& f_,
-        const meas_model& h_,
-        bool addw_,
-        double t0,
-        const Eigen::VectorXd& xm0,
-        const Eigen::MatrixXd& Pxx0,
-        const Eigen::MatrixXd& Pww_,
-        const Eigen::MatrixXd& Pnn_,
-        sig_type stype,
-        double k
-    ) :
-        nx(xm0.size()),
-        nz(Pnn_.rows()),
-        nw(Pww_.rows()),
-        addw(addw_),
-        f(f_),
-        h(h_),
-        Pww(Pww_),
-        Pnn(Pnn_),
-        Cww(Pww.llt().matrixL()),
-        Sp(sigmaSt(stype, addw ? nx : nx+nw, k)),
-        Su(sigmaSt(stype, nx, k)),
-        wp(sigmaWt(stype, addw ? nx : nx+nw, k)),
-        wu(sigmaWt(stype, nx, k)),
-        nsp(Sp.cols()),
-        nsu(Su.cols())
-    {
+UKF::UKF(
+    const dyn_model &f_,
+    const meas_model &h_,
+    bool addw_,
+    double t0,
+    const Eigen::VectorXd &xm0,
+    const Eigen::MatrixXd &Pxx0,
+    const Eigen::MatrixXd &Pww_,
+    const Eigen::MatrixXd &Pnn_,
+    sig_type stype,
+    double k) : nx(xm0.size()),
+                nz(Pnn_.rows()),
+                nw(Pww_.rows()),
+                addw(addw_),
+                f(f_),
+                h(h_),
+                Pww(Pww_),
+                Pnn(Pnn_),
+                Cww(Pww.llt().matrixL()),
+                Sp(sigmaSt(stype, addw ? nx : nx + nw, k)),
+                Su(sigmaSt(stype, nx, k)),
+                wp(sigmaWt(stype, addw ? nx : nx + nw, k)),
+                wu(sigmaWt(stype, nx, k)),
+                nsp(Sp.cols()),
+                nsu(Su.cols())
+{
 
     t.push_back(t0);
     xest.push_back(xm0);
     Pxx.push_back(Pxx0);
-
 }
 
 // Generate standardized sigma points
-Eigen::MatrixXd UKF::sigmaSt(UKF::sig_type stype, int n, double k) {
+Eigen::MatrixXd UKF::sigmaSt(UKF::sig_type stype, int n, double k)
+{
 
     MatrixXd S;
 
-    if (stype == JU) {
-        S.resize(n, 2*n+1);
+    if (stype == JU)
+    {
+        S.resize(n, 2 * n + 1);
         S.leftCols(n).setIdentity();
         S.rightCols(n).setIdentity();
         S.rightCols(n) *= -1;
         S.col(n).setZero();
         S *= sqrt(n + k);
-    } else {
+    }
+    else
+    {
         int order;
         if (stype == CUT8)
             order = 8;
@@ -158,19 +162,22 @@ Eigen::MatrixXd UKF::sigmaSt(UKF::sig_type stype, int n, double k) {
     }
 
     return S;
-
 }
 
 // Generate sigma point weights
-Eigen::VectorXd UKF::sigmaWt(UKF::sig_type stype, int n, double k) {
+Eigen::VectorXd UKF::sigmaWt(UKF::sig_type stype, int n, double k)
+{
 
     VectorXd w;
 
-    if (stype == JU) {
-        w.resize(2*n+1);
+    if (stype == JU)
+    {
+        w.resize(2 * n + 1);
         w.setConstant(0.5 / (n + k));
         w(n) = k / (n + k);
-    } else {
+    }
+    else
+    {
         int order;
         if (stype == CUT8)
             order = 8;
@@ -192,10 +199,10 @@ Eigen::VectorXd UKF::sigmaWt(UKF::sig_type stype, int n, double k) {
 
 // Reset filter
 void UKF::reset(
-            double t0,
-            const Eigen::VectorXd& xm0,
-            const Eigen::MatrixXd& Pxx0
-        ) {
+    double t0,
+    const Eigen::VectorXd &xm0,
+    const Eigen::MatrixXd &Pxx0)
+{
 
     t.clear();
     xest.clear();
@@ -204,37 +211,67 @@ void UKF::reset(
     t.push_back(t0);
     xest.push_back(xm0);
     Pxx.push_back(Pxx0);
-
 }
 
+// // Save results
+// void UKF::save(const string& filename) {
+
+//     int steps = xest.size();
+
+//     MatrixXd table(steps, 2*nx+1);
+
+//     for (int k = 0; k < steps; k++) {
+
+//         table(k,0) = t[k];
+
+//         table.row(k).segment(1, nx) = xest[k];
+
+//         table.row(k).tail(nx) = Pxx[k].diagonal().cwiseSqrt();
+
+//     }
+
+//     vector<string> header(2*nx+1);
+//     header[0] = "TIME";
+//     for (int i = 1; i <= nx; i++) {
+//         header[i]    = "EST X";
+//         header[i+nx] = "STD X";
+//         header[i]    += to_string(i);
+//         header[i+nx] += to_string(i);
+//     }
+
+//     EigenCSV::write(table, header, filename);
+
+// }
+
 // Save results
-void UKF::save(const string& filename) {
+void UKF::save(const string &filename)
+{
 
     int steps = xest.size();
 
-    MatrixXd table(steps, 2*nx+1);
+    MatrixXd table(steps, nx * (nx + 1) + 1);
 
-    for (int k = 0; k < steps; k++) {
+    for (int k = 0; k < steps; k++)
+    {
 
-        table(k,0) = t[k];
+        table(k, 0) = t[k];
 
         table.row(k).segment(1, nx) = xest[k];
 
-        table.row(k).tail(nx) = Pxx[k].diagonal().cwiseSqrt();
-
+        table.row(k).tail(nx) = Pxx[k];
     }
 
-    vector<string> header(2*nx+1);
+    vector<string> header(2 * nx + 1);
     header[0] = "TIME";
-    for (int i = 1; i <= nx; i++) {
-        header[i]    = "EST X";
-        header[i+nx] = "STD X";
-        header[i]    += to_string(i);
-        header[i+nx] += to_string(i);
+    for (int i = 1; i <= nx; i++)
+    {
+        header[i] = "EST X";
+        header[i + nx] = "STD X";
+        header[i] += to_string(i);
+        header[i + nx] += to_string(i);
     }
 
     EigenCSV::write(table, header, filename);
-
 }
 
 // Default location for CUT files

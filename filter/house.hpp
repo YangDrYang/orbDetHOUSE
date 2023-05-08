@@ -106,6 +106,9 @@ public:
 
     // Save results
     void save(const std::string &filename);
+
+    // Calculate Normalized Error Square
+    void calNES();
 };
 
 #endif
