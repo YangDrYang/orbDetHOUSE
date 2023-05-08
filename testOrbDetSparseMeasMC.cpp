@@ -716,8 +716,6 @@ int main(int argc, char *argv[])
         // for each time step
         for (int k = 0; k < nTotalSteps; k++)
         {
-            cout << k << "th step" << endl;
-
             measCorrupted(0, k) = measTruth(0, k);
             measCorrupted(1, k) = measTruth(1, k);
             measCorrupted(2, k) = measTruth(2, k);

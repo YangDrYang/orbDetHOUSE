@@ -258,6 +258,7 @@ void HOUSE::save(const std::string &filename)
 
         table.row(k).segment(1, nx) = distx[k].mean;
 
+        cout << "full covariance matrix" << distx[k].cov << endl;
         table.row(k).tail(nx * nx) = distx[k].cov;
     }
 

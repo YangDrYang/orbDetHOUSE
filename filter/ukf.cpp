@@ -258,7 +258,7 @@ void UKF::save(const string &filename)
 
         table.row(k).segment(1, nx) = xest[k];
 
-        table.row(k).tail(nx) = Pxx[k];
+        table.row(k).tail(nx * nx) = Pxx[k].reshaped(1, nx * nx);
     }
 
     vector<string> header(2 * nx + 1);
