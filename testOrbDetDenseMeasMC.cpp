@@ -183,26 +183,6 @@ Vector4d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &s
     p = satECI.head(3) - stnECI.head(3);
     v = satECI.tail(3) - stnECI.tail(3);
 
-    // if (p.dot(stnECI.head(3)) >= 0)
-    // {
-    //     // azimuth angle
-    //     z(0) = atan2(p(1), p(0));
-    //     // elevation angle
-    //     z(1) = asin(p(2) / p.norm());
-    //     // range
-    //     z(2) = p.norm();
-    //     // range rate
-    //     z(3) = p.dot(v) / p.norm();
-    // }
-    // // not visible
-    // else
-    // {
-    //     z(0) = NO_MEASUREMENT;
-    //     z(1) = NO_MEASUREMENT;
-    //     z(2) = NO_MEASUREMENT;
-    //     z(3) = NO_MEASUREMENT;
-    // }
-
     // azimuth angle
     z(0) = atan2(p(1), p(0));
     // elevation angle
@@ -211,6 +191,7 @@ Vector4d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &s
     z(2) = p.norm();
     // range rate
     z(3) = p.dot(v) / p.norm();
+
     return z;
 }
 
@@ -280,6 +261,7 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     filters.cut4 = filterOpts["CUT4"].as<bool>();
     filters.cut6 = filterOpts["CUT6"].as<bool>();
     filters.numTrials = filterOpts["num_trials"].as<int>();
+    filters.initNoise = filterOpts["init_noise"].as<bool>();
 
     // read simulation parameters (required)
     YAML::Node simParams = config["simulation_parameters"];
@@ -602,52 +584,6 @@ int main(int argc, char *argv[])
     string measTruthFile = simInfo.file.outDir + "/measurement_truth.csv";
     EigenCSV::write(tableMeasTruth, headerMeas, measTruthFile);
 
-    // // simulate ground-truth trajectory
-    // vector<VectorXd> trueData;
-    // trueData.clear();
-    // orbitProp.setPropOption(forceModelsTruthOpt);
-    // orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
-    // VectorXd X = initialStateVec;
-    // double time = 0, dt = epoch.timeStep;
-    // trueData.push_back(X);
-    // timer.tick();
-    // while (time < (epoch.endMJD - epoch.startMJD) * 86400)
-    // {
-    //     Vector3d fd = Vector3d::Zero();
-    //     X = f(time, time + epoch.timeStep, X, fd);
-    //     time += epoch.timeStep;
-    //     trueData.push_back(X);
-    // }
-    // MatrixXd runTimeTruth(1, 1);
-    // runTimeTruth(0, 0) = timer.tock();
-
-    // int nTotalSteps = trueData.size();
-    // // linear spaced times
-    // VectorXd tSec;
-    // tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
-    // // cout << tSec << endl;
-
-    // // Save true vectors and generate non-corrupted measurement vectors
-    // MatrixXd tableTrue(nTotalSteps, 7);
-    // tableTrue.col(0) = tSec;
-    // int dimMeas = measMdl.dimMeas;
-    // // MatrixXd measTruth = MatrixXd::Constant(dimMeas, nTotalSteps, NO_MEASUREMENT);
-    // MatrixXd measTruth(dimMeas, nTotalSteps);
-    // for (int k = 0; k < nTotalSteps; k++)
-    // {
-    //     tableTrue.row(k).tail(6) = trueData[k];
-    //     measTruth.col(k) = h(tSec(k), trueData[k]);
-    // };
-
-    // // header for the saved file
-    // vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-    // string trajTruthFile = simInfo.file.outDir + "/trajectory_truth";
-    // trajTruthFile += ".csv";
-    // EigenCSV::write(tableTrue, headerTraj, trajTruthFile);
-    // // // Save truth generation run times
-    // // vector<string> truthString({"true trajectory"});
-    // // EigenCSV::write(runTimeTruth, truthString, trajTruthFile, true);
-
     // Initialize UKF & CUT filters
     UKF ukf(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
     UKF cut4(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
@@ -661,7 +597,6 @@ int main(int argc, char *argv[])
     HOUSE::Dist distw(procNoiseCov);
     // HOUSE distributions for measurement noise
     HOUSE::Dist distn(measNoiseCov);
-
     // Initialize HOUSE
     HOUSE house(f, hh, dimMeas, 0, distXi, distw, distn, 0);
 
@@ -674,70 +609,59 @@ int main(int argc, char *argv[])
     {
         cout << "Trial " << j << endl;
 
-        // int seed = j;
-        // MatrixXd matProcessNoise = generateNoiseMatrix(seed, 1, initialCov);
-        // MatrixXd matMeasNoise = generateNoiseMatrix(seed, nTotalSteps, measNoiseCov);
-        // string noiseFile = simInfo.file.outDir + "/noise.csv";
-        // vector<string> proNoiseString;
-        // proNoiseString.push_back("process noise");
-        // EigenCSV::write(matProcessNoise, proNoiseString, noiseFile);
-        // // Open the file for appending
-        // vector<string> measNoiseString;
-        // measNoiseString.push_back("measurement noise");
-        // EigenCSV::write(matMeasNoise, measNoiseString, noiseFile, true);
+        int seed = j;
+        MatrixXd matInitNoise = generateNoiseMatrix(seed, 1, initialCov);
+        MatrixXd matMeasNoise = generateNoiseMatrix(seed, nTotalSteps, measNoiseCov);
 
-        // VectorXd initialState_ = initialStateVec + matProcessNoise.col(0);
-        // distXi.mean = initialState_;
-        VectorXd initialState_ = initialStateVec;
-        // cout << distXi.mean.transpose() << endl;
-        // cout << initialStateVec.transpose() << endl;
+        VectorXd initialState_;
+        // cout << filters.initNoise << endl
+        //      << matInitNoise.col(0) << endl;
+        if (filters.initNoise)
+        {
+            // corrupt initial state
+            initialState_ = initialStateVec + matInitNoise.col(0);
+            distXi.mean = initialState_;
+        }
+        else
+        {
+            initialState_ = initialStateVec;
+        }
 
         house.reset(0, distXi);
-        ukf.reset(0, initialStateVec, initialCov);
-        cut4.reset(0, initialStateVec, initialCov);
-        cut6.reset(0, initialStateVec, initialCov);
+        ukf.reset(0, initialState_, initialCov);
+        cut4.reset(0, initialState_, initialCov);
+        cut6.reset(0, initialState_, initialCov);
 
         orbitProp.setPropOption(forceModelsFilterOpt);
-        orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph); // reset propagator
+        orbitProp.initPropagator(initialState_, epoch.startMJD, leapSec, &erpt, egm, pJPLEph); // reset propagator
 
-        // // Generate Measurement vectors
-        // MatrixXd tableMeas(nTotalSteps, dimMeas + 1);
-        // int indMeas = 0;
-
+        // copy measurement truth to measurement corrupted
+        MatrixXd measCorrupted(dimMeas, nTotalSteps);
         // for each time step
         for (int k = 0; k < nTotalSteps; k++)
         {
+            measCorrupted(0, k) = measTruth(0, k);
+            measCorrupted(1, k) = measTruth(1, k);
+            measCorrupted(2, k) = measTruth(2, k);
+            measCorrupted(3, k) = measTruth(3, k);
+
             // if !NO_MEASUREMENT
             if (measTruth(0, k) != NO_MEASUREMENT)
             {
-                // generate corrupted measurements
-                // measTruth.col(k) += matMeasNoise.col(k);
-                measTruth(0, k) += measMdl.errorStd.azimuthErr * ARC_SEC * dist(gen);
-                measTruth(1, k) += measMdl.errorStd.elevationErr * ARC_SEC * dist(gen);
-                measTruth(2, k) += measMdl.errorStd.rangeErr * dist(gen);
-                measTruth(3, k) += measMdl.errorStd.rangeRateErr * dist(gen);
-                // // store corrupted measurement & time
-                // tableMeas(indMeas, 0) = tSec(k);
-                // tableMeas(indMeas, 1) = measTruth(0, k) + matMeasNoise(0, k);
-                // tableMeas(indMeas, 2) = measTruth(1, k) + matMeasNoise(1, k);
-                // tableMeas(indMeas, 3) = measTruth(2, k) + matMeasNoise(2, k);
-                // tableMeas(indMeas, 4) = measTruth(3, k) + matMeasNoise(3, k);
-
-                // indMeas++;
+                // // measTruth.col(k) += matMeasNoise.col(k);
+                measCorrupted(0, k) += matMeasNoise(0, k);
+                measCorrupted(1, k) += matMeasNoise(1, k);
+                measCorrupted(2, k) += matMeasNoise(2, k);
+                measCorrupted(3, k) += matMeasNoise(3, k);
             }
         }
-        // // save corrupted measurment data
-        // string measFile = simInfo.file.outDir + "/meas_";
-        // measFile += to_string(j);
-        // measFile += ".csv";
-        // EigenCSV::write(tableMeas.topRows(indMeas), measHeader, measFile, true);
 
         string outputFile;
         if (filters.house)
         {
             cout << "\tHOUSE" << '\n';
             timer.tick();
-            house.run(tSec, measTruth);
+            house.run(tSec, measCorrupted);
             runTimesMC(j - 1, 0) = timer.tock();
 
             outputFile = simInfo.file.outDir + "/house_";
@@ -753,7 +677,7 @@ int main(int argc, char *argv[])
             // cout << "startMJD\t" << epoch.startMJD << endl;
             // cout << "leapSec\t" << leapSec << endl;
             timer.tick();
-            ukf.run(tSec, measTruth);
+            ukf.run(tSec, measCorrupted);
             runTimesMC(j - 1, 1) = timer.tock();
 
             outputFile = simInfo.file.outDir + "/ukf_";
@@ -767,7 +691,7 @@ int main(int argc, char *argv[])
         {
             cout << "\tCUT-4" << '\n';
             timer.tick();
-            cut4.run(tSec, measTruth);
+            cut4.run(tSec, measCorrupted);
             runTimesMC(j - 1, 2) = timer.tock();
 
             outputFile = simInfo.file.outDir + "/cut4_";
@@ -781,7 +705,7 @@ int main(int argc, char *argv[])
         {
             cout << "\tCUT-6" << '\n';
             timer.tick();
-            cut6.run(tSec, measTruth);
+            cut6.run(tSec, measCorrupted);
             runTimesMC(j - 1, 3) = timer.tock();
 
             outputFile = simInfo.file.outDir + "/cut6_";
@@ -790,10 +714,32 @@ int main(int argc, char *argv[])
             cut6.save(outputFile);
         }
     }
-
-    // Save Filter run times
-    vector<string> filterStrings({"house", "ukf", "cut4", "cut6"});
-
-    string timeFile = simInfo.file.outDir + "/run_times.csv";
-    EigenCSV::write(runTimesMC, filterStrings, timeFile);
+    if (filters.house)
+    {
+        // Save Filter run times
+        vector<string> filterStrings({"house"});
+        string timeFile = simInfo.file.outDir + "/run_times_house.csv";
+        EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+    }
+    if (filters.ukf)
+    {
+        // Save Filter run times
+        vector<string> filterStrings({"ukf"});
+        string timeFile = simInfo.file.outDir + "/run_times_ukf.csv";
+        EigenCSV::write(runTimesMC.col(1), filterStrings, timeFile);
+    }
+    if (filters.cut4)
+    {
+        // Save Filter run times
+        vector<string> filterStrings({"cut4"});
+        string timeFile = simInfo.file.outDir + "/run_times_cut4.csv";
+        EigenCSV::write(runTimesMC.col(2), filterStrings, timeFile);
+    }
+    if (filters.cut6)
+    {
+        // Save Filter run times
+        vector<string> filterStrings({"cut6"});
+        string timeFile = simInfo.file.outDir + "/run_times_cut6.csv";
+        EigenCSV::write(runTimesMC.col(3), filterStrings, timeFile);
+    }
 }

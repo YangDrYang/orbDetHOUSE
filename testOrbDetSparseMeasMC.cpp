@@ -687,7 +687,7 @@ int main(int argc, char *argv[])
         // measNoiseString.push_back("measurement noise");
         // EigenCSV::write(matMeasNoise, measNoiseString, noiseFile, true);
 
-        // VectorXd initialState_;
+        VectorXd initialState_;
         // cout << filters.initNoise << endl
         //      << matInitNoise.col(0) << endl;
         if (filters.initNoise)

@@ -8,14 +8,31 @@ import numpy as np
 filters = ["house", "ukf", "cut4", "cut6"]
 
 # folder_path = "out_/"
-folder_path = "out/"
+# folder_path = "out/"
+folder_path = "out_dense/"
 
-# Create a new figure and axes for logarithmic plot
-fig, ax = plt.subplots(ncols=2, figsize=(10, 5))
-
-run_times = []
+fig, ax = plt.subplots(ncols=1, figsize=(5, 4))
+df = pd.DataFrame(columns=filters)
+print(df.head())
 for filter_type in filters:
     # Read CSV file into a pandas dataframe
-    df = pd.read_csv(folder_path + "run_times_" + filter_type + ".csv")
+    df[filter_type] = pd.read_csv(
+        folder_path + "run_times_" + filter_type + ".csv",
+        usecols=[filter_type],
+        squeeze=True,
+    )
 
-    run_times.append(df[filter_type])
+# calculate mean of each column
+means = df.mean()
+print("mean of run times:")
+print(means)
+# calculate standard deviation of each column
+stds = df.std()
+print("std of run times:")
+print(stds)
+
+ax = df.plot.line(ax=ax)
+ax.set_xlabel("Monte Carlo trials")
+ax.set_ylabel("run time [s]")
+plt.tight_layout()
+fig.savefig("plots/run_times.pdf")

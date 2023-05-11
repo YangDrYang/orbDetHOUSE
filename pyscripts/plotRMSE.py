@@ -12,8 +12,9 @@ filters = ["house", "ukf", "cut4", "cut6"]
 # filters = ["house", "cut4", "cut6"]
 # filters = ["house", "ukf"]
 
+folder_path = "out_dense/"
 # folder_path = "out_/"
-folder_path = "out/"
+# folder_path = "out/"
 
 # Create a new figure and axes for logarithmic plot
 fig, ax = plt.subplots(ncols=2, figsize=(10, 5))
@@ -22,7 +23,7 @@ for filter_type in filters:
     processing.process_rmse_each_filter(filter_type, folder_path)
 
     # Read CSV file into a pandas dataframe
-    df = pd.read_csv("plots/" + filter_type + "_trajectory_error.csv")
+    df = pd.read_csv(folder_path + "trajectory_error_" + filter_type + ".csv")
 
     # Plot the data on the axes
     ax[0].semilogy(df["tSec"], df["pos_err_rms"], label=filter_type)
@@ -53,7 +54,7 @@ pos_rmse = []
 vel_rmse = []
 for filter_type in filters:
     # Read CSV file into a pandas dataframe
-    df = pd.read_csv("plots/" + filter_type + "_trajectory_error.csv")
+    df = pd.read_csv(folder_path + "trajectory_error_" + filter_type + ".csv")
 
     pos_rmse.append(df["pos_err_rms"])
     vel_rmse.append(df["vel_err_rms"])

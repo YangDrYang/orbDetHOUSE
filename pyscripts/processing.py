@@ -27,6 +27,7 @@ def process_rmse_each_filter(filter_type, folder_path):
 
     # Read the truth CSV file into a pandas dataframe
     truth_df = pd.read_csv(folder_path + "trajectory_truth.csv")
+    # print(truth_df.head())
     truth_df = truth_df.iloc[:, 0:7]
 
     # Create an empty dataframe to store the data
@@ -51,7 +52,7 @@ def process_rmse_each_filter(filter_type, folder_path):
         total_num_nan = nan_mask.sum().sum()
         # print(total_num_nan)
 
-        if total_num_nan > 2000:
+        if total_num_nan > 10:
             # Count the files that contain NaN
             nan_file_names.append(file_path)
             # print(file_path)
@@ -80,14 +81,17 @@ def process_rmse_each_filter(filter_type, folder_path):
                 )
 
     # print all NaN files
+    print("nan file names by " + filter_type + ":   ")
     print(nan_file_names)
-    # # print all large value files
-    # print(large_value_file_names)
+    # print all large value files
+    print("large value file names by " + filter_type + ":   ")
+    print(large_value_file_names)
+
     # average of all trials
-    # df = df.div(
-    #     len(trial_file_names) - len(nan_file_names) - len(large_value_file_names)
-    # )
-    df = df.div(len(trial_file_names) - len(nan_file_names))
+    df = df.div(
+        len(trial_file_names) - len(nan_file_names) - len(large_value_file_names)
+    )
+    # df = df.div(len(trial_file_names) - len(nan_file_names))
 
     df["tSec"] = truth_df["tSec"]
     # df["time_lapse"] = truth_df["t"]
@@ -120,7 +124,103 @@ def process_rmse_each_filter(filter_type, folder_path):
     # # Display the final dataframe with the added columns
     print(df)
     # save the errors
-    df.to_csv("plots/" + filter_type + "_trajectory_error.csv")
+    df.to_csv(folder_path + "trajectory_error_" + filter_type + ".csv")
+
+
+# Normalised Error Square
+def process_nes_each_filter(filter_type, folder_path):
+    # Sort the file names based on the extracted number
+    trial_file_names = sorted(
+        [
+            filename
+            for filename in os.listdir(folder_path)
+            if filename.startswith(filter_type) and filename.endswith(".csv")
+        ],
+        key=get_number,
+    )
+
+    # print(trial_file_names)
+
+    # Read the truth CSV file into a pandas dataframe
+    truth_df = pd.read_csv(folder_path + "trajectory_truth.csv")
+    truth_df = truth_df.iloc[:, 0:7]
+
+    # Initialise an dataframe with two columns
+    nes_df = pd.DataFrame()
+
+    nan_file_names = []
+    large_value_file_names = []
+    # Loop through each file
+    for file_name in trial_file_names:
+        file_path = os.path.join(folder_path, file_name)
+
+        # Read the trial CSV file into a pandas dataframe
+        trial_df = pd.read_csv(file_path)
+        # print(trial_df.head())
+        trial_state_df = trial_df.iloc[:, 0:7]
+        trial_cov_df = trial_df.iloc[:, 7:43]
+        # print(trial_cov_df)
+
+        # Check which elements are NaN using isna()
+        nan_mask = trial_state_df.isna()
+        # Count the number of NaN values in the entire dataframe
+        total_num_nan = nan_mask.sum().sum()
+        # print(total_num_nan)
+
+        if total_num_nan > 2000:
+            # Count the files that contain NaN
+            nan_file_names.append(file_path)
+            # print(file_path)
+        else:
+            if (np.abs(trial_state_df["EST X1"] - truth_df["x"]) > 1e7).any():
+                large_value_file_names.append(file_path)
+            else:
+                df = pd.DataFrame(columns=["tSec", "NES"], dtype=float)
+                # Iterate over the rows of the dataframes
+                for index, row in trial_cov_df.iterrows():
+                    # Extract the covariance matrix
+                    cov = np.array(row.values.reshape(6, 6))
+
+                    # Extract the state error
+                    state_err = np.array(
+                        trial_state_df.iloc[index, 1:].values.reshape(6, 1)
+                        - truth_df.iloc[index, 1:].values.reshape(6, 1)
+                    )
+
+                    # print(state_err)
+
+                    # print(state_err.T @ np.linalg.inv(cov) @ state_err)
+                    # Calculate the expression and save to NES column
+                    df.loc[index, "NES"] = state_err.T @ np.linalg.inv(cov) @ state_err
+
+                    # print("This is how you pause")
+
+                    # input()
+                nes_df["NES"] = nes_df.get("NES", 0) + df["NES"]
+
+    # print all NaN files
+    print("nan file names by " + filter_type + ":   ")
+    print(nan_file_names)
+    # print all large value files
+    print("large value file names by " + filter_type + ":   ")
+    print(large_value_file_names)
+
+    # average of all trials
+    nes_df = nes_df.div(
+        len(trial_file_names) - len(nan_file_names) - len(large_value_file_names)
+    )
+    # nes_df = nes_df.div(len(trial_file_names) - len(nan_file_names))
+
+    nes_df["tSec"] = truth_df["tSec"]
+
+    new_order = [
+        "tSec",
+        "NES",
+    ]
+    nes_df = nes_df.reindex(columns=new_order)
+
+    # save the errors
+    nes_df.to_csv(folder_path + "nes_" + filter_type + ".csv")
 
 
 def process_err_each_filter(filter_type, folder_path):
@@ -169,7 +269,7 @@ def process_err_each_filter(filter_type, folder_path):
             print("running to here")
             nan_file_num += 1
             nan_file_names.append(file_path)
-            # print(file_path)
+            print(file_path)
         else:
             # Add the errors to the empty dataframe
             df["pos_err_x"] = trial_df["EST X1"] - truth_df["x"]

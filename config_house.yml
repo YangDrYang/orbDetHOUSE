@@ -4,7 +4,7 @@ filter_options:
   UKF: false
   CUT4: false
   CUT6: false
-  init_noise: false
+  init_noise: true
   num_trials: 100
 
 # requried
@@ -16,8 +16,8 @@ simulation_parameters:
   MJD_start: 55200.0 # 2010-JAN-04
   MJD_end: 55200.2 #5.757212410879634e+4
   # this directory must exist
-  output_directory: out
-  # output_directory: out_
+  # output_directory: out
+  output_directory: out_
 
 # requried
 initial_orbtial_parameters:
