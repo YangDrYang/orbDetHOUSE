@@ -32,14 +32,14 @@ for filter_type in filters:
     ax[1].semilogy(df["tSec"], df["vel_err_rms"], label=filter_type)
 
 # Add labels and title
-ax[0].set_xlabel("time lapse (s)")
+ax[0].set_xlabel("time elapsed (s)")
 ax[0].set_ylabel("position errors (m)")
 # ax_pos.set_ylim([-1000, 5000])
 ax[0].set_title("3D position rmse")
 ax[0].legend()
 
 # Add labels and title
-ax[1].set_xlabel("time lapse (s)")
+ax[1].set_xlabel("time elapsed (s)")
 ax[1].set_ylabel("velocity errors (m/s)")
 # ax[1].set_ylim([-0.5, 1])
 ax[1].set_title("3D velocity rmse")

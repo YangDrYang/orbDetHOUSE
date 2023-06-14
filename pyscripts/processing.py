@@ -303,7 +303,7 @@ def process_err_each_filter(filter_type, folder_path):
                 )
                 ax[2, 0].set_ylim(-10, 10)
                 ax[2, 0].set_ylabel("z [km]")
-                ax[2, 0].set_xlabel("time lapse [s]")
+                ax[2, 0].set_xlabel("time elapsed [s]")
                 ax[0, 1].plot(df["tSec"], df["vel_err_x"], linewidth=1, label=label)
                 ax[0, 1].set_ylim(-5, 5)
                 ax[0, 1].set_ylabel("x [m/s]")
@@ -313,7 +313,7 @@ def process_err_each_filter(filter_type, folder_path):
                 ax[2, 1].plot(df["tSec"], df["vel_err_z"], linewidth=1, label=label)
                 ax[2, 1].set_ylim(-5, 5)
                 ax[2, 1].set_ylabel("z [m/s]")
-                ax[2, 1].set_xlabel("time lapse [s]")
+                ax[2, 1].set_xlabel("time elapsed [s]")
 
     # # print all NaN files
     # print(nan_file_names)

@@ -51,7 +51,7 @@ for filter_type in filters:
         ax.axhline(y=chi2_lower, color="k", linestyle="--")
 
 # Add labels and title
-ax.set_xlabel("time lapse (s)")
+ax.set_xlabel("time elapsed (s)")
 ax.set_ylabel("normalised error square (m)")
 ax.set_ylim([-1, 15])
 # ax.set_title("nes")
