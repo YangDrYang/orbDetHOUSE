@@ -41,12 +41,19 @@ struct EpochInfo
 };
 struct FileInfo
 {
+    string grvFile;
+    string ephFile;
+    string erpFile;
+};
+struct ScenarioInfo
+{
+    EpochInfo epoch;
     string outDir;
 };
 struct SimInfo
 {
     EpochInfo epoch;
-    FileInfo file;
+    string outDir;
 };
 
 struct Filters
@@ -70,11 +77,13 @@ struct InitialState
 
 struct Errors
 {
+    double rightAscensionErr, declinationErr;
     double elevationErr, azimuthErr, rangeErr, rangeRateErr;
 };
 
 struct MeasModel
 {
+    string measFile;
     VectorXd groundStation;
     int dimMeas;
     Errors errorStd;

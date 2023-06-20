@@ -18,8 +18,13 @@ void UKF::predict(double tp)
 
     xesti = xest.back();
     Pxxi = Pxx.back();
+    // cout << xesti << endl;
+    // cout << Pxxi << endl;
 
     double ti = t.back();
+
+    // cout << tp << endl
+    //      << ti << endl;
 
     if (tp > ti)
     {
@@ -48,7 +53,7 @@ void UKF::predict(double tp)
 }
 
 // Update step with one measurement
-void UKF::update(const Eigen::VectorXd &z)
+void UKF::update(const VectorXd &z)
 {
 
     MatrixXd Pxxp(nx, nx), Pxxu(nx, nx), X(nx, nsu), Z(nz, nsu), Pzz(nz, nz),
@@ -58,12 +63,17 @@ void UKF::update(const Eigen::VectorXd &z)
     xestp = xest.back();
     Pxxp = Pxx.back();
 
+    cout << xestp << endl;
+    cout << Pxxp << endl;
+
     double tz = t.back();
 
     X = xestp.rowwise().replicate(nsu) + Pxxp.llt().matrixL() * Su;
 
     for (int i = 0; i < nsu; i++)
         Z.col(i) = h(tz, X.col(i));
+
+    // cout << "residuals: " << z - Z << endl;
 
     zm = Z * wu;
 
@@ -79,10 +89,12 @@ void UKF::update(const Eigen::VectorXd &z)
 
     xest.back() = xestu;
     Pxx.back() = Pxxu;
+
+    // cout << xestu << endl;
 }
 
 // Run filter for sequence of measurements
-void UKF::run(const Eigen::VectorXd &tz, const Eigen::MatrixXd &Z)
+void UKF::run(const VectorXd &tz, const MatrixXd &Z)
 {
     for (int i = 0; i < tz.size(); i++)
     {
@@ -101,10 +113,10 @@ UKF::UKF(
     const meas_model &h_,
     bool addw_,
     double t0,
-    const Eigen::VectorXd &xm0,
-    const Eigen::MatrixXd &Pxx0,
-    const Eigen::MatrixXd &Pww_,
-    const Eigen::MatrixXd &Pnn_,
+    const VectorXd &xm0,
+    const MatrixXd &Pxx0,
+    const MatrixXd &Pww_,
+    const MatrixXd &Pnn_,
     sig_type stype,
     double k) : nx(xm0.size()),
                 nz(Pnn_.rows()),
@@ -129,7 +141,7 @@ UKF::UKF(
 }
 
 // Generate standardized sigma points
-Eigen::MatrixXd UKF::sigmaSt(UKF::sig_type stype, int n, double k)
+MatrixXd UKF::sigmaSt(UKF::sig_type stype, int n, double k)
 {
 
     MatrixXd S;
@@ -165,7 +177,7 @@ Eigen::MatrixXd UKF::sigmaSt(UKF::sig_type stype, int n, double k)
 }
 
 // Generate sigma point weights
-Eigen::VectorXd UKF::sigmaWt(UKF::sig_type stype, int n, double k)
+VectorXd UKF::sigmaWt(UKF::sig_type stype, int n, double k)
 {
 
     VectorXd w;
@@ -200,8 +212,8 @@ Eigen::VectorXd UKF::sigmaWt(UKF::sig_type stype, int n, double k)
 // Reset filter
 void UKF::reset(
     double t0,
-    const Eigen::VectorXd &xm0,
-    const Eigen::MatrixXd &Pxx0)
+    const VectorXd &xm0,
+    const MatrixXd &Pxx0)
 {
 
     t.clear();

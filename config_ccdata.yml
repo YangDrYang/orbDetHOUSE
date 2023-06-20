@@ -1,0 +1,67 @@
+# required
+filter_options:
+  HOUSE: false
+  UKF: true
+  CUT4: false
+  CUT6: false
+  num_trials: 1
+
+# requried
+scenario_parameters:
+  MJD_start: 59356.59328126736 # 2021-May-22
+  MJD_end: 59357.795018171295 #2021-May-23
+  # this directory must exist
+  output_directory: out_ccdata
+
+# requried
+initial_orbtial_parameters:
+  dim_state: 6
+  # initial state of satillite (type ECEF or ECI), unit: m, m/s
+  initial_state: [-3185.26213924e+3, -3130.18937856e+3, 5283.97031168e+3, 6.46674351e+3, -3.5507631e+3, 1.79064592e+3]
+  initial_state_type: ECI
+  initial_covariance: 
+    - [1.0e+6, 0, 0, 0, 0, 0]
+    - [0, 1.0e+6, 0, 0, 0, 0]
+    - [0, 0, 1.0e+6, 0, 0, 0]
+    - [0, 0, 0, 1.0, 0, 0]
+    - [0, 0, 0, 0, 1.0, 0]
+    - [0, 0, 0, 0, 0, 1.0]    
+  process_noise_covariance:
+    - [4, 0, 0, 0, 0, 0]
+    - [0, 4, 0, 0, 0, 0]
+    - [0, 0, 4, 0, 0, 0]
+    - [0, 0, 0, 0.04, 0, 0]
+    - [0, 0, 0, 0, 0.04, 0]
+    - [0, 0, 0, 0, 0, 0.04]
+
+# requried
+measurement_parameters:
+  # measurement file
+  meas_file: ccdata/meas_data.csv
+  # ground station (as ECEF, velocities assumed to be 0)
+  ground_station: [-2730164.38085497, 3714370.03545681, 4393632.92952871, 0, 0, 0] #Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
+  dim_meas: 2
+  # measurement error with units [arcsec, arcsec]
+  right_ascension_error: 5
+  declination_error: 5
+
+
+# required, if not defined they will be set to default values
+propagator_filter_settings:
+  third_body_attraction: true
+  third_body_sun: true
+  third_body_moon: true
+  solid_earth_tide: false
+  ocean_tide_loading: false
+  solar_radiation_pressure : true
+  atmospheric_drag: true
+  relativity_effect: true
+  srpCoef: 1.23
+  srpArea : 0.136488 # 2 * PI  * pow(0.974 / 2, 2) * sin(0) + 1.034 * 0.132
+  satMass : 61.14  
+
+# optional
+ supporting_files:
+  gravity_file: GGMOS3.txt
+  ERP_file: cod15657.erp
+  ephemeris_file: unxp2000.405

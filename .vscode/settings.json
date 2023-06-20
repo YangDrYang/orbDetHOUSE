@@ -149,7 +149,8 @@
     "ranges": "cpp",
     "regex": "cpp",
     "scoped_allocator": "cpp",
-    "span": "cpp"
+    "span": "cpp",
+    "core": "cpp"
   },
   "cmake.configureOnOpen": true,
   "C_Cpp.errorSquiggles": "disabled",

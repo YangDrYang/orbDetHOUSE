@@ -269,7 +269,7 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     simInfo.epoch.endMJD = simParams["MJD_end"].as<double>();
     simInfo.epoch.timeStep = simParams["time_step"].as<double>();
     simInfo.epoch.timePass = simParams["time_pass"].as<double>();
-    simInfo.file.outDir = simParams["output_directory"].as<string>();
+    simInfo.outDir = simParams["output_directory"].as<string>();
 
     // read orbital parameters (required)
     YAML::Node orbitParams = config["initial_orbtial_parameters"];
@@ -577,11 +577,11 @@ int main(int argc, char *argv[])
 
     // header for the saved file
     vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-    string trajTruthFile = simInfo.file.outDir + "/trajectory_truth.csv";
+    string trajTruthFile = simInfo.outDir + "/trajectory_truth.csv";
     EigenCSV::write(tableTrajTruth, headerTraj, trajTruthFile);
     // header for the saved file
     vector<string> headerMeas({"tSec", "ra", "dec", "range", "range_rate"});
-    string measTruthFile = simInfo.file.outDir + "/measurement_truth.csv";
+    string measTruthFile = simInfo.outDir + "/measurement_truth.csv";
     EigenCSV::write(tableMeasTruth, headerMeas, measTruthFile);
 
     // Initialize UKF & CUT filters
@@ -664,7 +664,7 @@ int main(int argc, char *argv[])
             house.run(tSec, measCorrupted);
             runTimesMC(j - 1, 0) = timer.tock();
 
-            outputFile = simInfo.file.outDir + "/house_";
+            outputFile = simInfo.outDir + "/house_";
             outputFile += to_string(j);
             outputFile += ".csv";
             house.save(outputFile);
@@ -680,7 +680,7 @@ int main(int argc, char *argv[])
             ukf.run(tSec, measCorrupted);
             runTimesMC(j - 1, 1) = timer.tock();
 
-            outputFile = simInfo.file.outDir + "/ukf_";
+            outputFile = simInfo.outDir + "/ukf_";
             outputFile += to_string(j);
             outputFile += ".csv";
             ukf.save(outputFile);
@@ -694,7 +694,7 @@ int main(int argc, char *argv[])
             cut4.run(tSec, measCorrupted);
             runTimesMC(j - 1, 2) = timer.tock();
 
-            outputFile = simInfo.file.outDir + "/cut4_";
+            outputFile = simInfo.outDir + "/cut4_";
             outputFile += to_string(j);
             outputFile += ".csv";
             cut4.save(outputFile);
@@ -708,7 +708,7 @@ int main(int argc, char *argv[])
             cut6.run(tSec, measCorrupted);
             runTimesMC(j - 1, 3) = timer.tock();
 
-            outputFile = simInfo.file.outDir + "/cut6_";
+            outputFile = simInfo.outDir + "/cut6_";
             outputFile += to_string(j);
             outputFile += ".csv";
             cut6.save(outputFile);
@@ -718,28 +718,28 @@ int main(int argc, char *argv[])
     {
         // Save Filter run times
         vector<string> filterStrings({"house"});
-        string timeFile = simInfo.file.outDir + "/run_times_house.csv";
+        string timeFile = simInfo.outDir + "/run_times_house.csv";
         EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
     }
     if (filters.ukf)
     {
         // Save Filter run times
         vector<string> filterStrings({"ukf"});
-        string timeFile = simInfo.file.outDir + "/run_times_ukf.csv";
+        string timeFile = simInfo.outDir + "/run_times_ukf.csv";
         EigenCSV::write(runTimesMC.col(1), filterStrings, timeFile);
     }
     if (filters.cut4)
     {
         // Save Filter run times
         vector<string> filterStrings({"cut4"});
-        string timeFile = simInfo.file.outDir + "/run_times_cut4.csv";
+        string timeFile = simInfo.outDir + "/run_times_cut4.csv";
         EigenCSV::write(runTimesMC.col(2), filterStrings, timeFile);
     }
     if (filters.cut6)
     {
         // Save Filter run times
         vector<string> filterStrings({"cut6"});
-        string timeFile = simInfo.file.outDir + "/run_times_cut6.csv";
+        string timeFile = simInfo.outDir + "/run_times_cut6.csv";
         EigenCSV::write(runTimesMC.col(3), filterStrings, timeFile);
     }
 }

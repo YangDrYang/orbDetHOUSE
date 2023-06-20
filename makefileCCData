@@ -1,0 +1,75 @@
+# compiler
+CC = g++
+
+# create directories
+$(shell mkdir -p bin/orbmdl)
+$(shell mkdir -p bin/orbmdl/3rdparty)
+$(shell mkdir -p bin/orbmdl/sofa)
+$(shell mkdir -p bin/orbmdl/nrlmsise-00)
+$(shell mkdir -p bin/filter)
+
+OBJDIR = bin
+LOCAL_DIR = usr/local
+
+# for compiling orbmdl and filter
+# CPPFLAGS = -std=c++20 -fopenmp
+CPPFLAGS = --std=c++11 -Wall -pedantic -g -O3 
+INCLUDE = -I/$(LOCAL_DIR)/include/ -I/$(LOCAL_DIR)/include/eigen3/ -I/$(LOCAL_DIR)/boost_1_81_0 -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
+
+# orbmdl files
+ORBMDL_SRC = $(wildcard orbmdl/*.cpp) $(wildcard orbmdl/3rdparty/*.cpp) $(wildcard orbmdl/sofa/*.cpp)
+ORBMDL_OBJ = $(ORBMDL_SRC:orbmdl/%.cpp=$(OBJDIR)/orbmdl/%.o)
+ORBMDL_AR = $(OBJDIR)/orbmdl/liborbmdl.a
+# NRLMSISE00 (DRAG DENSITY MODEL) files
+NRLMSISE00_SRC = $(wildcard orbmdl/nrlmsise-00/*.c)
+NRLMSISE00_OBJ = $(NRLMSISE00_SRC:orbmdl/nrlmsise-00/%.c=$(OBJDIR)/orbmdl/nrlmsise-00/%.o)
+#gcc -c -o bin/orbmdl/nrlmsise-00/nrlmsise-00.o orbmdl/nrlmsise-00/nrlmsise-00.c -I./orbmdl/nrlmsise-00/
+
+# filter files
+FILTER_SRC = $(wildcard filter/*.cpp)
+FILTER_OBJ = $(FILTER_SRC:filter/%.cpp=$(OBJDIR)/filter/%.o)
+FILTER_AR = $(OBJDIR)/filter/libfilter.a
+
+# ORBDET files
+ORBDET_SRC = testOrbDetCCData.cpp
+ORBDET_OBJ = $(ORBDET_SRC:%.cpp=$(OBJDIR)/%.o)
+
+OBJECTS = $(ORBMDL_AR) $(FILTER_AR)
+
+# ----- COMPILE ORBDET -----
+testOrbDetCCData: $(ORBDET_OBJ) $(OBJECTS)
+	$(CC) $(CPPFLAGS) $(INCLUDE) $(OBJECTS) $(ORBDET_OBJ) -L$(OBJDIR)/orbmdl -lorbmdl -L$(OBJDIR)/filter -lfilter -lyaml-cpp -o testOrbDetCCData
+
+# compile ORBDET object file
+$(ORBDET_OBJ): $(OBJDIR)/%.o : %.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE) -c $< -o $@ 
+
+# ----- COMPILE orbmdl -----
+# compile orbmdl object files
+$(ORBMDL_OBJ): $(OBJDIR)/orbmdl/%.o : orbmdl/%.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE) -c $< -o $@	
+
+# gcc -c -o bin/orbmdl/nrlmsise-00/nrlmsise-00.o orbmdl/nrlmsise-00/nrlmsise-00.c -I./orbmdl/nrlmsise-00/
+# # ----- COMPILE NRLMSISE-00 -----
+# # compile NRLMSISE-00 object files
+# $(NRLMSISE00_OBJ): $(OBJDIR)/nrlmsise-00/%.o : orbmdl/nrlmsise-00/%.c
+# 	gcc $(INCLUDE) -c $< -o $@
+
+# create orbmdl library
+$(ORBMDL_AR): $(ORBMDL_OBJ)
+	ar rcs $(ORBMDL_AR) $(ORBMDL_OBJ)
+
+# ----- COMPILE filter -----
+# create filter library
+$(FILTER_AR): $(FILTER_OBJ)
+	ar rcs $(FILTER_AR) $(FILTER_OBJ)
+
+# compile filter object files
+$(FILTER_OBJ): $(OBJDIR)/filter/%.o : filter/%.cpp
+	$(CC) $(CPPFLAGS) $(INCLUDE) -c $< -o $@ 
+
+# ----- CLEAN -----
+.PHONY: clean
+clean:
+	# rm -f $(OBJDIR)/*.o $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(OBJDIR)/orbmdl/nrlmsise-00/*.o $(ORBMDL_AR) $(OBJDIR)/filter/*.o $(FILTER_AR) testOrbDetCCData
+	rm -f $(OBJDIR)/*.o $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(ORBMDL_AR) $(OBJDIR)/filter/*.o $(FILTER_AR) testOrbDetCCData
