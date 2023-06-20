@@ -50,11 +50,6 @@ struct ScenarioInfo
     EpochInfo epoch;
     string outDir;
 };
-struct SimInfo
-{
-    EpochInfo epoch;
-    string outDir;
-};
 
 struct Filters
 {
@@ -95,6 +90,6 @@ orbitModel(double t, const VectorXd &X);
 void initEGMCoef(string filename);
 void initGlobalVariables(VectorXd &initialState, string stateType);
 VectorXd stdVec2EigenVec(const vector<double> &stdVec);
-void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct SimInfo &simInfo, struct InitialState &initialState,
-                    MeasModel &measMdl, struct Filters &filters);
+void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
+                    MeasModel &measMdl, struct Filters &filters, struct FileInfo &suppFiles);
 MatrixXd generateTrueResults(DynamicModel &f, struct EpochInfo epoch, VectorXd initialState);

@@ -73,7 +73,7 @@ void UKF::update(const VectorXd &z)
     for (int i = 0; i < nsu; i++)
         Z.col(i) = h(tz, X.col(i));
 
-    // cout << "residuals: " << z - Z << endl;
+    cout << "residuals: " << z - Z << endl;
 
     zm = Z * wu;
 

@@ -61,7 +61,7 @@ propagator_filter_settings:
   satMass : 61.14  
 
 # optional
- supporting_files:
-  gravity_file: GGMOS3.txt
-  ERP_file: cod15657.erp
-  ephemeris_file: unxp2000.405
+supporting_files:
+  gravity_file: ./auxdata/GGMOS3.txt
+  ephemeris_file: ./auxdata/unxp2000.405
+  ERP_file: ./auxdata/cod21587.erp

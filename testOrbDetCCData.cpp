@@ -33,7 +33,7 @@ const double leaps[MAXLEAPS + 1][7] =
 
 // propagator variables
 erp_t erpt;
-double leapSec;
+// double leapSec;
 IERS iersInstance;
 ForceModels forceModelsTruthOpt = {}, forceModelsFilterOpt = {};
 EGMCoef egm;
@@ -75,22 +75,23 @@ double getLeapSecond(time_t t)
 
 void getIERS(double mjd)
 {
-    // // get leap seconds from the table
-    // double leapSec = getLeapSecond(convertMJD2Time_T(mjd));
+    // get leap seconds from the table
+    double leapSec = -getLeapSecond(convertMJD2Time_T(mjd));
 
     double erpv[4] = {};
-    cout << "leap second:   " << leapSec << "mjd:   " << mjd << endl;
+    // cout << "leap second:   " << leapSec << "   "
+    //      << "mjd:   " << mjd << endl;
     geterp_from_utc(&erpt, leapSec, mjd, erpv);
 
     double dUT1_UTC = erpv[2];
-    double dUTC_TAI = -19 + leapSec;
+    double dUTC_TAI = -(19 + leapSec);
     double xp = erpv[0];
     double yp = erpv[1];
     double lod = erpv[3];
 
     iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
 
-    cout << "dUT1_UTC:  " << dUT1_UTC << "dUTC_TAI: " << dUTC_TAI << "xp:   " << xp << endl;
+    // cout << "dUT1_UTC:  " << dUT1_UTC << "dUTC_TAI: " << dUTC_TAI << "xp:   " << xp << endl;
 }
 
 VectorXd simpleAccerationModel(double t, const VectorXd &X, const VectorXd &fd);
@@ -121,7 +122,7 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     Matrix3d mdECI2ECEF = Matrix3d::Identity();
 
     // get leap seconds from the table
-    leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD + tSec / 86400));
+    double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD + tSec / 86400));
     // set up the IERS instance
     getIERS(epoch.startMJD + tSec / 86400);
 
@@ -176,18 +177,18 @@ Vector2d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &s
     VectorXd stnECI = VectorXd::Zero(6);
     VectorXd stnECEF_ = stnECEF; // define a new variable that is not a const vector
 
-    // get leap seconds from the table
-    leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD + tSec / 86400));
+    // // get leap seconds from the table
+    // double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD + tSec / 86400));
 
-    cout << "tSec:  " << tSec << endl;
-    cout << "leapSec:   " << leapSec << endl;
+    // cout << "tSec:  " << tSec << endl;
+    // cout << "leapSec:   " << leapSec << endl;
 
     // set up the IERS instance
     getIERS(epoch.startMJD + tSec / 86400);
 
-    cout << "starting mjd:  " << epoch.startMJD << endl;
+    // cout << "starting mjd:  " << epoch.startMJD << endl;
     ecef2eciVec_sofa(epoch.startMJD + tSec / 86400, iersInstance, stnECEF_, stnECI);
-    // // cout << "epoch" << tSec << endl;
+    // cout << "epoch" << tSec << endl;
     // cout << "ground station in ECEF " << stnECEF_.transpose() << endl;
     // cout << "ground station in ECI  " << stnECI.transpose() << endl;
 
@@ -197,6 +198,11 @@ Vector2d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &s
 
     // right ascension angle
     z(0) = atan2(p(1), p(0));
+    if (z(0) < 0)
+    {
+        z(0) += 2 * M_PI;
+    };
+
     // declination angle
     z(1) = asin(p(2) / p.norm());
 
@@ -282,7 +288,7 @@ MatrixXd readCSV(const string &filename, int headerLinesToSkip)
 }
 
 void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
-                    struct MeasModel &measMdl, struct Filters &filters)
+                    struct MeasModel &measMdl, struct Filters &filters, struct FileInfo &suppFiles)
 {
     // load file
     YAML::Node config = YAML::LoadFile(fileName);
@@ -386,10 +392,10 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
         optFilter.srpCoef = parameter.as<double>();
 
     // read file options for info/data that are relied on
-    YAML::Node fileSupp = config["supporting_files"];
-    string erpFile = fileSupp["ERP_file"].as<string>();
-    string grvFile = fileSupp["gravity_file"].as<string>();
-    string ephFile = fileSupp["ephemeris_file"].as<string>();
+    YAML::Node fileOpt = config["supporting_files"];
+    suppFiles.erpFile = fileOpt["ERP_file"].as<string>();
+    suppFiles.grvFile = fileOpt["gravity_file"].as<string>();
+    suppFiles.ephFile = fileOpt["ephemeris_file"].as<string>();
 }
 
 VectorXd stdVec2EigenVec(const vector<double> &stdVec)
@@ -425,14 +431,13 @@ void initEGMCoef(string filename)
     }
 }
 
-void initGlobalVariables(VectorXd &initialStateVec, string stateType)
+void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct FileInfo &suppFiles)
 {
-    // START MOD
-    initEGMCoef("./auxdata/GGM03S.txt");
-    erpt = {.n = 14};
+    initEGMCoef(suppFiles.grvFile);
 
-    readerp("./auxdata/cod15657.erp", &erpt);
-    // cout << "erpt mjd\t" << erpt.data->mjd << endl;
+    erpt = {.n = 14};
+    cout << suppFiles.erpFile << endl;
+    readerp(suppFiles.erpFile, &erpt);
 
     // // transform ground station from
     // leapSec = 15;
@@ -451,12 +456,12 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType)
     // // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
 
     // get leap seconds from the table
-    leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
+    double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
     // set up the IERS instance
     getIERS(epoch.startMJD);
-    cout << "testing here" << endl;
 
-    pJPLEph = jpl_init_ephemeris(JPL_EPHEMERIS_FILENAME, nullptr, nullptr);
+    const char *ephFile = suppFiles.ephFile.c_str();
+    pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
 
     VectorXd rvECI = VectorXd::Zero(6);
     string ecefTag = "ECEF";
@@ -496,8 +501,9 @@ int main(int argc, char *argv[])
     struct MeasModel measMdl;
     struct Filters filters;
     struct InitialState initialState;
+    struct FileInfo suppFiles;
     // read parameter/settings from config file
-    readConfigFile(configFilename, forceModelsTruthOpt, forceModelsFilterOpt, snrInfo, initialState, measMdl, filters);
+    readConfigFile(configFilename, forceModelsTruthOpt, forceModelsFilterOpt, snrInfo, initialState, measMdl, filters, suppFiles);
     epoch = snrInfo.epoch;
     const int dimState = initialState.dimState;
     string initialStateType = initialState.initialStateType;
@@ -506,7 +512,7 @@ int main(int argc, char *argv[])
     const VectorXd groundStation = measMdl.groundStation;
 
     // initialise
-    initGlobalVariables(initialStateVec, initialStateType);
+    initGlobalVariables(initialStateVec, initialStateType, suppFiles);
 
     // read angular measurements from the exiting file
     string filename = measMdl.measFile;
@@ -538,6 +544,7 @@ int main(int argc, char *argv[])
     // process noise covariance
     MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
 
+    double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
     // setup orbit propagator
     orbitProp.setPropOption(forceModelsTruthOpt);
     orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);

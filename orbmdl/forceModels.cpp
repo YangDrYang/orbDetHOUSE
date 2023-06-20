@@ -352,7 +352,7 @@ void Propagator::initPropagator(
 
 	if (propOpt.flagSolarRadiationPressure)
 	{
-		pmSolarRadPressure = new SolarRadPressure(propOpt.optSRP, propOpt.paraSRP, pJPLEph); // todo aaron, dont use new
+		pmSolarRadPressure = new SolarRadPressure(propOpt.optSRP, propOpt.paraSRP, pJPLEph);
 	}
 
 	if (propOpt.flagThirdBodyGravity)

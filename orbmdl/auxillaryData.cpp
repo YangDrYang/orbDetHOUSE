@@ -13,11 +13,8 @@ int readerp(string file, erp_t *erp)
     double v[14] = {0};
     char buff[256];
 
-    //	trace(3,"%s: file=%s\n",__FUNCTION__, file);
-
     if (!(fp = fopen(file.c_str(), "r")))
     {
-        //         trace(2,"erp file open error: file=%s\n",file);
         return 0;
     }
 
@@ -71,13 +68,12 @@ int geterp_from_utc(
 {
     double day;
 
-    //	trace(4,"geterp:\n");
-
     if (erp->n <= 0)
         return 0;
 
     if (mjd <= erp->data[0].mjd)
     {
+        cout << "yang wrong2" << endl;
         day = mjd - erp->data[0].mjd;
 
         erpv[0] = erp->data[0].xp + erp->data[0].xpr * day;
@@ -91,6 +87,7 @@ int geterp_from_utc(
 
     if (mjd >= erp->data[erp->n - 1].mjd)
     {
+        cout << "yang right" << endl;
         day = mjd - erp->data[erp->n - 1].mjd;
 
         erpv[0] = erp->data[erp->n - 1].xp + erp->data[erp->n - 1].xpr * day;
