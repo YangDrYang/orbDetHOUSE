@@ -63,20 +63,24 @@ void UKF::update(const VectorXd &z)
     xestp = xest.back();
     Pxxp = Pxx.back();
 
-    cout << xestp << endl;
-    cout << Pxxp << endl;
+    // cout << "dimensions of meas: \t" << nz << endl;
+    // cout << xestp << endl;
+    // cout << Pxxp << endl;
 
     double tz = t.back();
 
     X = xestp.rowwise().replicate(nsu) + Pxxp.llt().matrixL() * Su;
 
+    // cout << "debuging here \t" << endl;
+
     for (int i = 0; i < nsu; i++)
         Z.col(i) = h(tz, X.col(i));
 
-    cout << "residuals: " << z - Z << endl;
+    // cout << "residuals: " << z - Z.col(0) << endl;
 
     zm = Z * wu;
 
+    cout << "Pnn \t" << Pnn << endl;
     Pzz = Z * wu.asDiagonal() * Z.transpose() - zm * zm.transpose() + Pnn;
 
     Pzx = Z * wu.asDiagonal() * X.transpose() - zm * xestp.transpose();
@@ -98,6 +102,7 @@ void UKF::run(const VectorXd &tz, const MatrixXd &Z)
 {
     for (int i = 0; i < tz.size(); i++)
     {
+        cout << "the " << i << "th epoch" << endl;
         predict(tz(i));
         // only update if given a measurment
         if (abs(Z(1, i)) <= M_PI * 2)

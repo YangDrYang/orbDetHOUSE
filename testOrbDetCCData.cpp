@@ -436,7 +436,7 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
     initEGMCoef(suppFiles.grvFile);
 
     erpt = {.n = 14};
-    cout << suppFiles.erpFile << endl;
+    // cout << suppFiles.erpFile << endl;
     readerp(suppFiles.erpFile, &erpt);
 
     // // transform ground station from
@@ -455,8 +455,6 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
     // iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
     // // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
 
-    // get leap seconds from the table
-    double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
     // set up the IERS instance
     getIERS(epoch.startMJD);
 
@@ -554,7 +552,7 @@ int main(int argc, char *argv[])
     VectorXd tSec = (matMeas.col(6).array() - matMeas(0, 6)).matrix() * 86400;
 
     // Extract two angular measurements in the last two columns
-    MatrixXd angMeas = matMeas.block(0, matMeas.cols() - dimMeas, 1, dimMeas);
+    MatrixXd angMeas = matMeas.block(0, matMeas.cols() - dimMeas, matMeas.rows(), dimMeas);
     // Convert from degress into raidans
     angMeas = angMeas * (M_PI / 180.0);
     // Transpose of angMeas to ensure the measurement in a vector for each time epoch
