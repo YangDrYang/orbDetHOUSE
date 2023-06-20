@@ -576,7 +576,7 @@ int main(int argc, char *argv[])
     HOUSE house(f, hh, dimMeas, 0, distXi, distw, distn, 0);
 
     string outputFile;
-    VectorXd runTimesMC(4);
+    MatrixXd runTimesMC(1, 4);
     Timer timer;
 
     if (filters.house)

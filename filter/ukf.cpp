@@ -80,7 +80,6 @@ void UKF::update(const VectorXd &z)
 
     zm = Z * wu;
 
-    cout << "Pnn \t" << Pnn << endl;
     Pzz = Z * wu.asDiagonal() * Z.transpose() - zm * zm.transpose() + Pnn;
 
     Pzx = Z * wu.asDiagonal() * X.transpose() - zm * xestp.transpose();
