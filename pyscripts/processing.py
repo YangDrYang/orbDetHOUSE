@@ -2,6 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import math
+import datetime as dt
+import matplotlib.dates as mdates
 
 
 # Define a function to extract the number from the file name
@@ -325,6 +328,105 @@ def process_err_each_filter(filter_type, folder_path):
     fig.savefig("plots/" + filter_type + "_MCS_err.pdf")
 
 
-# # filter_type = "ukf"
-# filter_type = "house"
-# process_each_filter(filter_type)
+def process_post_res_each_filter(od_file, stn_file, meas_file, post_res_file):
+    # Calculate the post residuals
+
+    # print(trial_file_names)
+
+    # Read the real measurement CSV file into a pandas dataframe
+    meas_df = pd.read_csv(meas_file)
+
+    # Read the od result CSV file into a pandas dataframe
+    od_df = pd.read_csv(od_file)
+    od_df = od_df.iloc[:, 0:7]
+
+    # Read the station ECI coordinate CSV file into a pandas dataframe
+    stn_df = pd.read_csv(stn_file)
+
+    post_res_df = pd.DataFrame()
+
+    for index, meas_row in meas_df.iterrows():
+        # Access the common identifier
+        identifier = meas_row["MJD"]
+
+        stn_row = stn_df[stn_df["MJD"] == identifier]
+
+        post_res_row = pd.DataFrame()
+        post_res_row["MJD"] = identifier
+
+        # Access the common identifier
+        identifier = meas_row["MJD"] - meas_df.iloc[0, 0]
+
+        # Retrieve the corresponding row in od_df using the common identifier
+
+        od_row = od_df[od_df["MJD"] == identifier]
+
+        # Access the values from od_row and meas_row for calculations
+
+        x_sat = od_row["EST X1"]
+        y_sat = od_row["EST X2"]
+        z_sat = od_row["EST X3"]
+
+        x_stn = stn_row["X"]
+        y_stn = stn_row["Y"]
+        z_stn = stn_row["Z"]
+
+        # Calculate the range vector between satellite and station
+        p = np.array([x_sat, y_sat, z_sat]) - np.array([x_stn, y_stn, z_stn])
+
+        # Calculate the right ascension angle
+        post_res_row["RA"] = math.atan2(p[1], p[0])
+        if post_res_row["RA"] < 0:
+            post_res_row["RA"] += 2 * math.pi
+
+        # Calculate the declination angle
+        post_res_row["Dec"] = math.asin(p[2] / np.linalg.norm(p))
+
+        post_res_df = pd.concat([post_res_df, post_res_row], ignore_index=True)
+
+    # Generate plots for two angles
+
+    # Convert MJD to datetime objects
+    dates = mdates.num2date(post_res_df["MJD"])
+
+    # Create subplots with shared x-axis
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(8, 10))
+
+    # Plot RA vs MJD
+    ax1.scatter(dates, np.radians(post_res_df["RA"]), color="blue")
+    ax1.set_ylabel("ra res(radians)")
+    # ax1.set_title("ra res vs date")
+
+    # Plot Dec vs MJD
+    ax2.scatter(dates, np.radians(post_res_df["Dec"]), color="red")
+    ax2.set_xlabel("date (utc)")
+    ax2.set_ylabel("dec res (radians)")
+    # ax2.set_title("dec vs date")
+
+    # Format x-axis as hours
+    hours = mdates.HourLocator(interval=1)
+    hour_format = mdates.DateFormatter("%H:%M")
+    ax2.xaxis.set_major_locator(hours)
+    ax2.xaxis.set_major_formatter(hour_format)
+
+    # Show only the date for the first epoch of each day
+    dates_first_epoch = np.unique([date.date() for date in dates])
+    for date in dates_first_epoch:
+        ax1.axvline(date, color="gray", linestyle="--", alpha=0.5)
+        ax2.axvline(date, color="gray", linestyle="--", alpha=0.5)
+
+    # Show only 1 hour before and 1 hour after the data on x-axis
+    start_time = min(dates) - dt.timedelta(hours=1)
+    end_time = max(dates) + dt.timedelta(hours=1)
+    ax2.set_xlim(start_time, end_time)
+
+    # Rotate x-axis tick labels and adjust label spacing
+    fig.autofmt_xdate(rotation=45)
+    ax2.tick_params(axis="x", rotation=45, labelsize=10)
+
+    # Adjust spacing between subplots
+    plt.subplots_adjust(hspace=0.4)
+
+    plt.tight_layout()
+    # Save the figure
+    plt.savefig(post_res_file)
