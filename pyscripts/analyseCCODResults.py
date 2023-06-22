@@ -6,10 +6,15 @@ filters = ["house", "ukf", "cut4", "cut6"]
 # Directory path
 folder_path = "out_ccdata"
 
+norad_id = 46984
+meas_file = "ccdata/meas_data_id_" + str(norad_id) + ".csv"
+stn_file = "ccdata/stn_data_id_" + str(norad_id) + ".csv"
+post_res_file = "out_ccdata/post_res_id_" + str(norad_id) + ".csv"
 # Create a new figure and axes for logarithmic plot
 fig, ax = plt.subplots(ncols=2, figsize=(10, 5))
 
 for filter_type in filters:
+    od_file = "out_ccdata/" + filter_type + ".csv"
     processing.process_post_res_each_filter(od_file, stn_file, meas_file, post_res_file)
 
     # Read CSV file into a pandas dataframe

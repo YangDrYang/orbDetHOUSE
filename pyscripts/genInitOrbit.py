@@ -6,11 +6,15 @@ import yaml
 
 import pandas as pd
 
+norad_id = 46984  # NORAD ID
+directory_path = "ccdata/"  # Directory path
+file_name = "meas_data_id_" + str(norad_id) + ".csv"  # File name
+file_path = directory_path + file_name
 # Read the CSV file into a pandas DataFrame
-obsDF = pd.read_csv("ccdata/meas_data.csv")
+obsDF = pd.read_csv(file_path)
 
 pathName = "pyscripts/"
-yamlName = "InputStarlink.yml"
+yamlName = "inputSentinel6A.yml"
 with open(pathName + yamlName) as f:
     inputDict = yaml.safe_load(f)
 

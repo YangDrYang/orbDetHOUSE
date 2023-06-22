@@ -8,8 +8,10 @@ filter_options:
 
 # requried
 scenario_parameters:
-  MJD_start: 59356.59328126736 # 2021-May-22
-  MJD_end: 59357.795018171295 #2021-May-23
+  # MJD_start: 59356.59328126736 # 2021-May-22
+  # MJD_end: 59357.795018171295 #2021-May-23
+  MJD_start: 59349.51137986922 # 2021-May-15
+  MJD_end: 59352.559680763894 #2021-May-18  
   # this directory must exist
   output_directory: out_ccdata
 
@@ -17,7 +19,8 @@ scenario_parameters:
 initial_orbtial_parameters:
   dim_state: 6
   # initial state of satillite (type ECEF or ECI), unit: m, m/s
-  initial_state: [-3185.26213924e+3, -3130.18937856e+3, 5283.97031168e+3, 6.46674351e+3, -3.5507631e+3, 1.79064592e+3]
+  # initial_state: [-3185.26213924e+3, -3130.18937856e+3, 5283.97031168e+3, 6.46674351e+3, -3.5507631e+3, 1.79064592e+3]
+  initial_state: [-3669.5756236e+3,   1040.41851433e+3,  6705.99019621e+3, -5.05132767e+3, -4.68671761e+3, -2.03577368e+3]
   initial_state_type: ECI
   initial_covariance: 
     - [1.0e+6, 0, 0, 0, 0, 0]
@@ -37,7 +40,7 @@ initial_orbtial_parameters:
 # requried
 measurement_parameters:
   # measurement file
-  meas_file: ccdata/meas_data.csv
+  meas_file: ccdata/meas_data_id_46984.csv
   # ground station (as ECEF, velocities assumed to be 0)
   ground_station: [-2730164.38085497, 3714370.03545681, 4393632.92952871, 0, 0, 0] #Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
   dim_meas: 2

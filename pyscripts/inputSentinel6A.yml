@@ -1,0 +1,11 @@
+satDict:
+    satInfo: ["Sentinel6A", "46984"]
+    dateInfo: ["2021-05-15", "2021-05-18"]
+dictFile:
+    # existing tle file
+    tleFile: "pyscripts/tleSentinel6A.txt"
+    # a new tle file to save downloaded tle data
+    tleOutFile: "pyscripts/tleSentinel6A.txt"
+
+
+
