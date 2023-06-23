@@ -30,7 +30,6 @@ using namespace Eigen;
 using namespace std;
 
 #define DEFAULT_CONFIG_FILENAME "config.yaml"
-#define JPL_EPHEMERIS_FILENAME "./auxdata/unxp2000.405"
 
 struct EpochInfo
 {

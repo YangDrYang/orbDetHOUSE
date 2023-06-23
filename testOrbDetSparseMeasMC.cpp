@@ -481,7 +481,7 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType)
     // set up the IERS instance
     getIERS(epoch.startMJD);
 
-    pJPLEph = jpl_init_ephemeris(JPL_EPHEMERIS_FILENAME, nullptr, nullptr);
+    pJPLEph = jpl_init_ephemeris("./auxdata/unxp2000.405", nullptr, nullptr);
 
     VectorXd rvECI = VectorXd::Zero(6);
     string ecefTag = "ECEF";
