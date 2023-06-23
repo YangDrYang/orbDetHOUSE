@@ -17,7 +17,7 @@ simulation_parameters:
   MJD_end: 55200.2 #5.757212410879634e+4
   # this directory must exist
   # output_directory: out
-  output_directory: out_
+  output_directory: out_sparse
 
 # requried
 initial_orbtial_parameters:
