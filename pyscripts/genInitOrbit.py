@@ -13,7 +13,7 @@ file_path = directory_path + file_name
 # Read the CSV file into a pandas DataFrame
 obsDF = pd.read_csv(file_path)
 
-pathName = "pyscripts/"
+pathName = "yamlinputs/"
 yamlName = "inputSentinel6A.yml"
 with open(pathName + yamlName) as f:
     inputDict = yaml.safe_load(f)
@@ -36,8 +36,9 @@ print(obsDF.iloc[0, 0:6])
 
 # obtain position and velocity at the next epoch from TLE
 rvFirstMeasEpoch = satdata[0].at(tProp)
-rECIFirstMeasEpoch = rvFirstMeasEpoch.position.km
-vECIFirstMeasEpoch = rvFirstMeasEpoch.velocity.km_per_s
+rECIFirstMeasEpoch = rvFirstMeasEpoch.position.km * 1000
+vECIFirstMeasEpoch = rvFirstMeasEpoch.velocity.km_per_s * 1000
 
+print(tProp)
 print(rECIFirstMeasEpoch)
 print(vECIFirstMeasEpoch)

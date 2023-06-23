@@ -127,7 +127,70 @@ def process_rmse_each_filter(filter_type, folder_path):
     # # Display the final dataframe with the added columns
     print(df)
     # save the errors
-    df.to_csv(folder_path + "trajectory_error_" + filter_type + ".csv")
+    df.to_csv(folder_path + "trajectory_error_" + filter_type + ".csv", index=False)
+
+
+def process_rmse_each_filter_ccdata(
+    filter_type, out_folder_path, norad_id, od_ref_data_file
+):
+    # folder_path = "out_/"  # replace with the path to your folder
+    # Get a sorted list of file names in the folder that start with filter_type
+
+    # Read the truth CSV file into a pandas dataframe
+    truth_df = pd.read_csv(od_ref_data_file)
+    # print(truth_df.head())
+    truth_df = truth_df.iloc[:, 0:7]
+    # Read the estimaiton CSV file into a pandas dataframe
+    truth_df = pd.read_csv(od_ref_data_file)
+
+    est_file_name = filter_type + "_id_" + str(norad_id) + ".csv"
+    # Create an empty dataframe to store the data
+    est_df = pd.read_csv(out_folder_path + est_file_name)
+
+    df = pd.DataFrame()
+    # Add the errors to the empty dataframe
+    df["pos_err_x"] = est_df["EST X1"] - truth_df["Interpolated_X"]
+    df["pos_err_y"] = est_df["EST X2"] - truth_df["Interpolated_Y"]
+    df["pos_err_z"] = est_df["EST X3"] - truth_df["Interpolated_Z"]
+    df["vel_err_x"] = est_df["EST X4"] - truth_df["Interpolated_VX"]
+    df["vel_err_y"] = est_df["EST X5"] - truth_df["Interpolated_VY"]
+    df["vel_err_z"] = est_df["EST X6"] - truth_df["Interpolated_VZ"]
+
+    df["mjd"] = truth_df["MJD"]
+    # df["time_lapse"] = truth_df["t"]
+    # define the new order of the columns
+    new_order = [
+        "mjd",
+        "pos_err_x",
+        "pos_err_y",
+        "pos_err_z",
+        "vel_err_x",
+        "vel_err_y",
+        "vel_err_z",
+    ]
+    df = df.reindex(columns=new_order)
+
+    # calculate the rms of position and velocity for each epoch
+    # select the position components to include in the calculation
+    cols_pos_err = ["pos_err_x", "pos_err_y", "pos_err_z"]
+    # select the velocity components to include in the calculation
+    cols_vel_err = ["vel_err_x", "vel_err_y", "vel_err_z"]
+
+    # calculate the root mean square of the selected columns
+    rms_pos_err = np.sqrt(np.mean(np.square(df[cols_pos_err]), axis=1))
+    rms_vel_err = np.sqrt(np.mean(np.square(df[cols_vel_err]), axis=1))
+
+    # add the root mean square as a new column to the original DataFrame
+    df["pos_err_rms"] = rms_pos_err
+    df["vel_err_rms"] = rms_vel_err
+
+    # # Display the final dataframe with the added columns
+    print(df)
+    # save the errors
+    df.to_csv(
+        out_folder_path + filter_type + "_err_id_" + str(norad_id) + ".csv",
+        index=False,
+    )
 
 
 # Normalised Error Square
@@ -223,7 +286,7 @@ def process_nes_each_filter(filter_type, folder_path):
     nes_df = nes_df.reindex(columns=new_order)
 
     # save the errors
-    nes_df.to_csv(folder_path + "nes_" + filter_type + ".csv")
+    nes_df.to_csv(folder_path + "nes_" + filter_type + ".csv", index=False)
 
 
 def process_err_each_filter(filter_type, folder_path):

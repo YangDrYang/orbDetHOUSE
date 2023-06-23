@@ -79,7 +79,7 @@ void getIERS(double mjd)
     geterp_from_utc(&erpt, leapSec, mjd, erpv);
 
     double dUT1_UTC = erpv[2];
-    double dUTC_TAI = -19 + leapSec;
+    double dUTC_TAI = -(19 + leapSec);
     double xp = erpv[0];
     double yp = erpv[1];
     double lod = erpv[3];
@@ -267,7 +267,7 @@ MatrixXd generateTrueResults(DynamicModel &f, struct EpochInfo epoch, VectorXd i
     return results;
 }
 
-void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct SimInfo &simInfo, struct InitialState &initialState,
+void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
                     struct MeasModel &measMdl, struct Filters &filters)
 {
     // load file
@@ -285,11 +285,11 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
 
     // read simulation parameters (required)
     YAML::Node simParams = config["simulation_parameters"];
-    simInfo.epoch.startMJD = simParams["MJD_start"].as<double>();
-    simInfo.epoch.endMJD = simParams["MJD_end"].as<double>();
-    simInfo.epoch.timeStep = simParams["time_step"].as<double>();
-    simInfo.epoch.timePass = simParams["time_pass"].as<double>();
-    simInfo.outDir = simParams["output_directory"].as<string>();
+    snrInfo.epoch.startMJD = simParams["MJD_start"].as<double>();
+    snrInfo.epoch.endMJD = simParams["MJD_end"].as<double>();
+    snrInfo.epoch.timeStep = simParams["time_step"].as<double>();
+    snrInfo.epoch.timePass = simParams["time_pass"].as<double>();
+    snrInfo.outDir = simParams["output_directory"].as<string>();
 
     // read orbital parameters (required)
     YAML::Node orbitParams = config["initial_orbtial_parameters"];
@@ -517,13 +517,13 @@ int main(int argc, char *argv[])
     }
     cout << "Reading configuration from file: " << configFilename << endl;
 
-    struct SimInfo simInfo;
+    struct ScenarioInfo snrInfo;
     struct MeasModel measMdl;
     struct Filters filters;
     struct InitialState initialState;
     // read parameter/settings from config file
-    readConfigFile(configFilename, forceModelsTruthOpt, forceModelsFilterOpt, simInfo, initialState, measMdl, filters);
-    epoch = simInfo.epoch;
+    readConfigFile(configFilename, forceModelsTruthOpt, forceModelsFilterOpt, snrInfo, initialState, measMdl, filters);
+    epoch = snrInfo.epoch;
     int numTrials = filters.numTrials;
     const int dimState = initialState.dimState;
     string initialStateType = initialState.initialStateType;
@@ -597,11 +597,11 @@ int main(int argc, char *argv[])
 
     // header for the saved file
     vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-    string trajTruthFile = simInfo.outDir + "/trajectory_truth.csv";
+    string trajTruthFile = snrInfo.outDir + "/trajectory_truth.csv";
     EigenCSV::write(tableTrajTruth, headerTraj, trajTruthFile);
     // header for the saved file
     vector<string> headerMeas({"tSec", "ra", "dec", "range", "range_rate"});
-    string measTruthFile = simInfo.outDir + "/measurement_truth.csv";
+    string measTruthFile = snrInfo.outDir + "/measurement_truth.csv";
     EigenCSV::write(tableMeasTruth, headerMeas, measTruthFile);
 
     // // simulate ground-truth trajectory
@@ -643,7 +643,7 @@ int main(int argc, char *argv[])
 
     // // header for the saved file
     // vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-    // string trajTruthFile = simInfo.outDir + "/trajectory_truth";
+    // string trajTruthFile = snrInfo.outDir + "/trajectory_truth";
     // trajTruthFile += ".csv";
     // EigenCSV::write(tableTrue, headerTraj, trajTruthFile);
     // // // Save truth generation run times
@@ -678,7 +678,7 @@ int main(int argc, char *argv[])
         int seed = j;
         MatrixXd matInitNoise = generateNoiseMatrix(seed, 1, initialCov);
         MatrixXd matMeasNoise = generateNoiseMatrix(seed, nTotalSteps, measNoiseCov);
-        // string noiseFile = simInfo.outDir + "/noise.csv";
+        // string noiseFile = snrInfo.outDir + "/noise.csv";
         // vector<string> proNoiseString;
         // proNoiseString.push_back("process noise");
         // EigenCSV::write(matInitNoise, proNoiseString, noiseFile);
@@ -752,7 +752,7 @@ int main(int argc, char *argv[])
         }
         // // save corrupted measurment data
         // cout << "running to here" << endl;
-        // string measFile = simInfo.outDir + "/meas_";
+        // string measFile = snrInfo.outDir + "/meas_";
         // measFile += to_string(j);
         // measFile += ".csv";
         // EigenCSV::write(tableMeas.topRows(indMeas), headerMeas, measFile, true);
@@ -765,7 +765,7 @@ int main(int argc, char *argv[])
             house.run(tSec, measCorrupted);
             runTimesMC(j - 1, 0) = timer.tock();
 
-            outputFile = simInfo.outDir + "/house_";
+            outputFile = snrInfo.outDir + "/house_";
             outputFile += to_string(j);
             outputFile += ".csv";
             house.save(outputFile);
@@ -781,7 +781,7 @@ int main(int argc, char *argv[])
             ukf.run(tSec, measCorrupted);
             runTimesMC(j - 1, 1) = timer.tock();
 
-            outputFile = simInfo.outDir + "/ukf_";
+            outputFile = snrInfo.outDir + "/ukf_";
             outputFile += to_string(j);
             outputFile += ".csv";
             ukf.save(outputFile);
@@ -795,7 +795,7 @@ int main(int argc, char *argv[])
             cut4.run(tSec, measCorrupted);
             runTimesMC(j - 1, 2) = timer.tock();
 
-            outputFile = simInfo.outDir + "/cut4_";
+            outputFile = snrInfo.outDir + "/cut4_";
             outputFile += to_string(j);
             outputFile += ".csv";
             cut4.save(outputFile);
@@ -809,7 +809,7 @@ int main(int argc, char *argv[])
             cut6.run(tSec, measCorrupted);
             runTimesMC(j - 1, 3) = timer.tock();
 
-            outputFile = simInfo.outDir + "/cut6_";
+            outputFile = snrInfo.outDir + "/cut6_";
             outputFile += to_string(j);
             outputFile += ".csv";
             cut6.save(outputFile);
@@ -819,28 +819,28 @@ int main(int argc, char *argv[])
     {
         // Save Filter run times
         vector<string> filterStrings({"house"});
-        string timeFile = simInfo.outDir + "/run_times_house.csv";
+        string timeFile = snrInfo.outDir + "/run_times_house.csv";
         EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
     }
     if (filters.ukf)
     {
         // Save Filter run times
         vector<string> filterStrings({"ukf"});
-        string timeFile = simInfo.outDir + "/run_times_ukf.csv";
+        string timeFile = snrInfo.outDir + "/run_times_ukf.csv";
         EigenCSV::write(runTimesMC.col(1), filterStrings, timeFile);
     }
     if (filters.cut4)
     {
         // Save Filter run times
         vector<string> filterStrings({"cut4"});
-        string timeFile = simInfo.outDir + "/run_times_cut4.csv";
+        string timeFile = snrInfo.outDir + "/run_times_cut4.csv";
         EigenCSV::write(runTimesMC.col(2), filterStrings, timeFile);
     }
     if (filters.cut6)
     {
         // Save Filter run times
         vector<string> filterStrings({"cut6"});
-        string timeFile = simInfo.outDir + "/run_times_cut6.csv";
+        string timeFile = snrInfo.outDir + "/run_times_cut6.csv";
         EigenCSV::write(runTimesMC.col(3), filterStrings, timeFile);
     }
 }

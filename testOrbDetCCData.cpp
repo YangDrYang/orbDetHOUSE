@@ -435,7 +435,7 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
 {
     initEGMCoef(suppFiles.grvFile);
 
-    erpt = {.n = 14};
+    erpt = {.n = 0};
     // cout << suppFiles.erpFile << endl;
     readerp(suppFiles.erpFile, &erpt);
 
@@ -508,6 +508,10 @@ int main(int argc, char *argv[])
     VectorXd initialStateVec = initialState.initialStateVec;
     MatrixXd initialCov = initialState.initialCovarianceMat;
     const VectorXd groundStation = measMdl.groundStation;
+    // Find the position of the dot (file type extension)
+    size_t dotPos = measMdl.measFile.find_last_of('.');
+    // Extract the last five characters without the file type extension
+    string noradID = measMdl.measFile.substr(dotPos - 5, 5);
 
     // initialise
     initGlobalVariables(initialStateVec, initialStateType, suppFiles);
@@ -588,12 +592,14 @@ int main(int argc, char *argv[])
 
         cout << "running to here" << endl;
 
-        outputFile = snrInfo.outDir + "/house.csv";
+        outputFile = snrInfo.outDir + "/house_id_" + noradID + ".csv";
+        ;
         house.save(outputFile);
 
         // Save Filter run times
         vector<string> filterStrings({"house"});
-        string timeFile = snrInfo.outDir + "/run_times_house.csv";
+        string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + ".csv";
+        ;
         EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
     }
 
@@ -608,12 +614,12 @@ int main(int argc, char *argv[])
         ukf.run(tSec, angMeas);
         runTimesMC(1) = timer.tock();
 
-        outputFile = snrInfo.outDir + "/ukf.csv";
+        outputFile = snrInfo.outDir + "/ukf_id_" + noradID + ".csv";
         ukf.save(outputFile);
 
         // Save Filter run times
         vector<string> filterStrings({"ukf"});
-        string timeFile = snrInfo.outDir + "/run_times_ukf.csv";
+        string timeFile = snrInfo.outDir + "/run_times_ukf_id_" + noradID + ".csv";
         EigenCSV::write(runTimesMC.col(1), filterStrings, timeFile);
     }
 
@@ -625,12 +631,12 @@ int main(int argc, char *argv[])
         cut4.run(tSec, angMeas);
         runTimesMC(2) = timer.tock();
 
-        outputFile = snrInfo.outDir + "/cut4.csv";
+        outputFile = snrInfo.outDir + "/cut4_id_" + noradID + ".csv";
         cut4.save(outputFile);
 
         // Save Filter run times
         vector<string> filterStrings({"cut4"});
-        string timeFile = snrInfo.outDir + "/run_times_cut4.csv";
+        string timeFile = snrInfo.outDir + "/run_times_cut4_id_" + noradID + ".csv";
         EigenCSV::write(runTimesMC.col(2), filterStrings, timeFile);
     }
 
@@ -642,12 +648,13 @@ int main(int argc, char *argv[])
         cut6.run(tSec, angMeas);
         runTimesMC(3) = timer.tock();
 
-        outputFile = snrInfo.outDir + "/cut6.csv";
+        outputFile = snrInfo.outDir + "/cut6_id_" + noradID + ".csv";
         cut6.save(outputFile);
 
         // Save Filter run times
         vector<string> filterStrings({"cut6"});
-        string timeFile = snrInfo.outDir + "/run_times_cut6.csv";
+        string timeFile = snrInfo.outDir + "/run_times_cut6_id_" + noradID + ".csv";
+        ;
         EigenCSV::write(runTimesMC.col(3), filterStrings, timeFile);
     }
 }

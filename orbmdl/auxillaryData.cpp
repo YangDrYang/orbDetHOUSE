@@ -70,10 +70,10 @@ int geterp_from_utc(
 
     if (erp->n <= 0)
         return 0;
-
+    // cout << "erp data[0] \t" << erp->data[0].mjd << "\t"
+    //      << "erp data[n-1]" << erp->data[erp->n - 1].mjd << endl;
     if (mjd <= erp->data[0].mjd)
     {
-        cout << "yang wrong2" << endl;
         day = mjd - erp->data[0].mjd;
 
         erpv[0] = erp->data[0].xp + erp->data[0].xpr * day;
@@ -87,7 +87,6 @@ int geterp_from_utc(
 
     if (mjd >= erp->data[erp->n - 1].mjd)
     {
-        cout << "yang right" << endl;
         day = mjd - erp->data[erp->n - 1].mjd;
 
         erpv[0] = erp->data[erp->n - 1].xp + erp->data[erp->n - 1].xpr * day;

@@ -1,6 +1,6 @@
 # required
 filter_options:
-  HOUSE: false
+  HOUSE: true
   UKF: true
   CUT4: false
   CUT6: false
