@@ -12,8 +12,8 @@ filters = ["house", "ukf", "cut4", "cut6"]
 # filters = ["house", "cut4", "cut6"]
 # filters = ["house", "ukf"]
 
-folder_path = "out_dense/"
-# folder_path = "out_/"
+# folder_path = "out_dense/"
+folder_path = "out_sparse/"
 # folder_path = "out/"
 
 # Create a new figure and axes for logarithmic plot

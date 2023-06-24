@@ -7,9 +7,9 @@ import numpy as np
 
 filters = ["house", "ukf", "cut4", "cut6"]
 
-# folder_path = "out_/"
+folder_path = "out_sparse/"
 # folder_path = "out/"
-folder_path = "out_dense/"
+# folder_path = "out_dense/"
 
 fig, ax = plt.subplots(ncols=1, figsize=(5, 4))
 df = pd.DataFrame(columns=filters)
@@ -21,6 +21,9 @@ for filter_type in filters:
         usecols=[filter_type],
         squeeze=True,
     )
+
+# Remove zero values from the DataFrame
+df = df[df != 0]
 
 # calculate mean of each column
 means = df.mean()

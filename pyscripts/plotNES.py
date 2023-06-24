@@ -10,8 +10,8 @@ import scipy.stats as stats
 
 filters = ["house", "ukf", "cut4", "cut6"]
 
-folder_path = "out_dense/"
-# folder_path = "out_/"
+# folder_path = "out_dense/"
+folder_path = "out_sparse/"
 # folder_path = "out/"
 
 # flag to determine to process the NES or use existing files for plots
