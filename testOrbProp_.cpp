@@ -72,8 +72,8 @@ double getLeapSecond(time_t t)
 
 void getIERS(double mjd)
 {
-    // get leap seconds from the table
-    // double leapSec = -getLeapSecond(convertMJD2Time_T(mjd));
+    // // get leap seconds from the table
+    // double leapSec = getLeapSecond(convertMJD2Time_T(mjd));
 
     double erpv[4] = {};
     geterp_from_utc(&erpt, leapSec, mjd, erpv);
@@ -134,6 +134,139 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     return Xf;
 }
 
+Vector2d simpleMeasurementModel(double tSec, const VectorXd &satECI, const VectorXd &stnECEF)
+{
+    Vector2d z;
+    Vector3d p;
+    VectorXd rsECEF(6); // = VectorXd::Zero(6);
+    VectorXd stnECI = VectorXd::Zero(6);
+    VectorXd stnECEF_ = stnECEF; // define a new variable that is not a const vector
+
+    ecef2eciVec_sofa(epoch.startMJD + tSec / 86400, iersInstance, stnECEF_, stnECI);
+    // end transformation code
+    p = satECI.head(3) - stnECI.head(3);
+
+    if (p.dot(stnECI.head(3)) >= 0)
+    {
+        // range
+        // azimuth angle
+        z(0) = atan2(p(1), p(0));
+        // elevation angle
+        z(1) = asin(p(2) / p.norm());
+    }
+    // not visible
+    else
+    {
+        z(0) = NO_MEASUREMENT;
+        z(1) = NO_MEASUREMENT;
+    }
+    return z;
+}
+
+Vector4d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &stnECEF)
+{
+    Vector4d z;
+    Vector3d p, r, v;
+    VectorXd stnECI = VectorXd::Zero(6);
+    VectorXd stnECEF_ = stnECEF; // define a new variable that is not a const vector
+
+    // get leap seconds from the table
+    leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD + tSec / 86400));
+    // set up the IERS instance
+    getIERS(epoch.startMJD + tSec / 86400);
+
+    ecef2eciVec_sofa(epoch.startMJD + tSec / 86400, iersInstance, stnECEF_, stnECI);
+    // cout << "epoch" << tSec << endl;
+    // cout << "ground station in ECI" << stnECI.transpose() << endl;
+
+    // end transformation code
+    p = satECI.head(3) - stnECI.head(3);
+    v = satECI.tail(3) - stnECI.tail(3);
+
+    if (p.dot(stnECI.head(3)) >= 0)
+    {
+        // azimuth angle
+        z(0) = atan2(p(1), p(0));
+        // elevation angle
+        z(1) = asin(p(2) / p.norm());
+        // range
+        z(2) = p.norm();
+        // range rate
+        z(3) = p.dot(v) / p.norm();
+    }
+    // not visible
+    else
+    {
+        z(0) = NO_MEASUREMENT;
+        z(1) = NO_MEASUREMENT;
+        z(2) = NO_MEASUREMENT;
+        z(3) = NO_MEASUREMENT;
+    }
+
+    // // azimuth angle
+    // z(0) = atan2(p(1), p(0));
+    // // elevation angle
+    // z(1) = asin(p(2) / p.norm());
+    // // range
+    // z(2) = p.norm();
+    // // range rate
+    // z(3) = p.dot(v) / p.norm();
+
+    return z;
+}
+
+// // Function to generate a noise matrix for a window of epochs
+MatrixXd generateNoiseMatrix(int seed, int nEpoch, const MatrixXd &covariance)
+{
+    // Create a random number generator with the given seed
+    mt19937_64 gen(seed);
+
+    // Create a normal distribution with mean 0 and covariance matrix
+    MatrixXd L = covariance.llt().matrixL();
+    normal_distribution<double> dist(0.0, 1.0);
+
+    // Generate a noise matrix with the specified number of epochs
+    MatrixXd noise(covariance.rows(), nEpoch);
+    for (int i = 0; i < nEpoch; i++)
+    {
+        for (int j = 0; j < covariance.rows(); j++)
+        {
+            noise(j, i) = dist(gen);
+        }
+        noise.col(i) = L * noise.col(i);
+    }
+
+    return noise;
+}
+
+MatrixXd generateTrueResults(DynamicModel &f, struct EpochInfo epoch, VectorXd initialStateVec)
+{
+    // create results matrix
+    int length = floor((epoch.endMJD - epoch.startMJD) / (epoch.timeStep / 86400.0)) + 1;
+    MatrixXd results(length, 7);
+
+    double time = 0;
+    double step = epoch.timeStep;
+
+    Vector3d W = Vector3d::Zero();
+    VectorXd X = initialStateVec;
+    VectorXd result(7);
+
+    // Save initial state
+    result << time, X;
+    results.row(0) = result;
+    // TODO: remove variation is forces model (the w vector)
+    for (int i = 1; i < length; i++)
+    {
+        X = f(time, time + step, X, W);
+        time += step;
+        result << time, X;
+        results.row(i) = result;
+    }
+
+    return results;
+}
+
 void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
                     struct MeasModel &measMdl, struct Filters &filters, struct FileInfo &suppFiles)
 {
@@ -141,12 +274,22 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     YAML::Node config = YAML::LoadFile(fileName);
     YAML::Node parameter;
 
-    // read scenario parameters (required)
-    YAML::Node snrParams = config["scenario_parameters"];
-    snrInfo.epoch.startMJD = snrParams["MJD_start"].as<double>();
-    snrInfo.epoch.endMJD = snrParams["MJD_end"].as<double>();
-    snrInfo.epoch.timeStep = snrParams["time_step"].as<double>();
-    snrInfo.outDir = snrParams["output_directory"].as<string>();
+    // read filter options (required)
+    YAML::Node filterOpts = config["filter_options"];
+    filters.house = filterOpts["HOUSE"].as<bool>();
+    filters.ukf = filterOpts["UKF"].as<bool>();
+    filters.cut4 = filterOpts["CUT4"].as<bool>();
+    filters.cut6 = filterOpts["CUT6"].as<bool>();
+    filters.numTrials = filterOpts["num_trials"].as<int>();
+    filters.initNoise = filterOpts["init_noise"].as<bool>();
+
+    // read simulation parameters (required)
+    YAML::Node simParams = config["simulation_parameters"];
+    snrInfo.epoch.startMJD = simParams["MJD_start"].as<double>();
+    snrInfo.epoch.endMJD = simParams["MJD_end"].as<double>();
+    snrInfo.epoch.timeStep = simParams["time_step"].as<double>();
+    snrInfo.epoch.timePass = simParams["time_pass"].as<double>();
+    snrInfo.outDir = simParams["output_directory"].as<string>();
 
     // read orbital parameters (required)
     YAML::Node orbitParams = config["initial_orbtial_parameters"];
@@ -157,9 +300,84 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     // read params as standard vector, convert to eigen vector
     tempVec = orbitParams["initial_state"].as<vector<double>>();
     initialState.initialStateVec = stdVec2EigenVec(tempVec);
+    // Read matrix from YAML file
+    MatrixXd tempMat = MatrixXd::Zero(dimState, dimState);
+    const YAML::Node &covInitState = orbitParams["initial_covariance"];
+    for (int i = 0; i < dimState; ++i)
+    {
+        const YAML::Node &row = covInitState[i];
+        for (int j = 0; j < dimState; ++j)
+        {
+            tempMat(i, j) = row[j].as<double>();
+        }
+    }
+    initialState.initialCovarianceMat = tempMat;
+
+    tempMat = MatrixXd::Zero(dimState, dimState);
+    const YAML::Node &covProNoise = orbitParams["process_noise_covariance"];
+    for (int i = 0; i < dimState; ++i)
+    {
+        const YAML::Node &row = covProNoise[i];
+        for (int j = 0; j < dimState; ++j)
+        {
+            tempMat(i, j) = row[j].as<double>();
+        }
+    }
+    initialState.processNoiseCovarianceMat = tempMat;
+
+    // read measurement characristics (noise standard deviations)
+    YAML::Node measParams = config["measurement_parameters"];
+    tempVec = measParams["ground_station"].as<vector<double>>();
+    measMdl.groundStation = stdVec2EigenVec(tempVec);
+    measMdl.dimMeas = measParams["dim_meas"].as<int>();
+    measMdl.errorStd.azimuthErr = measParams["elevation_error"].as<double>();
+    measMdl.errorStd.elevationErr = measParams["azimuth_error"].as<double>();
+    measMdl.errorStd.rangeErr = measParams["range_error"].as<double>();
+    measMdl.errorStd.rangeRateErr = measParams["range_rate_error"].as<double>();
+
+    // read propagator settings (optional)
+    YAML::Node propTruthSettings = config["propagator_truth_settings"];
+    if (parameter = propTruthSettings["earth_gravaity"])
+        optTruth.earth_gravity = parameter.as<bool>();
+    if (parameter = propTruthSettings["solid_earth_tide"])
+        optTruth.solid_earth_tide = parameter.as<bool>();
+    if (parameter = propTruthSettings["ocean_tide_loading"])
+        optTruth.ocean_tide_loading = parameter.as<bool>();
+    if (parameter = propTruthSettings["third_body_attraction"])
+        optTruth.third_body_attraction = parameter.as<bool>();
+    if (parameter = propTruthSettings["third_body_sun"])
+        optTruth.third_body_sun = parameter.as<bool>();
+    if (parameter = propTruthSettings["third_body_moon"])
+        optTruth.third_body_moon = parameter.as<bool>();
+    if (parameter = propTruthSettings["third_body_planet"])
+        optTruth.third_body_planet = parameter.as<bool>();
+    if (parameter = propTruthSettings["relativity_effect"])
+        optTruth.relativity_effect = parameter.as<bool>();
+    if (parameter = propTruthSettings["atmospheric_drag"])
+        optTruth.atmospheric_drag = parameter.as<bool>();
+    if (parameter = propTruthSettings["solar_radiation_pressure"])
+        optTruth.solar_radiation_pressure = parameter.as<bool>();
+    if (parameter = propTruthSettings["thermal_emission"])
+        optTruth.thermal_emission = parameter.as<bool>();
+    if (parameter = propTruthSettings["earth_albedo"])
+        optTruth.earth_albedo = parameter.as<bool>();
+    if (parameter = propTruthSettings["infrared_radiation"])
+        optTruth.infrared_radiation = parameter.as<bool>();
+    if (parameter = propTruthSettings["antenna_thrust"])
+        optTruth.antenna_thrust = parameter.as<bool>();
+    if (parameter = propTruthSettings["empirical_acceleration"])
+        optTruth.empirical_acceleration = parameter.as<bool>();
+    if (parameter = propTruthSettings["satellite_manoeuvre"])
+        optTruth.satellite_manoeuvre = parameter.as<bool>();
+    if (parameter = propTruthSettings["satMass"])
+        optTruth.satMass = parameter.as<double>();
+    if (parameter = propTruthSettings["srpArea"])
+        optTruth.srpArea = parameter.as<double>();
+    if (parameter = propTruthSettings["srpCoef"])
+        optTruth.srpCoef = parameter.as<double>();
 
     // read propagator settings for filters (optional)
-    YAML::Node propFilterSettings = config["propagator_truth_settings"];
+    YAML::Node propFilterSettings = config["propagator_filter_settings"];
     if (parameter = propFilterSettings["earth_gravaity"])
         optFilter.earth_gravity = parameter.as<bool>();
     if (parameter = propFilterSettings["solid_earth_tide"])
@@ -241,20 +459,20 @@ void initEGMCoef(string filename)
 
 void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct FileInfo &suppFiles)
 {
+    // initEGMCoef("./auxdata/GGM03S.txt");
     initEGMCoef(suppFiles.grvFile);
+    cout << suppFiles.grvFile << endl;
 
     erpt = {.n = 0};
-    // cout << suppFiles.erpFile << endl;
+    // readerp("./auxdata/cod15657.erp", &erpt);
     readerp(suppFiles.erpFile, &erpt);
-    // cout << "erpt mjd\t" << erpt.data->mjd << endl;
 
-    // get leap seconds from the table
-    leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
     // set up the IERS instance
     getIERS(epoch.startMJD);
 
-    const char *ephFile = suppFiles.ephFile.c_str();
-    pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
+    pJPLEph = jpl_init_ephemeris("./auxdata/unxp2000.405", nullptr, nullptr);
+    // const char *ephFile = suppFiles.ephFile.c_str();
+    // pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
 
     VectorXd rvECI = VectorXd::Zero(6);
     string ecefTag = "ECEF";
@@ -298,47 +516,44 @@ int main(int argc, char *argv[])
     // read parameter/settings from config file
     readConfigFile(configFilename, forceModelsTruthOpt, forceModelsFilterOpt, snrInfo, initialState, measMdl, filters, suppFiles);
     epoch = snrInfo.epoch;
+    int numTrials = filters.numTrials;
     const int dimState = initialState.dimState;
     string initialStateType = initialState.initialStateType;
     VectorXd initialStateVec = initialState.initialStateVec;
-    MatrixXd initialCov = initialState.initialCovarianceMat;
 
     // initialise
     initGlobalVariables(initialStateVec, initialStateType, suppFiles);
-    // // get leap seconds from the table
-    // double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
 
-    // setup orbit propagator
-    orbitProp.setPropOption(forceModelsTruthOpt);
-    orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
+    // UKF state & measurement models
     double absErr = 1E-6;
     double relErr = 1E-6;
     DynamicModel::stf g = accelerationModel;
     DynamicModel f(g, dimState, absErr, relErr);
 
+    Timer timer;
+
+    // simulate ground-truth trajectory and generate non-corrupted measurement vectors
+    orbitProp.setPropOption(forceModelsTruthOpt);
+    orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
     VectorXd propStateVec = initialStateVec;
     double time = 0, dt = epoch.timeStep;
     int nTotalSteps = (epoch.endMJD - epoch.startMJD) * 86400 / dt + 1;
-    cout << "total steps:\t" << nTotalSteps << endl;
     // linear spaced times
     VectorXd tSec;
     tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
     MatrixXd tableTrajTruth(nTotalSteps, dimState + 1);
     tableTrajTruth.col(0) = tSec;
     tableTrajTruth.row(0).tail(dimState) = initialStateVec;
-
-    Timer timer;
     timer.tick();
     for (int k = 0; k < nTotalSteps - 1; k++)
     {
         propStateVec = f(time, time + dt, propStateVec, Vector3d::Zero());
         time += dt;
         tableTrajTruth.row(k + 1).tail(dimState) = propStateVec;
-        cout << "The " << k + 1 << "th time step" << endl;
     }
-    cout << "The total time consumption is:\t" << timer.tock() << endl;
+
     // header for the saved file
     vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-    string propFile = snrInfo.outDir + "/prop_results.csv";
-    EigenCSV::write(tableTrajTruth, headerTraj, propFile);
+    string trajTruthFile = snrInfo.outDir + "/orb_prop.csv";
+    EigenCSV::write(tableTrajTruth, headerTraj, trajTruthFile);
 }

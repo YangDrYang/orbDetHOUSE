@@ -1,14 +1,13 @@
 #ifndef __GRAVITY_HPP__
 #define __GRAVITY_HPP__
 
+#include "configDefault.hpp"
 #include "satRefSys.hpp"
 #include "jplEph.hpp"
-#include "config.hpp"
 #include <string>
 using std::string;
 
 // ToDo: fix this, this is already defined in the config header file
-
 
 /** Struct to save Earth gravity coefficients
  */
@@ -34,8 +33,6 @@ MatrixXd LegendreD(
 	int n,		  ///< Maximum order
 	MatrixXd pnm, ///< Normalised Legendre polinomial matrix
 	double phi);  ///< Geocentric latitude in radian
-
-
 
 struct EarthGravMdlOpt
 {

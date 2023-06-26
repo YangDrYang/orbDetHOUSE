@@ -10,13 +10,13 @@
 #include <yaml-cpp/yaml.h>
 
 // model headers
+#include "configDefault.hpp"
 #include "auxillaryData.hpp"
 #include "forceModels.hpp"
 #include "coordTrans.hpp"
 #include "satRefSys.hpp"
 #include "jplEph.hpp"
 #include "jpl_eph.hpp"
-#include "config.hpp"
 
 // filter headers
 #include "house.hpp"

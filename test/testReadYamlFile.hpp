@@ -7,7 +7,7 @@
 #include <vector>
 #include <Eigen/Dense>
 #include <yaml-cpp/yaml.h>
-#include "config.hpp"
+#include "configDefault.hpp"
 
 #define DEFAULT_CONFIG_FILENAME "config.yaml"
 #define JPL_EPHEMERIS_FILENAME "unxp2000.405"

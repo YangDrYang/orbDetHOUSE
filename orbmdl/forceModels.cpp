@@ -549,7 +549,7 @@ Vector3d Propagator::calculateAcceleration(
 		directSRPAcc = pmSolarRadPressure->directSolarRadiationAcc(mMJDUTC, rSat);
 		acc += directSRPAcc;
 
-		if (1)
+		if (0)
 		{
 			cout << "Calculated acceleration due to the direct solar radiation: " << setw(14) << mMJDUTC << setw(14) << directSRPAcc.transpose() << endl;
 		}

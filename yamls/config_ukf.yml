@@ -1,7 +1,7 @@
 # required
 filter_options:
   HOUSE: false
-  UKF: false
+  UKF: true
   CUT4: false
   CUT6: false
   init_noise: true
@@ -13,26 +13,17 @@ simulation_parameters:
   time_step: 10
   # time duration of each pass in seconds
   time_pass: 120
-  # MJD_start: 55200.0 # 2010-JAN-04
-  # MJD_end: 55200.2 #5.757212410879634e+4
+  MJD_start: 55200.0 # 2010-JAN-04
+  MJD_end: 55200.2 
   # # this directory must exist
   # # output_directory: out
-  # output_directory: out_sparse
-  MJD_start: 59348.916238425903430 
-  MJD_end: 59348.916932870401070
-  # this directory must exist
-  # output_directory: out
-  output_directory: out/out_prop
+  output_directory: out_sparse
 
 # requried
 initial_orbtial_parameters:
-  # dim_state: 6
-  # # initial state of satillite (type ECEF or ECI), unit: m, m/s
-  # initial_state: [7007.2175e+3, 0, 0, 0, 0.6606e+3, 7.5509e+3]
-  # initial_state_type: ECI
   dim_state: 6
   # initial state of satillite (type ECEF or ECI), unit: m, m/s
-  initial_state: [-1049836.531406142516062,-4275236.478115282021463,-6337381.515492259524763,5944.446546185818079,2819.968620172394367,-2885.421064631562786]
+  initial_state: [7007.2175e+3, 0, 0, 0, 0.6606e+3, 7.5509e+3]
   initial_state_type: ECI
   initial_covariance: 
     - [1.481e+8, 0, 0, 0, -9.237e+4, -5.333e+4]
@@ -102,12 +93,8 @@ propagator_filter_settings:
   srpArea : 0.136488 # 2 * PI  * pow(0.974 / 2, 2) * sin(0) + 1.034 * 0.132
   satMass : 61.14  
 
-# file_options:
-#   ERP_file: cod15657.erp
-#   gravity_file: GGMOS3.txt
-#   ephemeris_file: unxp2000.405
 # optional
 supporting_files:
+  ERP_file: ./auxdata/cod15657.erp
   gravity_file: ./auxdata/GGMOS3.txt
   ephemeris_file: ./auxdata/unxp2000.405
-  ERP_file: ./auxdata/cod21587.erp

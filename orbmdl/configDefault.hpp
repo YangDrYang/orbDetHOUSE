@@ -1,5 +1,5 @@
-#ifndef CONFIG_HPP
-#define CONFIG_HPP
+#ifndef CONFIGDEFAULT_HPP
+#define CONFIGDEFAULT_HPP
 
 #define BETTER_ENUMS_DEFAULT_CONSTRUCTOR(Enum) \
 public:                                        \
