@@ -1,7 +1,7 @@
 # required
 filter_options:
-  HOUSE: true
-  UKF: true
+  HOUSE: false
+  UKF: false
   CUT4: false
   CUT6: false
   num_trials: 1
@@ -13,7 +13,7 @@ scenario_parameters:
   MJD_start: 59349.51137986922 # 2021-May-15
   MJD_end: 59352.559680763894 #2021-May-18  
   # this directory must exist
-  output_directory: out_ccdata
+  output_directory: out/out_ccdata
 
 # requried
 initial_orbtial_parameters:

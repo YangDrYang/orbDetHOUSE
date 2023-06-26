@@ -534,10 +534,6 @@ int main(int argc, char *argv[])
     // initialise
     initGlobalVariables(initialStateVec, initialStateType);
 
-    // setup orbit propagator
-    orbitProp.setPropOption(forceModelsTruthOpt);
-    orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
-
     // UKF state & measurement models
     DynamicModel::stf g = accelerationModel;
     DynamicModel f(g, dimState, 1E-6, 1E-6);

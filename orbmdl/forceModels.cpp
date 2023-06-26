@@ -66,7 +66,7 @@ ThirdBodyAttraction::ThirdBodyAttraction(
 		mGM = GM_Sun;
 		break;
 	default:
-		std::cout << "ThirdBodyAttraction: E_SolarSysStarType Unsupport " << std::endl;
+		std::cout << "ThirdBodyAttraction: E_SolarSysStarType Unsupport " << endl;
 	}
 
 	mJPLEphemeris = new JPLEphemeris(pJPLEph);
@@ -112,7 +112,7 @@ void ThirdBodyAttraction::setThirdBodyStar(
 		mGM = GM_Sun;
 		break;
 	default:
-		std::cout << "ThirdBodyAttraction: E_SolarSysStarType Unsupport " << std::endl;
+		std::cout << "ThirdBodyAttraction: E_SolarSysStarType Unsupport " << endl;
 	}
 }
 
@@ -232,7 +232,7 @@ Vector3d SolarRadPressure::directSolarRadiationAcc(
 	Vector3d rSun;
 	mJPLEphemeris->getJPLEphemeris(mjdTT + JD2MJD, eSun, eEarth, rSun);
 
-	// cout << "Calculated sun position: " << std::setw(14) << mjdTT << std::setw(14) << rSun.transpose() << std::endl;
+	// cout << "Calculated sun position: " << setw(14) << mjdTT << setw(14) << rSun.transpose() << endl;
 
 	Vector3d rDis = rSat - rSun;
 	switch (mSRPPara.srpMdlName)
@@ -420,7 +420,7 @@ Vector3d Propagator::calculateAcceleration(
 		// earthgravityAcc = -MU / (pow(rSat.norm(), 3)) * rSat;
 		if (0)
 		{
-			cout << "Calculated accleration due to the Earth's central body gravity: " << std::setw(14) << mMJDUTC << std::setw(14) << earthgravityAcc.transpose() << std::endl;
+			cout << "Calculated accleration due to the Earth's central body gravity: " << setw(14) << mMJDUTC << setw(14) << earthgravityAcc.transpose() << endl;
 		}
 		acc += earthgravityAcc;
 	}
@@ -436,7 +436,7 @@ Vector3d Propagator::calculateAcceleration(
 			acc += thirdbodyAcc;
 			if (0)
 			{
-				cout << "Calculated acceleration due to Sun's attraction: " << std::setw(14) << mMJDUTC << std::setw(14) << thirdbodyAcc.transpose() << std::endl;
+				cout << "Calculated acceleration due to Sun's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
 			}
 		}
 
@@ -447,7 +447,7 @@ Vector3d Propagator::calculateAcceleration(
 			acc += thirdbodyAcc;
 			if (0)
 			{
-				cout << "Calculated acceleration due to Moon's attraction: " << std::setw(14) << mMJDUTC << std::setw(14) << thirdbodyAcc.transpose() << std::endl;
+				cout << "Calculated acceleration due to Moon's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
 			}
 		}
 
@@ -458,7 +458,7 @@ Vector3d Propagator::calculateAcceleration(
 			acc += thirdbodyAcc;
 			if (0)
 			{
-				cout << "Calculated acceleration due to Jupiter's attraction: " << std::setw(14) << mMJDUTC << std::setw(14) << thirdbodyAcc.transpose() << std::endl;
+				cout << "Calculated acceleration due to Jupiter's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
 			}
 		}
 
@@ -469,7 +469,7 @@ Vector3d Propagator::calculateAcceleration(
 			acc += thirdbodyAcc;
 			if (0)
 			{
-				cout << "Calculated acceleration due to Venus' attraction: " << std::setw(14) << mMJDUTC << std::setw(14) << thirdbodyAcc.transpose() << std::endl;
+				cout << "Calculated acceleration due to Venus' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
 			}
 		}
 
@@ -480,7 +480,7 @@ Vector3d Propagator::calculateAcceleration(
 			acc += thirdbodyAcc;
 			if (0)
 			{
-				cout << "Calculated acceleration due to Mars' attraction: " << std::setw(14) << mMJDUTC << std::setw(14) << thirdbodyAcc.transpose() << std::endl;
+				cout << "Calculated acceleration due to Mars' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
 			}
 		}
 
@@ -491,7 +491,7 @@ Vector3d Propagator::calculateAcceleration(
 			acc += thirdbodyAcc;
 			if (0)
 			{
-				cout << "Calculated acceleration due to Saturn's attraction: " << std::setw(14) << mMJDUTC << std::setw(14) << thirdbodyAcc.transpose() << std::endl;
+				cout << "Calculated acceleration due to Saturn's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
 			}
 		}
 
@@ -502,7 +502,7 @@ Vector3d Propagator::calculateAcceleration(
 			acc += thirdbodyAcc;
 			if (0)
 			{
-				cout << "Calculated acceleration due to Uranus' attraction: " << std::setw(14) << mMJDUTC << std::setw(14) << thirdbodyAcc.transpose() << std::endl;
+				cout << "Calculated acceleration due to Uranus' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
 			}
 		}
 
@@ -513,7 +513,7 @@ Vector3d Propagator::calculateAcceleration(
 			acc += thirdbodyAcc;
 			if (0)
 			{
-				cout << "Calculated acceleration due to Neptune' attraction: " << std::setw(14) << mMJDUTC << std::setw(14) << thirdbodyAcc.transpose() << std::endl;
+				cout << "Calculated acceleration due to Neptune' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
 			}
 		}
 
@@ -524,7 +524,7 @@ Vector3d Propagator::calculateAcceleration(
 			acc += thirdbodyAcc;
 			if (0)
 			{
-				cout << "Calculated acceleration due to Pluto' attraction: " << std::setw(14) << mMJDUTC << std::setw(14) << thirdbodyAcc.transpose() << std::endl;
+				cout << "Calculated acceleration due to Pluto' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
 			}
 		}
 	}
@@ -538,7 +538,7 @@ Vector3d Propagator::calculateAcceleration(
 
 		if (0)
 		{
-			cout << "Calculated acceleration due to the relativity effect: " << std::setw(14) << mMJDUTC << std::setw(14) << relativityAcc.transpose() << std::endl;
+			cout << "Calculated acceleration due to the relativity effect: " << setw(14) << mMJDUTC << setw(14) << relativityAcc.transpose() << endl;
 		}
 	}
 
@@ -549,9 +549,9 @@ Vector3d Propagator::calculateAcceleration(
 		directSRPAcc = pmSolarRadPressure->directSolarRadiationAcc(mMJDUTC, rSat);
 		acc += directSRPAcc;
 
-		if (0)
+		if (1)
 		{
-			cout << "Calculated acceleration due to the direct solar radiation: " << std::setw(14) << mMJDUTC << std::setw(14) << directSRPAcc.transpose() << std::endl;
+			cout << "Calculated acceleration due to the direct solar radiation: " << setw(14) << mMJDUTC << setw(14) << directSRPAcc.transpose() << endl;
 		}
 	}
 	return acc;

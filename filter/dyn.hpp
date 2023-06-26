@@ -37,7 +37,7 @@ public:
 private:
     // Workspace
     VectorXd work;
-    int iwork[5];
+    // int iwork[5];
 };
 
 #endif

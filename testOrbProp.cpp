@@ -321,9 +321,10 @@ int main(int argc, char *argv[])
     // setup orbit propagator
     orbitProp.setPropOption(forceModelsTruthOpt);
     orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
-
+    double absErr = 1E-6;
+    double relErr = 1E-6;
     DynamicModel::stf g = accelerationModel;
-    DynamicModel f(g, dimState, 1E-6, 1E-6);
+    DynamicModel f(g, dimState, absErr, relErr);
 
     VectorXd propStateVec = initialStateVec;
     double time = 0, dt = epoch.timeStep;

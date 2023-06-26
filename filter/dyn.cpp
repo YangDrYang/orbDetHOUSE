@@ -73,14 +73,13 @@ VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, cons
         VectorXd dxdt0 = f(t, xx, ww);
         dxdt = *(new vector<double>(dxdt0.data(), dxdt0.data() + dxdt0.size()));
     };
-    // Observer, prints time and state when called (during integration)
-    auto my_observer = [&](const state_type &x, const double t)
-    {
-        cout << t << "   " << x[0] << "   " << x[1] << "   " << x[2] << "   " << x[3] << "   " << x[4] << "   " << x[5] << endl;
-    };
+    // // Observer, prints time and state when called (during integration)
+    // auto my_observer = [&](const state_type &x, const double t)
+    // {
+    //     cout << t << "   " << x[0] << "   " << x[1] << "   " << x[2] << "   " << x[3] << "   " << x[4] << "   " << x[5] << endl;
+    // };
     double dt = tf - ti;
     state_type xd(xi.data(), xi.data() + xi.size());
-    cout << reltol << endl;
     // double rel_tol = 1e-6;
     // double abs_tol = 1e-6;
     // integrate_adaptive(ctrl_rkck78(rel_tol, abs_tol), my_system, xd, ti, tf, dt, my_observer);
