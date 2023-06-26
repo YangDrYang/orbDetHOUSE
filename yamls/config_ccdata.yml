@@ -49,7 +49,7 @@ measurement_parameters:
   declination_error: 5
 
 
-# required, if not defined they will be set to default values
+# optional, if not defined they will be set to default values
 propagator_filter_settings:
   third_body_attraction: true
   third_body_sun: true

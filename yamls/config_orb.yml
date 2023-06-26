@@ -1,28 +1,19 @@
-# required
-filter_options:
-  HOUSE: false
-  UKF: false
-  CUT4: false
-  CUT6: false
-  num_trials: 100
-
+# Sentinel 6A satellite propogation 
 # requried
-simulation_parameters:
+scenario_parameters:
   # time step in seconds, MJD in days
   time_step: 10
-  # time duration of each pass in seconds
-  time_pass: 120
-  MJD_start: 55200.0 # 2010-JAN-04
-  MJD_end: 55200.2 #5.757212410879634e+4
+  MJD_start: 59348.916238425903430 
+  MJD_end: 59348.916932870401070
   # this directory must exist
   # output_directory: out
-  output_directory: out_
+  output_directory: out/out_prop
 
 # requried
 initial_orbtial_parameters:
   dim_state: 6
   # initial state of satillite (type ECEF or ECI), unit: m, m/s
-  initial_state: [7007.2175e+3, 0, 0, 0, 0.6606e+3, 7.5509e+3]
+  initial_state: [-1049836.531406142516062,-4275236.478115282021463,-6337381.515492259524763,5944.446546185818079,2819.968620172394367,-2885.421064631562786]
   initial_state_type: ECI
   initial_covariance: 
     - [1.481e+8, 0, 0, 0, -9.237e+4, -5.333e+4]
@@ -31,55 +22,10 @@ initial_orbtial_parameters:
     - [0, -3.121e+4, -1.242e+4, 3.687e+1, 0, 0]
     - [-9.237e+4, 0, 0, 0, 6.798e+1, 3.145e+1]
     - [-5.333e+4, 0, 0, 0, 3.145e+1, 3.166e+1]
-    # - [1.481e+4, 0, 0, 0, -9.237, -5.333]
-    # - [0, 2.885e+3, 9.994e+2, -3.121, 0, 0]
-    # - [0, 9.994e+2, 5.770e+2, -1.242, 0, 0]
-    # - [0, -3.121, -1.242, 3.687e-3, 0, 0]
-    # - [-9.237, 0, 0, 0, 6.798e-3, 3.145e-3]
-    # - [-5.333, 0, 0, 0, 3.145e-3, 3.166e-3]
-  process_noise_covariance:
-    # - [4, 0, 0, 0, 0, 0]
-    # - [0, 4, 0, 0, 0, 0]
-    # - [0, 0, 4, 0, 0, 0]
-    # - [0, 0, 0, 0.04, 0, 0]
-    # - [0, 0, 0, 0, 0.04, 0]
-    # - [0, 0, 0, 0, 0, 0.04]
-    - [1.0e-9, 0, 0, 0, 0, 0]
-    - [0, 1.0e-9, 0, 0, 0, 0]
-    - [0, 0, 1.0e-9, 0, 0, 0]
-    - [0, 0, 0, 1.0e-9, 0, 0]
-    - [0, 0, 0, 0, 1.0e-9, 0]
-    - [0, 0, 0, 0, 0, 1.0e-9]    
-
-# requried
-measurement_parameters:
-  # ground station (as ECEF, velocities assumed to be 0)
-  ground_station: [0, 0, 6378100.0, 0, 0, 0] # north pole
-  dim_meas: 4
-  # measurement error with units [metres, arcsec, arcsec]
-  # current data from https://www.sciencedirect.com/science/article/abs/pii/S0273117722002496
-  range_error: 30
-  range_rate_error: 0.3
-  azimuth_error: 100
-  elevation_error: 100
-
 
 # optional, if not defined they will be set to default values
 propagator_truth_settings:
-  third_body_attraction: true
-  third_body_sun: true
-  third_body_moon: true
-  solid_earth_tide: false
-  ocean_tide_loading: false
-  solar_radiation_pressure : true
-  atmospheric_drag: true
-  relativity_effect: true
-  srpCoef: 1.23
-  srpArea : 0.136488 # 2 * PI  * pow(0.974 / 2, 2) * sin(0) + 1.034 * 0.132
-  satMass : 61.14
-
-# optional, if not defined they will be set to default values
-propagator_filter_settings:
+  earth_gravity: true
   third_body_attraction: true
   third_body_sun: true
   third_body_moon: true
@@ -92,7 +38,8 @@ propagator_filter_settings:
   srpArea : 0.136488 # 2 * PI  * pow(0.974 / 2, 2) * sin(0) + 1.034 * 0.132
   satMass : 61.14  
 
-file_options:
-  ERP_file: cod15657.erp
-  gravity_file: GGMOS3.txt
-  ephemeris_file: unxp2000.405
+# optional
+supporting_files:
+  gravity_file: ./auxdata/GGMOS3.txt
+  ephemeris_file: ./auxdata/unxp2000.405
+  ERP_file: ./auxdata/cod21587.erp

@@ -115,7 +115,7 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     Matrix3d mdECI2ECEF = Matrix3d::Identity();
 
     // get leap seconds from the table
-    leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD + tSec / 86400));
+    double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD + tSec / 86400));
     // set up the IERS instance
     getIERS(epoch.startMJD + tSec / 86400);
 
@@ -141,17 +141,11 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     YAML::Node config = YAML::LoadFile(fileName);
     YAML::Node parameter;
 
-    // read filter options (required)
-    YAML::Node filterOpts = config["filter_options"];
-    filters.house = filterOpts["HOUSE"].as<bool>();
-    filters.ukf = filterOpts["UKF"].as<bool>();
-    filters.cut4 = filterOpts["CUT4"].as<bool>();
-    filters.cut6 = filterOpts["CUT6"].as<bool>();
-
     // read scenario parameters (required)
     YAML::Node snrParams = config["scenario_parameters"];
     snrInfo.epoch.startMJD = snrParams["MJD_start"].as<double>();
     snrInfo.epoch.endMJD = snrParams["MJD_end"].as<double>();
+    snrInfo.epoch.timeStep = snrParams["time_step"].as<double>();
     snrInfo.outDir = snrParams["output_directory"].as<string>();
 
     // read orbital parameters (required)
@@ -176,29 +170,8 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     }
     initialState.initialCovarianceMat = tempMat;
 
-    tempMat = MatrixXd::Zero(dimState, dimState);
-    const YAML::Node &covProNoise = orbitParams["process_noise_covariance"];
-    for (int i = 0; i < dimState; ++i)
-    {
-        const YAML::Node &row = covProNoise[i];
-        for (int j = 0; j < dimState; ++j)
-        {
-            tempMat(i, j) = row[j].as<double>();
-        }
-    }
-    initialState.processNoiseCovarianceMat = tempMat;
-
-    // read measurement characristics (noise standard deviations)
-    YAML::Node measParams = config["measurement_parameters"];
-    measMdl.measFile = measParams["meas_file"].as<string>();
-    tempVec = measParams["ground_station"].as<vector<double>>();
-    measMdl.groundStation = stdVec2EigenVec(tempVec);
-    measMdl.dimMeas = measParams["dim_meas"].as<int>();
-    measMdl.errorStd.rightAscensionErr = measParams["right_ascension_error"].as<double>();
-    measMdl.errorStd.declinationErr = measParams["declination_error"].as<double>();
-
     // read propagator settings for filters (optional)
-    YAML::Node propFilterSettings = config["propagator_filter_settings"];
+    YAML::Node propFilterSettings = config["propagator_truth_settings"];
     if (parameter = propFilterSettings["earth_gravaity"])
         optFilter.earth_gravity = parameter.as<bool>();
     if (parameter = propFilterSettings["solid_earth_tide"])
@@ -341,7 +314,9 @@ int main(int argc, char *argv[])
     MatrixXd initialCov = initialState.initialCovarianceMat;
 
     // initialise
-    initGlobalVariables(initialStateVec, initialStateType);
+    initGlobalVariables(initialStateVec, initialStateType, suppFiles);
+    // get leap seconds from the table
+    double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
 
     // setup orbit propagator
     orbitProp.setPropOption(forceModelsTruthOpt);
@@ -350,12 +325,10 @@ int main(int argc, char *argv[])
     DynamicModel::stf g = accelerationModel;
     DynamicModel f(g, dimState, 1E-6, 1E-6);
 
-    // simulate ground-truth trajectory and generate non-corrupted measurement vectors
-    orbitProp.setPropOption(forceModelsTruthOpt);
-    orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
     VectorXd propStateVec = initialStateVec;
     double time = 0, dt = epoch.timeStep;
     int nTotalSteps = (epoch.endMJD - epoch.startMJD) * 86400 / dt + 1;
+    cout << "total steps:\t" << nTotalSteps << endl;
     // linear spaced times
     VectorXd tSec;
     tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
@@ -370,9 +343,11 @@ int main(int argc, char *argv[])
         propStateVec = f(time, time + dt, propStateVec, Vector3d::Zero());
         time += dt;
         tableTrajTruth.row(k + 1).tail(dimState) = propStateVec;
+        cout << "The " << k + 1 << "th time step" << endl;
     }
+    cout << "The total time consumption is:\t" << timer.tock() << endl;
     // header for the saved file
     vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-    string trajTruthFile = snrInfo.file.outDir + "/trajectory_truth.csv";
-    EigenCSV::write(tableTrajTruth, headerTraj, trajTruthFile);
+    string propFile = snrInfo.outDir + "/prop_results.csv";
+    EigenCSV::write(tableTrajTruth, headerTraj, propFile);
 }
