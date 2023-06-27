@@ -40,6 +40,8 @@
 ./.vscode
 
 *.DS_Store
+bin/.DS_Store
+out/.DS_Store
 
 *.PAS
-*.EOF
+*.EOF.DS_Store

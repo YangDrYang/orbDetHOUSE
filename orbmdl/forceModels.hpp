@@ -6,6 +6,7 @@
 
 using std::map;
 
+#include "atmosphereModel.hpp"
 #include "configDefault.hpp"
 #include "auxillaryData.hpp"
 #include "coordTrans.hpp"
@@ -85,6 +86,13 @@ struct SRPPara
 	E_SRPModels srpMdlName = E_SRPModels::CANNONBALL;
 };
 
+struct DragPara
+{
+	double satMass = 0;	 ///< Satellite mass, unit: kg
+	double dragArea = 0; ///< SRP projected area, unit: m^2
+	double dragCoef = 0; ///< SRP coefficient (cannonball model)
+};
+
 /*
  * Class type: The class of solar radiation pressure
  */
@@ -130,6 +138,7 @@ struct PropOpt
 	bool flagSolarRadiationPressure;
 	SRPOpt optSRP;
 	SRPPara paraSRP;
+	DragPara paraDrag;
 	bool flagAntennaThrust;
 	bool flagEmpiricalAcceleration;
 	bool flagSatelliteManoeuvre;

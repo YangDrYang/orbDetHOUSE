@@ -327,6 +327,11 @@ void Propagator::setPropOption(
 	propOpt.paraSRP.satMass = forceMdl.satMass;
 	propOpt.paraSRP.srpArea = forceMdl.srpArea;
 	propOpt.paraSRP.srpCoef = forceMdl.srpCoef;
+
+	// Drag parameters
+	propOpt.paraDrag.satMass = forceMdl.satMass;
+	propOpt.paraDrag.dragArea = forceMdl.dragArea;
+	propOpt.paraDrag.dragCoef = forceMdl.dragCoef;
 }
 
 /* initialise the propagator with time, state and necessary parameters
@@ -554,6 +559,18 @@ Vector3d Propagator::calculateAcceleration(
 			cout << "Calculated acceleration due to the direct solar radiation: " << setw(14) << mMJDUTC << setw(14) << directSRPAcc.transpose() << endl;
 		}
 	}
+
+	// if (propOpt.flag)
+	// {
+	// }
+	// Calculate drag
+	Vector3d atmDragAcc = Vector3d::Zero();
+	atmDragAcc = calculateDragForce(rSat, vSat, *mIERS,
+									propOpt.paraDrag.dragArea, propOpt.paraDrag.dragCoef, mMJDUTC) /
+				 propOpt.paraDrag.satMass;
+	// cout << "drag acc:\t" << atmDragAcc << endl;
+	acc += atmDragAcc;
+
 	return acc;
 }
 

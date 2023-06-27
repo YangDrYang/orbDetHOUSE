@@ -9,8 +9,8 @@ public:                                        \
 #include <string>
 using std::string;
 
-#define GRAVITY_DEG_N 4
-#define GRAVITY_DEG_M 4
+#define GRAVITY_DEG_N 40
+#define GRAVITY_DEG_M 40
 
 BETTER_ENUM(E_SRPModels, int,
             CANNONBALL,
@@ -52,6 +52,8 @@ struct ForceModels
     E_SRPModels srpMdlName = E_SRPModels::CANNONBALL;
     double srpArea = 5;
     double srpCoef = 1;
+    double dragArea = 5;
+    double dragCoef = 1;
     int egmAccDeg = GRAVITY_DEG_N;
     int egmAccOrd = GRAVITY_DEG_M;
     int egmSTMDeg = GRAVITY_DEG_N;

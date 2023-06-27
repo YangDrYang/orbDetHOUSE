@@ -6,7 +6,7 @@ scenario_parameters:
   # # time duration of each pass in seconds
   # time_pass: 120
   MJD_start: 59348.916238425903430 
-  MJD_end: 59348.917627314796846
+  MJD_end: 59349.999571759297396
   # this directory must exist
   # output_directory: out
   output_directory: out/out_prop
