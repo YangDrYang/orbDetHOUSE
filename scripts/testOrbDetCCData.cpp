@@ -287,7 +287,7 @@ MatrixXd readCSV(const string &filename, int headerLinesToSkip)
     return matrix;
 }
 
-void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
+void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
                     struct MeasModel &measMdl, struct Filters &filters, struct FileInfo &suppFiles)
 {
     // load file
@@ -390,6 +390,10 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
         optFilter.srpArea = parameter.as<double>();
     if (parameter = propFilterSettings["srpCoef"])
         optFilter.srpCoef = parameter.as<double>();
+    if (parameter = propFilterSettings["dragArea"])
+        optFilter.dragArea = parameter.as<double>();
+    if (parameter = propFilterSettings["dragCoef"])
+        optFilter.dragCoef = parameter.as<double>();
 
     // read file options for info/data that are relied on
     YAML::Node fileOpt = config["supporting_files"];
@@ -439,22 +443,6 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
     // cout << suppFiles.erpFile << endl;
     readerp(suppFiles.erpFile, &erpt);
 
-    // // transform ground station from
-    // leapSec = 15;
-
-    // double erpv[4] = {};
-    // geterp_from_utc(&erpt, leapSec, epoch.startMJD, erpv);
-    // // cout << "erpv[3]\t" << erpv[3] << endl;
-
-    // double dUT1_UTC = erpv[2];
-    // double dUTC_TAI = -(19 + leapSec);
-    // double xp = erpv[0];
-    // double yp = erpv[1];
-    // double lod = erpv[3];
-
-    // iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
-    // // double mjdTT = mjdUTC + iersInstance.TT_UTC(mjdUTC) / 86400;
-
     // set up the IERS instance
     getIERS(epoch.startMJD);
 
@@ -495,13 +483,14 @@ int main(int argc, char *argv[])
     }
     cout << "Reading configuration from file: " << configFilename << endl;
 
+    struct ForceModels forceModelsPropOpt;
     struct ScenarioInfo snrInfo;
     struct MeasModel measMdl;
     struct Filters filters;
     struct InitialState initialState;
     struct FileInfo suppFiles;
     // read parameter/settings from config file
-    readConfigFile(configFilename, forceModelsTruthOpt, forceModelsFilterOpt, snrInfo, initialState, measMdl, filters, suppFiles);
+    readConfigFile(configFilename, forceModelsPropOpt, snrInfo, initialState, measMdl, filters, suppFiles);
     epoch = snrInfo.epoch;
     const int dimState = initialState.dimState;
     string initialStateType = initialState.initialStateType;
@@ -524,8 +513,10 @@ int main(int argc, char *argv[])
     //      << matMeas << endl;
 
     // UKF state & measurement models
+    double absErr = 1E-6;
+    double relErr = 1E-6;
     DynamicModel::stf g = accelerationModel;
-    DynamicModel f(g, dimState, 1E-6, 1E-6);
+    DynamicModel f(g, dimState, absErr, relErr);
     UKF::meas_model h = [&groundStation](double t, const VectorXd &x) -> VectorXd
     {
         return measurementModel(t, x, groundStation);
@@ -548,7 +539,8 @@ int main(int argc, char *argv[])
 
     double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
     // setup orbit propagator
-    orbitProp.setPropOption(forceModelsTruthOpt);
+    orbitProp.setPropOption(forceModelsPropOpt);
+    orbitProp.printPropOption();
     orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
 
     int dimMeas = measMdl.dimMeas;

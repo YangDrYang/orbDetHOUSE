@@ -602,7 +602,7 @@ Vector3d Propagator::calculateAcceleration(
 	{
 		atmDragAcc = calculateDragForce(rSat, vSat, *mIERS, propOpt.paraDrag.dragArea, propOpt.paraDrag.dragCoef, mMJDUTC) / propOpt.paraDrag.satMass;
 		acc += atmDragAcc;
-		if (1)
+		if (0)
 		{
 			cout << "Calculated acceleration due to the atmospheric drag: " << setw(14) << mMJDUTC << setw(14) << atmDragAcc.transpose() << endl;
 		}
