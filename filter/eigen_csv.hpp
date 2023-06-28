@@ -9,13 +9,15 @@
 #include <sstream>
 #include <string>
 #include <vector>
+using namespace Eigen;
+using namespace std;
 
 namespace EigenCSV
 {
 
     template <typename T>
-    void write(const Eigen::DenseBase<T> &A,
-               const std::string &filename)
+    void write(const DenseBase<T> &A,
+               const string &filename)
     {
 
         using namespace std;
@@ -37,9 +39,9 @@ namespace EigenCSV
     }
 
     template <typename T>
-    void write(const Eigen::DenseBase<T> &A,
-               const std::vector<std::string> &header,
-               const std::string &filename,
+    void write(const DenseBase<T> &A,
+               const vector<string> &header,
+               const string &filename,
                bool append = false)
     {
 
@@ -72,8 +74,8 @@ namespace EigenCSV
     }
 
     template <typename T>
-    void read(const std::string &filename,
-              bool header, bool resize, Eigen::DenseBase<T> &A)
+    void read(const string &filename,
+              bool header, bool resize, DenseBase<T> &A)
     {
 
         using namespace std;

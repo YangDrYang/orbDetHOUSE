@@ -11,16 +11,16 @@ ForceModels forceModelsOpt = {};
 // EGMCoef egm;
 // void *pJPLEph;
 // Propagator orbitProp;
-struct EpochInfo epoch; 
+struct EpochInfo epoch;
 
-
-void readConfigFile(string fileName, ForceModels& options, struct EpochInfo& epoch, Eigen::VectorXd& initialState,
-                    Eigen::VectorXd& groundStation, struct Filters& filters, int& numTrials, struct Errors& errorStd,
-                    string& iniatialStateType){
+void readConfigFile(string fileName, ForceModels &options, struct EpochInfo &epoch, VectorXd &initialState,
+                    VectorXd &groundStation, struct Filters &filters, int &numTrials, struct Errors &errorStd,
+                    string &iniatialStateType)
+{
     // load file
     YAML::Node config = YAML::LoadFile(fileName);
     YAML::Node parameter;
-    
+
     // read filter options (required)
     YAML::Node filterOpts = config["filter_options"];
     filters.house = filterOpts["HOUSE"].as<bool>();
@@ -47,7 +47,6 @@ void readConfigFile(string fileName, ForceModels& options, struct EpochInfo& epo
     initialState = stdVec2EigenVec(tempVec);
     tempVec = orbitParams["ground_station"].as<std::vector<double>>();
     groundStation = stdVec2EigenVec(tempVec);
-
 
     // read propagator settings (optional)
     YAML::Node propSettings = config["propagator_truth_settings"];
@@ -87,11 +86,11 @@ void readConfigFile(string fileName, ForceModels& options, struct EpochInfo& epo
         options.srpArea = parameter.as<double>();
     if (parameter = propSettings["srpCoef"])
         options.srpCoef = parameter.as<double>();
-
 }
 
-Eigen::VectorXd stdVec2EigenVec(const std::vector<double>& stdVec){
-    Eigen::VectorXd eigenVec(stdVec.size());
+VectorXd stdVec2EigenVec(const std::vector<double> &stdVec)
+{
+    VectorXd eigenVec(stdVec.size());
     for (int i = 0; i < 6; i++)
     {
         eigenVec(i) = stdVec[i];
@@ -99,18 +98,19 @@ Eigen::VectorXd stdVec2EigenVec(const std::vector<double>& stdVec){
     return eigenVec;
 }
 
-
-int main(int argc, char *argv[]){    
+int main(int argc, char *argv[])
+{
     string configFilename;
     // input config .yaml file
-    switch (argc) {
-    case 1:     // Read default file
+    switch (argc)
+    {
+    case 1: // Read default file
         configFilename = DEFAULT_CONFIG_FILENAME;
         break;
-    case 2:     // Read supplied file
+    case 2: // Read supplied file
         configFilename = argv[1];
         break;
-    default:    // wrong number of args
+    default: // wrong number of args
         cerr << "Accepts up to 1 argument (.yaml input file).\nIf no argument given, the default config file will be read (config.yaml)" << endl;
         exit(1);
         break;

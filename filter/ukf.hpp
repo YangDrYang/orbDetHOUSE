@@ -24,13 +24,13 @@ public:
     };
 
     // Dynamical model type
-    typedef std::function<Eigen::VectorXd(double, double,
-                                          const Eigen::VectorXd &, const Eigen::VectorXd &)>
+    typedef function<VectorXd(double, double,
+                              const VectorXd &, const VectorXd &)>
         dyn_model;
 
     // Measurement model type
-    typedef std::function<Eigen::VectorXd(double,
-                                          const Eigen::VectorXd &)>
+    typedef function<VectorXd(double,
+                              const VectorXd &)>
         meas_model;
 
     // Dimensions of state, measurement, & process noise
@@ -46,14 +46,14 @@ public:
     const meas_model h;
 
     // Process & measurement noise covariance
-    const Eigen::MatrixXd Pww, Pnn;
+    const MatrixXd Pww, Pnn;
 
     // Cholesky decomposition of process noise covariance
-    const Eigen::MatrixXd Cww;
+    const MatrixXd Cww;
 
     // Standardized sigma points & weights
-    const Eigen::MatrixXd Sp, Su;
-    const Eigen::VectorXd wp, wu;
+    const MatrixXd Sp, Su;
+    const VectorXd wp, wu;
 
     // Number of sigma points in prediction & update step
     const int nsp, nsu;
@@ -64,10 +64,10 @@ public:
         const meas_model &h_,
         bool addw_,
         double t0,
-        const Eigen::VectorXd &xm0,
-        const Eigen::MatrixXd &Pxx0,
-        const Eigen::MatrixXd &Pww_,
-        const Eigen::MatrixXd &Pnn_,
+        const VectorXd &xm0,
+        const MatrixXd &Pxx0,
+        const MatrixXd &Pww_,
+        const MatrixXd &Pnn_,
         sig_type stype,
         double k);
 
@@ -75,37 +75,37 @@ public:
     void predict(double tp);
 
     // Update step with one measurement
-    void update(const Eigen::VectorXd &z);
+    void update(const VectorXd &z);
 
     // Run filter for sequence of measurements
-    void run(const Eigen::VectorXd &tz, const Eigen::MatrixXd &Z);
+    void run(const VectorXd &tz, const MatrixXd &Z);
 
     // Generate standardized sigma points
-    static Eigen::MatrixXd sigmaSt(sig_type stype, int n, double k);
+    static MatrixXd sigmaSt(sig_type stype, int n, double k);
 
     // Generate sigma point weights
-    static Eigen::VectorXd sigmaWt(sig_type stype, int n, double k);
+    static VectorXd sigmaWt(sig_type stype, int n, double k);
 
     // Times
-    std::vector<double> t;
+    vector<double> t;
 
     // State estimates
-    std::vector<Eigen::VectorXd> xest;
+    vector<VectorXd> xest;
 
     // State estimate covariances
-    std::vector<Eigen::MatrixXd> Pxx;
+    vector<MatrixXd> Pxx;
 
     // Reset filter
     void reset(
         double t0,
-        const Eigen::VectorXd &xm0,
-        const Eigen::MatrixXd &Pxx0);
+        const VectorXd &xm0,
+        const MatrixXd &Pxx0);
 
     // Save results
-    void save(const std::string &filename);
+    void save(const string &filename);
 
     // Directory for CUT files
-    static std::string cut_dir;
+    static string cut_dir;
 };
 
 #endif

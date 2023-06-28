@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
     EigenCSV::write(run_times, filterStrings, time_file);
 }
 
-Eigen::MatrixXd generateTrueResults(DynamicModel &f, struct EpochInfo epoch, VectorXd initialState)
+MatrixXd generateTrueResults(DynamicModel &f, struct EpochInfo epoch, VectorXd initialState)
 {
     // create results matrix
     int length = floor((epoch.endMJD - epoch.startMJD) / (epoch.timeStep / 86400.0)) + 1;
@@ -421,8 +421,8 @@ Eigen::MatrixXd generateTrueResults(DynamicModel &f, struct EpochInfo epoch, Vec
     return results;
 }
 
-// void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct EpochInfo &epoch, Eigen::VectorXd &initialState,
-//                     Eigen::VectorXd &groundStation, struct Filters &filters, int &numTrials, struct Errors &errorStd,
+// void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct EpochInfo &epoch, VectorXd &initialState,
+//                     VectorXd &groundStation, struct Filters &filters, int &numTrials, struct Errors &errorStd,
 //                     string &iniatialStateType)
 // {
 //     // load file
@@ -692,9 +692,9 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
         optFilter.srpCoef = parameter.as<double>();
 }
 
-Eigen::VectorXd stdVec2EigenVec(const std::vector<double> &stdVec)
+VectorXd stdVec2EigenVec(const std::vector<double> &stdVec)
 {
-    Eigen::VectorXd eigenVec(stdVec.size());
+    VectorXd eigenVec(stdVec.size());
     for (int i = 0; i < 6; i++)
     {
         eigenVec(i) = stdVec[i];

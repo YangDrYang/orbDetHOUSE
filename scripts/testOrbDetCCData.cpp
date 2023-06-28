@@ -582,8 +582,6 @@ int main(int argc, char *argv[])
         house.run(tSec, angMeas);
         runTimesMC(0) = timer.tock();
 
-        cout << "running to here" << endl;
-
         outputFile = snrInfo.outDir + "/house_id_" + noradID + ".csv";
         ;
         house.save(outputFile);

@@ -6,7 +6,7 @@ import processing
 # filters = ["ukf"]
 filters = ["house", "ukf"]
 # Directory path
-out_folder_path = "out_ccdata/"
+out_folder_path = "out/out_ccdata/"
 
 norad_id = 46984
 meas_file = "ccdata/meas_data_id_" + str(norad_id) + ".csv"

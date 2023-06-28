@@ -5,6 +5,8 @@
 
 #include <vector>
 
+using namespace std;
+
 // using namespace std;
 // using namespace Eigen;
 
@@ -15,13 +17,13 @@ class HOUSE
 
 public:
     // Dynamical model type
-    typedef std::function<Eigen::VectorXd(double, double,
-                                          const Eigen::VectorXd &, const Eigen::VectorXd &)>
+    typedef std::function<VectorXd(double, double,
+                                   const VectorXd &, const VectorXd &)>
         dyn_model;
 
     // Measurement model type
-    typedef std::function<Eigen::VectorXd(double,
-                                          const Eigen::VectorXd &, const Eigen::VectorXd &)>
+    typedef std::function<VectorXd(double,
+                                   const VectorXd &, const VectorXd &)>
         meas_model;
 
     // Distribution type
@@ -31,14 +33,14 @@ public:
     public:
         int n;
 
-        Eigen::VectorXd mean, skew, kurt;
-        Eigen::MatrixXd cov, covL;
+        VectorXd mean, skew, kurt;
+        MatrixXd cov, covL;
 
         // Generate distribution from sigma points & weights
-        Dist(const Eigen::MatrixXd &X, const Eigen::VectorXd &w);
+        Dist(const MatrixXd &X, const VectorXd &w);
 
         // Generate zero-mean Gaussian distribution
-        Dist(const Eigen::MatrixXd &S);
+        Dist(const MatrixXd &S);
     };
 
     // Augmented state sigma point type
@@ -48,8 +50,8 @@ public:
     public:
         int n_state, n_noise, n_pts;
 
-        Eigen::MatrixXd state, noise;
-        Eigen::VectorXd wgt;
+        MatrixXd state, noise;
+        VectorXd wgt;
 
         Sigma(const Dist &distX, const Dist &distW, double delta);
     };
@@ -69,10 +71,10 @@ public:
     void predict(double tp);
 
     // Update step with one measurement
-    void update(const Eigen::VectorXd &z);
+    void update(const VectorXd &z);
 
     // Run filter for sequence of measurements
-    void run(const Eigen::VectorXd &tz, const Eigen::MatrixXd &Z);
+    void run(const VectorXd &tz, const MatrixXd &Z);
 
     // Dynamical model
     const dyn_model f;

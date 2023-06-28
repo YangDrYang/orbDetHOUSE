@@ -53,7 +53,7 @@ using namespace boost::numeric::odeint;
 
 int main(int argc, char *argv[])
 {
-    Eigen::VectorXd v;
+    VectorXd v;
 
     v.resize(2);
 

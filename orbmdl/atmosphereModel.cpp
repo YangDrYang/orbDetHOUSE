@@ -1,9 +1,10 @@
 #include "atmosphereModel.hpp"
+using namespace Eigen;
 
 #define R_EARTH 6378.137e3 // from https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 
 static void MJDtoDOY(double mjd, int &year, int &doy, double &sec);
-static double calculateDensity(double t, const Eigen::VectorXd &X, IERS iersInstance);
+static double calculateDensity(double t, const VectorXd &X, IERS iersInstance);
 static long ymd_to_mjd(int year, int month, int day);
 static void mjd_to_ymd(long mjd, int *year, int *month, int *day);
 static vector<double> cartesianGeodetic(VectorXd Xeci, double t, IERS iersInstance);

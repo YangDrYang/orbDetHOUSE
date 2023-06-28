@@ -1,6 +1,6 @@
 # required
 filter_options:
-  HOUSE: false
+  HOUSE: true
   UKF: true
   CUT4: false
   CUT6: false
@@ -19,15 +19,15 @@ scenario_parameters:
 initial_orbtial_parameters:
   dim_state: 6
   # initial state of satillite (type ECEF or ECI), unit: m, m/s
-  initial_state: [-3669.5756236e+3,   1040.41851433e+3,  6705.99019621e+3, -5.05132767e+3, -4.68671761e+3, -2.03577368e+3]
+  initial_state: [-3670344.7060020026,1040280.3902267866,6705782.195689557,-5051.439372019426,-4686.233409635222,-2035.9701596230573]
   initial_state_type: ECI
   initial_covariance: 
-    - [1.0e+6, 0, 0, 0, 0, 0]
-    - [0, 1.0e+6, 0, 0, 0, 0]
-    - [0, 0, 1.0e+6, 0, 0, 0]
-    - [0, 0, 0, 1.0, 0, 0]
-    - [0, 0, 0, 0, 1.0, 0]
-    - [0, 0, 0, 0, 0, 1.0]    
+    - [1.0e-4, 0, 0, 0, 0, 0]
+    - [0, 1.0e-4, 0, 0, 0, 0]
+    - [0, 0, 1.0e-4, 0, 0, 0]
+    - [0, 0, 0, 1.0e-8, 0, 0]
+    - [0, 0, 0, 0, 1.0e-8, 0]
+    - [0, 0, 0, 0, 0, 1.0e-8]    
   process_noise_covariance:
     - [4, 0, 0, 0, 0, 0]
     - [0, 4, 0, 0, 0, 0]
@@ -56,7 +56,7 @@ propagator_filter_settings:
   solid_earth_tide: true
   ocean_tide_loading: true
   solar_radiation_pressure : true
-  atmospheric_drag: true
+  atmospheric_drag: false
   relativity_effect: true
   srpCoef: 1.23
   srpArea : 8.73

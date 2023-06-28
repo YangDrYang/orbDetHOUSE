@@ -84,7 +84,7 @@ MatrixXd readCSV(const string &filename, int headerLinesToSkip)
 
 void writeCSV(const string &filename, const MatrixXd &data, const vector<string> &header)
 {
-    std::ofstream file(filename);
+    ofstream file(filename);
     if (file.is_open())
     {
         // Write header
