@@ -39,9 +39,10 @@
 /odvenv
 /.vscode
 
-*.DS_Store
+.DS_Store
 bin/.DS_Store
 out/.DS_Store
 
 *.PAS
-*.EOF.DS_Store
+*.EOF
+
