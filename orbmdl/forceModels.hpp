@@ -138,6 +138,7 @@ struct PropOpt
 	bool flagSolarRadiationPressure;
 	SRPOpt optSRP;
 	SRPPara paraSRP;
+	bool flagAtmosphericDrag;
 	DragPara paraDrag;
 	bool flagAntennaThrust;
 	bool flagEmpiricalAcceleration;
@@ -164,8 +165,7 @@ struct Propagator
 	void setPropOption(
 		ForceModels forceMdl);
 
-	void printPropOption(
-		ForceModels forceMdl);
+	void printPropOption();
 
 	void initPropagator(
 		VectorXd rSatECI,
@@ -186,13 +186,6 @@ struct Propagator
 	Vector3d calculateAcceleration(
 		const Vector3d &rSat,		///< Inertial position of satellite (m)
 		const Vector3d &vSat,		///< Inertial velocity of satellite (m/s)
-		const Matrix3d &mECI2ECEF); ///< Transformation matrix from ECI coordinate to ECEF
-
-	Vector3d calculateAccelNGradient(
-		const Vector3d &rSat,		///< Inertial position of satellite (m)
-		const Vector3d &vSat,		///< Inertial velocity of satellite (m/s)
-		Matrix3d &mGradient,		///< Gradient (G=da/dr) in the ICRF/J2000 system
-		Vector3d &dadCR,			///< Partials of acceleration w.r.t. to the solar radiation coefficient
 		const Matrix3d &mECI2ECEF); ///< Transformation matrix from ECI coordinate to ECEF
 
 protected:

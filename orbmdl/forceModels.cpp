@@ -328,6 +328,7 @@ void Propagator::setPropOption(
 	propOpt.paraSRP.srpArea = forceMdl.srpArea;
 	propOpt.paraSRP.srpCoef = forceMdl.srpCoef;
 
+	propOpt.flagAtmosphericDrag = forceMdl.atmospheric_drag;
 	// Drag parameters
 	propOpt.paraDrag.satMass = forceMdl.satMass;
 	propOpt.paraDrag.dragArea = forceMdl.dragArea;
@@ -337,39 +338,36 @@ void Propagator::setPropOption(
 /* Print options for force models in the propagator
  *
  */
-void Propagator::printPropOption(
-	ForceModels forceMdl)
+void Propagator::printPropOption()
 {
 
 	// Print the options with right alignment
-	cout << setw(25) << right << "earth_gravity: " << forceMdl.earth_gravity << endl;
-	cout << setw(25) << right << "gravity_model: " << forceMdl.gravity_model << endl;
-	cout << setw(25) << right << "solid_earth_tide: " << forceMdl.solid_earth_tide << endl;
-	cout << setw(25) << right << "ocean_tide_loading: " << forceMdl.ocean_tide_loading << endl;
-	cout << setw(25) << right << "third_body_attraction: " << forceMdl.third_body_attraction << endl;
-	cout << setw(25) << right << "third_body_sun: " << forceMdl.third_body_sun << endl;
-	cout << setw(25) << right << "third_body_moon: " << forceMdl.third_body_moon << endl;
-	cout << setw(25) << right << "third_body_planet: " << forceMdl.third_body_planet << endl;
-	cout << setw(25) << right << "relativity_effect: " << forceMdl.relativity_effect << endl;
-	cout << setw(25) << right << "atmospheric_drag: " << forceMdl.atmospheric_drag << endl;
-	cout << setw(25) << right << "solar_radiation_pressure: " << forceMdl.solar_radiation_pressure << endl;
-	cout << setw(25) << right << "thermal_emission: " << forceMdl.thermal_emission << endl;
-	cout << setw(25) << right << "earth_albedo: " << forceMdl.earth_albedo << endl;
-	cout << setw(25) << right << "infrared_radiation: " << forceMdl.infrared_radiation << endl;
-	cout << setw(25) << right << "antenna_thrust: " << forceMdl.antenna_thrust << endl;
-	cout << setw(25) << right << "empirical_acceleration: " << forceMdl.empirical_acceleration << endl;
-	cout << setw(25) << right << "satellite_manoeuvre: " << forceMdl.satellite_manoeuvre << endl;
-	cout << setw(25) << right << "satMass: " << forceMdl.satMass << endl;
-	cout << setw(25) << right << "srpMdlName: " << forceMdl.srpMdlName << endl;
-	cout << setw(25) << right << "srpArea: " << forceMdl.srpArea << endl;
-	cout << setw(25) << right << "srpCoef: " << forceMdl.srpCoef << endl;
-	cout << setw(25) << right << "dragArea: " << forceMdl.dragArea << endl;
-	cout << setw(25) << right << "dragCoef: " << forceMdl.dragCoef << endl;
-	cout << setw(25) << right << "egmAccDeg: " << forceMdl.egmAccDeg << endl;
-	cout << setw(25) << right << "egmAccOrd: " << forceMdl.egmAccOrd << endl;
-	cout << setw(25) << right << "egmSTMDeg: " << forceMdl.egmSTMDeg << endl;
-	cout << setw(25) << right << "egmSTMOrd: " << forceMdl.egmSTMOrd << endl;
-	cout << setw(25) << right << "odeInteg: " << forceMdl.odeInteg << endl;
+	cout << setw(25) << right << "earth_gravity: " << propOpt.flagEarthGravity << endl;
+	cout << setw(25) << right << "gravity_model: " << propOpt.optEarthGravMdl.earthGravMdl << endl;
+	cout << setw(25) << right << "egmAccDeg: " << propOpt.optEarthGravMdl.earthGravAccDeg.mMax << endl;
+	cout << setw(25) << right << "egmAccOrd: " << propOpt.optEarthGravMdl.earthGravAccDeg.nMax << endl;
+	cout << setw(25) << right << "solid_earth_tide: " << propOpt.optTides.flagSolidEarthTides << endl;
+	cout << setw(25) << right << "ocean_tide_loading: " << propOpt.optTides.flagOceanTides << endl;
+	cout << setw(25) << right << "third_body_attraction: " << propOpt.flagThirdBodyGravity << endl;
+	cout << setw(25) << right << "third_body_sun: " << propOpt.optThirdBodyGravity.flagSunGrav << endl;
+	cout << setw(25) << right << "third_body_moon: " << propOpt.optThirdBodyGravity.flagMoonGrav << endl;
+	cout << setw(25) << right << "third_body_planet: " << propOpt.optThirdBodyGravity.flagJupiterGrav << endl;
+	cout << setw(25) << right << "relativity_effect: " << propOpt.flagRelativityEffect << endl;
+
+	cout << setw(25) << right << "atmospheric_drag: " << propOpt.flagAtmosphericDrag << endl;
+	cout << setw(25) << right << "satMass: " << propOpt.paraDrag.satMass << endl;
+	cout << setw(25) << right << "dragArea: " << propOpt.paraDrag.dragArea << endl;
+	cout << setw(25) << right << "dragCoef: " << propOpt.paraDrag.dragCoef << endl;
+
+	cout << setw(25) << right << "solar_radiation_pressure: " << propOpt.flagSolarRadiationPressure << endl;
+	cout << setw(25) << right << "direct_solar_radiation_pressure: " << propOpt.optSRP.flagDirectSRP << endl;
+	cout << setw(25) << right << "thermal_emission: " << propOpt.optSRP.flagThermalEmission << endl;
+	cout << setw(25) << right << "earth_albedo: " << propOpt.optSRP.flagEarthAlbedo << endl;
+	cout << setw(25) << right << "infrared_radiation: " << propOpt.optSRP.flagInfraredRadiation << endl;
+	cout << setw(25) << right << "srpArea: " << propOpt.paraSRP.srpArea << endl;
+	cout << setw(25) << right << "srpCoef: " << propOpt.paraSRP.srpCoef << endl;
+
+	cout << setw(25) << right << "odeInteg: " << propOpt.odeInteg << endl;
 }
 
 /* initialise the propagator with time, state and necessary parameters
@@ -598,47 +596,17 @@ Vector3d Propagator::calculateAcceleration(
 		}
 	}
 
-	// if (propOpt.flag)
-	// {
-	// }
 	// Calculate drag
 	Vector3d atmDragAcc = Vector3d::Zero();
-	atmDragAcc = calculateDragForce(rSat, vSat, *mIERS,
-									propOpt.paraDrag.dragArea, propOpt.paraDrag.dragCoef, mMJDUTC) /
-				 propOpt.paraDrag.satMass;
-	// cout << "drag acc:\t" << atmDragAcc << endl;
-	acc += atmDragAcc;
-
-	return acc;
-}
-
-Vector3d Propagator::calculateAccelNGradient(
-	const Vector3d &rSat,	   ///< Inertial position of satellite (m)
-	const Vector3d &vSat,	   ///< Inertial velocity of satellite (m/s)
-	Matrix3d &mGradient,	   ///< Gradient (G=da/dr) in the ICRF/J2000 system
-	Vector3d &dadCr,		   ///< Partials of acceleration w.r.t. to the solar radiation coefficient
-	const Matrix3d &mECI2ECEF) ///< Transformation matrix from ECI coordinate to ECEF
-{
-
-	bool bVarEq = true;
-	Vector3d earthGravityAcc = pmGravityModel->centralBodyGravityAcc(mMJDUTC, mERPv, rSat, mECI2ECEF, bVarEq);
-	Vector3d drSat;
-	const double dinc = 1.0; // Position increment [m]
-	Vector3d daSat;
-
-	/* Gradient
-	 */
-	for (int i = 0; i < 3; i++)
+	if (propOpt.flagAtmosphericDrag)
 	{
-		drSat = Vector3d::Zero();
-		drSat(i) = dinc;																								  // Set offset in i-th component of the position vector
-		daSat = pmGravityModel->centralBodyGravityAcc(mMJDUTC, mERPv, rSat + drSat, mECI2ECEF, bVarEq) - earthGravityAcc; // Acceleration difference
-		mGradient.col(i) = daSat / dinc;																				  // Derivative with respect to i-th component
+		atmDragAcc = calculateDragForce(rSat, vSat, *mIERS, propOpt.paraDrag.dragArea, propOpt.paraDrag.dragCoef, mMJDUTC) / propOpt.paraDrag.satMass;
+		acc += atmDragAcc;
+		if (1)
+		{
+			cout << "Calculated acceleration due to the atmospheric drag: " << setw(14) << mMJDUTC << setw(14) << atmDragAcc.transpose() << endl;
+		}
 	}
 
-	/* Radiation pressure coefficient partials
-	 */
-	double mjdTT = mIERS->TT_UTC(mMJDUTC) / 86400.0 + mMJDUTC;
-	pmSolarRadPressure->mSRPPara.srpCoef = 1.0;
-	dadCr = pmSolarRadPressure->directSolarRadiationAcc(mjdTT, rSat);
+	return acc;
 }

@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
 
     // setup orbit propagator
     orbitProp.setPropOption(forceModelsPropOpt);
-    orbitProp.printPropOption(forceModelsPropOpt);
+    orbitProp.printPropOption();
     orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
     double absErr = 1E-6;
     double relErr = 1E-6;
