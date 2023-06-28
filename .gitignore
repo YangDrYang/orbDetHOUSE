@@ -36,9 +36,9 @@
 *.eps
 *.svg
 
-/odvenv
-/.vscode
-/ccdata
+odvenv/
+.vscode/
+ccdata/
 
 .DS_Store
 bin/.DS_Store
