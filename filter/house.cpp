@@ -6,7 +6,6 @@
 #include <iostream>
 
 using namespace Eigen;
-using namespace std;
 
 // Prediction step
 void HOUSE::predict(double tp)
@@ -210,7 +209,7 @@ void HOUSE::reset(double t0, const Dist &distx0)
 }
 
 // // Save results
-// void HOUSE::save(const string &filename)
+// void HOUSE::save(const std::string &filename)
 // {
 
 //     using namespace std;
@@ -243,7 +242,7 @@ void HOUSE::reset(double t0, const Dist &distx0)
 // }
 
 // Save results
-void HOUSE::save(const string &filename)
+void HOUSE::save(const std::string &filename)
 {
 
     using namespace std;

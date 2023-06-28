@@ -5,10 +5,7 @@
 
 #include <vector>
 
-using namespace std;
-
-// using namespace std;
-// using namespace Eigen;
+using namespace Eigen;
 
 #define NO_MEASUREMENT 99999999
 
