@@ -66,7 +66,7 @@ ThirdBodyAttraction::ThirdBodyAttraction(
 		mGM = GM_Sun;
 		break;
 	default:
-		std::cout << "ThirdBodyAttraction: E_SolarSysStarType Unsupport " << endl;
+		cout << "ThirdBodyAttraction: E_SolarSysStarType Unsupport " << endl;
 	}
 
 	mJPLEphemeris = new JPLEphemeris(pJPLEph);
@@ -112,7 +112,7 @@ void ThirdBodyAttraction::setThirdBodyStar(
 		mGM = GM_Sun;
 		break;
 	default:
-		std::cout << "ThirdBodyAttraction: E_SolarSysStarType Unsupport " << endl;
+		cout << "ThirdBodyAttraction: E_SolarSysStarType Unsupport " << endl;
 	}
 }
 
@@ -332,6 +332,44 @@ void Propagator::setPropOption(
 	propOpt.paraDrag.satMass = forceMdl.satMass;
 	propOpt.paraDrag.dragArea = forceMdl.dragArea;
 	propOpt.paraDrag.dragCoef = forceMdl.dragCoef;
+}
+
+/* Print options for force models in the propagator
+ *
+ */
+void Propagator::printPropOption(
+	ForceModels forceMdl)
+{
+
+	// Print the options with right alignment
+	cout << setw(25) << right << "earth_gravity: " << forceMdl.earth_gravity << endl;
+	cout << setw(25) << right << "gravity_model: " << forceMdl.gravity_model << endl;
+	cout << setw(25) << right << "solid_earth_tide: " << forceMdl.solid_earth_tide << endl;
+	cout << setw(25) << right << "ocean_tide_loading: " << forceMdl.ocean_tide_loading << endl;
+	cout << setw(25) << right << "third_body_attraction: " << forceMdl.third_body_attraction << endl;
+	cout << setw(25) << right << "third_body_sun: " << forceMdl.third_body_sun << endl;
+	cout << setw(25) << right << "third_body_moon: " << forceMdl.third_body_moon << endl;
+	cout << setw(25) << right << "third_body_planet: " << forceMdl.third_body_planet << endl;
+	cout << setw(25) << right << "relativity_effect: " << forceMdl.relativity_effect << endl;
+	cout << setw(25) << right << "atmospheric_drag: " << forceMdl.atmospheric_drag << endl;
+	cout << setw(25) << right << "solar_radiation_pressure: " << forceMdl.solar_radiation_pressure << endl;
+	cout << setw(25) << right << "thermal_emission: " << forceMdl.thermal_emission << endl;
+	cout << setw(25) << right << "earth_albedo: " << forceMdl.earth_albedo << endl;
+	cout << setw(25) << right << "infrared_radiation: " << forceMdl.infrared_radiation << endl;
+	cout << setw(25) << right << "antenna_thrust: " << forceMdl.antenna_thrust << endl;
+	cout << setw(25) << right << "empirical_acceleration: " << forceMdl.empirical_acceleration << endl;
+	cout << setw(25) << right << "satellite_manoeuvre: " << forceMdl.satellite_manoeuvre << endl;
+	cout << setw(25) << right << "satMass: " << forceMdl.satMass << endl;
+	cout << setw(25) << right << "srpMdlName: " << forceMdl.srpMdlName << endl;
+	cout << setw(25) << right << "srpArea: " << forceMdl.srpArea << endl;
+	cout << setw(25) << right << "srpCoef: " << forceMdl.srpCoef << endl;
+	cout << setw(25) << right << "dragArea: " << forceMdl.dragArea << endl;
+	cout << setw(25) << right << "dragCoef: " << forceMdl.dragCoef << endl;
+	cout << setw(25) << right << "egmAccDeg: " << forceMdl.egmAccDeg << endl;
+	cout << setw(25) << right << "egmAccOrd: " << forceMdl.egmAccOrd << endl;
+	cout << setw(25) << right << "egmSTMDeg: " << forceMdl.egmSTMDeg << endl;
+	cout << setw(25) << right << "egmSTMOrd: " << forceMdl.egmSTMOrd << endl;
+	cout << setw(25) << right << "odeInteg: " << forceMdl.odeInteg << endl;
 }
 
 /* initialise the propagator with time, state and necessary parameters

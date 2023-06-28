@@ -25,14 +25,16 @@ propagator_truth_settings:
   third_body_attraction: true
   third_body_sun: true
   third_body_moon: true
-  solid_earth_tide: false
-  ocean_tide_loading: false
+  solid_earth_tide: true
+  ocean_tide_loading: true
   solar_radiation_pressure : true
   atmospheric_drag: true
   relativity_effect: true
   srpCoef: 1.23
-  srpArea : 0.136488 # 2 * PI  * pow(0.974 / 2, 2) * sin(0) + 1.034 * 0.132
-  satMass : 61.14
+  srpArea : 8.73
+  dragCoef: 2.0
+  dragArea : 4.091655
+  satMass : 961.831
 
 # optional
 supporting_files:

@@ -150,7 +150,8 @@
     "regex": "cpp",
     "scoped_allocator": "cpp",
     "span": "cpp",
-    "core": "cpp"
+    "core": "cpp",
+    "shared_mutex": "cpp"
   },
   "cmake.configureOnOpen": true,
   "C_Cpp.errorSquiggles": "disabled",

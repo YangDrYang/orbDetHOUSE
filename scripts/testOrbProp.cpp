@@ -32,7 +32,6 @@ const double leaps[MAXLEAPS + 1][7] =
 erp_t erpt;
 double leapSec;
 IERS iersInstance;
-ForceModels forceModelsTruthOpt = {}, forceModelsFilterOpt = {};
 EGMCoef egm;
 void *pJPLEph;
 Propagator orbitProp;
@@ -134,7 +133,7 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     return Xf;
 }
 
-void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
+void readConfigFile(string fileName, ForceModels &optProp, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
                     struct MeasModel &measMdl, struct Filters &filters, struct FileInfo &suppFiles)
 {
     // load file
@@ -161,43 +160,47 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     // read propagator settings for filters (optional)
     YAML::Node propFilterSettings = config["propagator_truth_settings"];
     if (parameter = propFilterSettings["earth_gravaity"])
-        optFilter.earth_gravity = parameter.as<bool>();
+        optProp.earth_gravity = parameter.as<bool>();
     if (parameter = propFilterSettings["solid_earth_tide"])
-        optFilter.solid_earth_tide = parameter.as<bool>();
+        optProp.solid_earth_tide = parameter.as<bool>();
     if (parameter = propFilterSettings["ocean_tide_loading"])
-        optFilter.ocean_tide_loading = parameter.as<bool>();
+        optProp.ocean_tide_loading = parameter.as<bool>();
     if (parameter = propFilterSettings["third_body_attraction"])
-        optFilter.third_body_attraction = parameter.as<bool>();
+        optProp.third_body_attraction = parameter.as<bool>();
     if (parameter = propFilterSettings["third_body_sun"])
-        optFilter.third_body_sun = parameter.as<bool>();
+        optProp.third_body_sun = parameter.as<bool>();
     if (parameter = propFilterSettings["third_body_moon"])
-        optFilter.third_body_moon = parameter.as<bool>();
+        optProp.third_body_moon = parameter.as<bool>();
     if (parameter = propFilterSettings["third_body_planet"])
-        optFilter.third_body_planet = parameter.as<bool>();
+        optProp.third_body_planet = parameter.as<bool>();
     if (parameter = propFilterSettings["relativity_effect"])
-        optFilter.relativity_effect = parameter.as<bool>();
+        optProp.relativity_effect = parameter.as<bool>();
     if (parameter = propFilterSettings["atmospheric_drag"])
-        optFilter.atmospheric_drag = parameter.as<bool>();
+        optProp.atmospheric_drag = parameter.as<bool>();
     if (parameter = propFilterSettings["solar_radiation_pressure"])
-        optFilter.solar_radiation_pressure = parameter.as<bool>();
+        optProp.solar_radiation_pressure = parameter.as<bool>();
     if (parameter = propFilterSettings["thermal_emission"])
-        optFilter.thermal_emission = parameter.as<bool>();
+        optProp.thermal_emission = parameter.as<bool>();
     if (parameter = propFilterSettings["earth_albedo"])
-        optFilter.earth_albedo = parameter.as<bool>();
+        optProp.earth_albedo = parameter.as<bool>();
     if (parameter = propFilterSettings["infrared_radiation"])
-        optFilter.infrared_radiation = parameter.as<bool>();
+        optProp.infrared_radiation = parameter.as<bool>();
     if (parameter = propFilterSettings["antenna_thrust"])
-        optFilter.antenna_thrust = parameter.as<bool>();
+        optProp.antenna_thrust = parameter.as<bool>();
     if (parameter = propFilterSettings["empirical_acceleration"])
-        optFilter.empirical_acceleration = parameter.as<bool>();
+        optProp.empirical_acceleration = parameter.as<bool>();
     if (parameter = propFilterSettings["satellite_manoeuvre"])
-        optFilter.satellite_manoeuvre = parameter.as<bool>();
+        optProp.satellite_manoeuvre = parameter.as<bool>();
     if (parameter = propFilterSettings["satMass"])
-        optFilter.satMass = parameter.as<double>();
+        optProp.satMass = parameter.as<double>();
     if (parameter = propFilterSettings["srpArea"])
-        optFilter.srpArea = parameter.as<double>();
+        optProp.srpArea = parameter.as<double>();
     if (parameter = propFilterSettings["srpCoef"])
-        optFilter.srpCoef = parameter.as<double>();
+        optProp.srpCoef = parameter.as<double>();
+    if (parameter = propFilterSettings["dragArea"])
+        optProp.dragArea = parameter.as<double>();
+    if (parameter = propFilterSettings["dragCoef"])
+        optProp.dragCoef = parameter.as<double>();
 
     // read file options for info/data that are relied on
     YAML::Node fileOpt = config["supporting_files"];
@@ -290,13 +293,14 @@ int main(int argc, char *argv[])
     }
     cout << "Reading configuration from file: " << configFilename << endl;
 
+    struct ForceModels forceModelsPropOpt;
     struct ScenarioInfo snrInfo;
     struct MeasModel measMdl;
     struct Filters filters;
     struct InitialState initialState;
     struct FileInfo suppFiles;
     // read parameter/settings from config file
-    readConfigFile(configFilename, forceModelsTruthOpt, forceModelsFilterOpt, snrInfo, initialState, measMdl, filters, suppFiles);
+    readConfigFile(configFilename, forceModelsPropOpt, snrInfo, initialState, measMdl, filters, suppFiles);
     epoch = snrInfo.epoch;
     const int dimState = initialState.dimState;
     string initialStateType = initialState.initialStateType;
@@ -309,7 +313,8 @@ int main(int argc, char *argv[])
     // double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
 
     // setup orbit propagator
-    orbitProp.setPropOption(forceModelsTruthOpt);
+    orbitProp.setPropOption(forceModelsPropOpt);
+    orbitProp.printPropOption(forceModelsPropOpt);
     orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
     double absErr = 1E-6;
     double relErr = 1E-6;
@@ -334,7 +339,7 @@ int main(int argc, char *argv[])
         propStateVec = f(time, time + dt, propStateVec, Vector3d::Zero());
         time += dt;
         tableTrajTruth.row(k + 1).tail(dimState) = propStateVec;
-        cout << "The " << k + 1 << "th time step" << endl;
+        // cout << "The " << k + 1 << "th time step" << endl;
     }
     cout << "The total time consumption is:\t" << timer.tock() << endl;
     // header for the saved file

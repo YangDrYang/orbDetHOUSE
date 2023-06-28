@@ -164,6 +164,9 @@ struct Propagator
 	void setPropOption(
 		ForceModels forceMdl);
 
+	void printPropOption(
+		ForceModels forceMdl);
+
 	void initPropagator(
 		VectorXd rSatECI,
 		double mjdUTC = 0,

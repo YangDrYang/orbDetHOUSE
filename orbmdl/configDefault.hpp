@@ -9,8 +9,8 @@ public:                                        \
 #include <string>
 using std::string;
 
-#define GRAVITY_DEG_N 40
-#define GRAVITY_DEG_M 40
+#define GRAVITY_DEG_N 100
+#define GRAVITY_DEG_M 100
 
 BETTER_ENUM(E_SRPModels, int,
             CANNONBALL,
