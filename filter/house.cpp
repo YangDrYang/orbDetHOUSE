@@ -15,8 +15,23 @@ void HOUSE::predict(double tp)
 
     if (tp > ti)
     {
+        Dist distxi = distx.back();
+        while (tp > ti + dtMax)
+        {
+            Sigma sig(distxi, distw, delta);
 
-        Sigma sig(distx.back(), distw, delta);
+            MatrixXd Xp(nx, sig.n_pts);
+
+            for (int i = 0; i < sig.n_pts; i++)
+                Xp.col(i) = f(ti, ti + dtMax, sig.state.col(i), sig.noise.col(i));
+
+            Dist distXp(Xp, sig.wgt);
+
+            distxi = distXp;
+            ti += dtMax;
+        }
+
+        Sigma sig(distxi, distw, delta);
 
         MatrixXd Xp(nx, sig.n_pts);
 
@@ -44,6 +59,9 @@ void HOUSE::update(const VectorXd &z)
 
     for (int i = 0; i < sig.n_pts; i++)
         Z.col(i) = h(tz, sig.state.col(i), sig.noise.col(i));
+
+    VectorXd res = z - Z.col(0);
+    cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
     xm = distx.back().mean;
     zm = Z * sig.wgt;
@@ -149,6 +167,7 @@ HOUSE::HOUSE(
     const meas_model &h_,
     int nz_,
     double t0,
+    double dtMax_,
     const Dist &distx0,
     const Dist &distw_,
     const Dist &distv_,
@@ -156,7 +175,8 @@ HOUSE::HOUSE(
                      nx(distx0.n), nz(nz_),
                      nw(distw_.n), nv(distv_.n),
                      distw(distw_), distv(distv_),
-                     delta(delta_)
+                     delta(delta_),
+                     dtMax(dtMax_)
 {
 
     distx.push_back(distx0);

@@ -59,6 +59,7 @@ public:
         const meas_model &h_,
         int nz_,
         double t0,
+        double dtMax_,
         const Dist &distx0,
         const Dist &distw_,
         const Dist &distv_,
@@ -99,6 +100,9 @@ public:
 
     // Times
     std::vector<double> t;
+
+    // Maximum time step for dynamical model
+    const double dtMax;
 
     // Reset filter
     void reset(double t0, const Dist &distx0);

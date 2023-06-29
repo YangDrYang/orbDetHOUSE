@@ -574,8 +574,8 @@ int main(int argc, char *argv[])
     angMeas = angMeas * (M_PI / 180.0);
     // Transpose of angMeas to ensure the measurement in a vector for each time epoch
     angMeas = angMeas.transpose().eval();
-    // vector<string> measStrings({"angular measurements"});
-    // EigenCSV::write(angMeas, measStrings, "angles.csv");
+    vector<string> measStrings({"angular measurements"});
+    EigenCSV::write(angMeas, measStrings, "angles.csv");
 
     double dtMax = 60;
     // Initialize UKF & CUT filters
@@ -586,13 +586,13 @@ int main(int argc, char *argv[])
 
     // HOUSE distributions for state
     HOUSE::Dist distXi(initialCov);
-    distXi.mean = initialState.initialStateVec;
+    distXi.mean = initialStateVec;
     // HOUSE distributions for state noise
     HOUSE::Dist distw(procNoiseCov);
     // HOUSE distributions for measurement noise
     HOUSE::Dist distn(measNoiseCov);
     // Initialize HOUSE
-    HOUSE house(f, hh, dimMeas, 0, distXi, distw, distn, 0);
+    HOUSE house(f, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0);
 
     string outputFile;
     MatrixXd runTimesMC(1, 4);
