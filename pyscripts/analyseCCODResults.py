@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import processing
 
 # filters = ["house", "ukf", "cut4", "cut6"]
-# filters = ["ukf"]
-filters = ["house", "ukf"]
+filters = ["ukf"]
+# filters = ["house", "ukf"]
 # Directory path
 out_folder_path = "out/out_ccdata/"
 
@@ -62,10 +62,14 @@ for filter_type in filters:
         out_folder_path + filter_type + "_err_id_" + str(norad_id) + ".csv"
     )
     # Plot the data on the axes
-    ax[0].plot(err_df["mjd"].head(70))
-    ax[1].plot(err_df["pos_err_x"].head(70))
-    ax[2].plot(err_df["pos_err_y"].head(70))
-    ax[3].plot(err_df["pos_err_z"].head(70))
+    # ax[0].plot(err_df["mjd"].head(70))
+    # ax[1].plot(err_df["pos_err_x"].head(70))
+    # ax[2].plot(err_df["pos_err_y"].head(70))
+    # ax[3].plot(err_df["pos_err_z"].head(70))
+    ax[0].plot(err_df["mjd"])
+    ax[1].plot(err_df["pos_err_x"])
+    ax[2].plot(err_df["pos_err_y"])
+    ax[3].plot(err_df["pos_err_z"])
 
 # Add labels and title
 ax[0].set_ylabel("mjd (day)")

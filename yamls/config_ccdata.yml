@@ -1,6 +1,6 @@
 # required
 filter_options:
-  HOUSE: true
+  HOUSE: false
   UKF: true
   CUT4: false
   CUT6: false
@@ -11,7 +11,11 @@ scenario_parameters:
   # MJD_start: 59356.59328126736 # 2021-May-22
   # MJD_end: 59357.795018171295 #2021-May-23
   MJD_start: 59349.51137986922 # 2021-May-15
-  MJD_end: 59352.559680763894 #2021-May-18  
+  MJD_end:  59351.54470621643
+  # MJD_end: 59352.559680763894 #2021-May-18  
+  # MJD_start: 59349.51288590162
+  # MJD_end: 59350.52712098842
+
   # this directory must exist
   output_directory: out/out_ccdata
 
@@ -20,6 +24,7 @@ initial_orbtial_parameters:
   dim_state: 6
   # initial state of satillite (type ECEF or ECI), unit: m, m/s
   initial_state: [-3670344.7060020026,1040280.3902267866,6705782.195689557,-5051.439372019426,-4686.233409635222,-2035.9701596230573]
+  # initial_state: [-4299182.037649778,424377.41311747686,6392328.627819218,-4602.143031060031,-4768.812901435728,-2776.03925579375]
   initial_state_type: ECI
   initial_covariance: 
     - [1.0e-4, 0, 0, 0, 0, 0]
@@ -29,9 +34,9 @@ initial_orbtial_parameters:
     - [0, 0, 0, 0, 1.0e-8, 0]
     - [0, 0, 0, 0, 0, 1.0e-8]    
   process_noise_covariance:
-    - [4, 0, 0, 0, 0, 0]
-    - [0, 4, 0, 0, 0, 0]
-    - [0, 0, 4, 0, 0, 0]
+    - [100, 0, 0, 0, 0, 0]
+    - [0, 100, 0, 0, 0, 0]
+    - [0, 0, 100, 0, 0, 0]
     - [0, 0, 0, 0.04, 0, 0]
     - [0, 0, 0, 0, 0.04, 0]
     - [0, 0, 0, 0, 0, 0.04]
@@ -44,8 +49,8 @@ measurement_parameters:
   ground_station: [-2730164.38085497, 3714370.03545681, 4393632.92952871, 0, 0, 0] #Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
   dim_meas: 2
   # measurement error with units [arcsec, arcsec]
-  right_ascension_error: 5
-  declination_error: 5
+  right_ascension_error: 3
+  declination_error: 3
 
 
 # optional, if not defined they will be set to default values
@@ -66,6 +71,6 @@ propagator_filter_settings:
 
 # optional
 supporting_files:
-  gravity_file: ./auxdata/GGMOS3.txt
+  gravity_file: ./auxdata/GGM03S.txt
   ephemeris_file: ./auxdata/unxp2000.405
   ERP_file: ./auxdata/cod21587.erp

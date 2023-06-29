@@ -28,6 +28,30 @@ void UKF::predict(double tp)
 
     if (tp > ti)
     {
+        // control the prediction step, no larger than dtMax
+        while (tp > ti + dtMax)
+        {
+            Xi = xesti.rowwise().replicate(nsp) + Pxxi.llt().matrixL() * Sp.topRows(nx);
+
+            if (addw)
+                W.setZero();
+            else
+                W = Cww * Sp.bottomRows(nw);
+
+            for (int i = 0; i < nsp; i++)
+                Xp.col(i) = f(ti, ti + dtMax, Xi.col(i), W.col(i));
+
+            xestp = Xp * wp;
+
+            Pxxp = Xp * wp.asDiagonal() * Xp.transpose() - xestp * xestp.transpose();
+
+            if (addw)
+                Pxxp += Pww;
+
+            xesti = xestp;
+            ti += dtMax;
+            Pxxi = Pxxp;
+        }
 
         Xi = xesti.rowwise().replicate(nsp) + Pxxi.llt().matrixL() * Sp.topRows(nx);
 
@@ -76,7 +100,8 @@ void UKF::update(const VectorXd &z)
     for (int i = 0; i < nsu; i++)
         Z.col(i) = h(tz, X.col(i));
 
-    // cout << "residuals: " << z - Z.col(0) << endl;
+    VectorXd res = z - Z.col(0);
+    cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
     zm = Z * wu;
 
@@ -117,6 +142,7 @@ UKF::UKF(
     const meas_model &h_,
     bool addw_,
     double t0,
+    double dtMax_,
     const VectorXd &xm0,
     const MatrixXd &Pxx0,
     const MatrixXd &Pww_,
@@ -127,6 +153,7 @@ UKF::UKF(
                 nw(Pww_.rows()),
                 addw(addw_),
                 f(f_),
+                dtMax(dtMax_),
                 h(h_),
                 Pww(Pww_),
                 Pnn(Pnn_),

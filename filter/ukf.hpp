@@ -42,6 +42,9 @@ public:
     // Dynamical model: x(tf) = f(ti, tf, x(ti), w)
     const dyn_model f;
 
+    // Maximum time step for dynamical model
+    const double dtMax;
+
     // Measurement model: z = h(t, x) + v
     const meas_model h;
 
@@ -64,6 +67,7 @@ public:
         const meas_model &h_,
         bool addw_,
         double t0,
+        double dtMax_,
         const VectorXd &xm0,
         const MatrixXd &Pxx0,
         const MatrixXd &Pww_,

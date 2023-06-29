@@ -5,8 +5,10 @@ scenario_parameters:
   time_step: 10
   # # time duration of each pass in seconds
   # time_pass: 120
-  MJD_start: 59348.916238425903430 
-  MJD_end: 59349.999571759297396
+  # MJD_start: 59348.916238425903430 
+  # MJD_end: 59349.999571759297396
+  MJD_start: 59349.51137986922 
+  MJD_end:  59349.5114217037
   # this directory must exist
   # output_directory: out
   output_directory: out/out_prop
@@ -15,7 +17,8 @@ scenario_parameters:
 initial_orbtial_parameters:
   dim_state: 6
   # initial state of satillite (type ECEF or ECI), unit: m, m/s
-  initial_state: [-1049836.531406142516062,-4275236.478115282021463,-6337381.515492259524763,5944.446546185818079,2819.968620172394367,-2885.421064631562786]
+  # initial_state: [-1049836.531406142516062,-4275236.478115282021463,-6337381.515492259524763,5944.446546185818079,2819.968620172394367,-2885.421064631562786]
+  initial_state: [-3670344.7060020026,1040280.3902267866,6705782.195689557,-5051.439372019426,-4686.233409635222,-2035.9701596230573]
   initial_state_type: ECI
   initial_covariance: 
 

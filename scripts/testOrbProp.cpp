@@ -320,7 +320,6 @@ int main(int argc, char *argv[])
     double relErr = 1E-6;
     DynamicModel::stf g = accelerationModel;
     DynamicModel f(g, dimState, absErr, relErr);
-
     VectorXd propStateVec = initialStateVec;
     double time = 0, dt = epoch.timeStep;
     int nTotalSteps = (epoch.endMJD - epoch.startMJD) * 86400 / dt + 1;

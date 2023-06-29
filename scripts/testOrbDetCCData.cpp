@@ -206,6 +206,8 @@ Vector2d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &s
     // declination angle
     z(1) = asin(p(2) / p.norm());
 
+    // cout << "calculated measurements: " << z(0) << "\t" << z(1) << endl;
+
     return z;
 }
 
@@ -464,6 +466,24 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
     }
 }
 
+int findClosestIndex(const VectorXd &tSec, double target)
+{
+    double minDiff = std::numeric_limits<double>::max();
+    int closestIndex = -1;
+
+    for (int i = 0; i < tSec.size(); i++)
+    {
+        double diff = std::abs(tSec[i] - target);
+        if (diff < minDiff)
+        {
+            minDiff = diff;
+            closestIndex = i;
+        }
+    }
+
+    return closestIndex;
+}
+
 int main(int argc, char *argv[])
 {
     string configFilename;
@@ -505,18 +525,18 @@ int main(int argc, char *argv[])
     // initialise
     initGlobalVariables(initialStateVec, initialStateType, suppFiles);
 
-    // read angular measurements from the exiting file
-    string filename = measMdl.measFile;
-    int headerLinesToSkip = 1; // Number of lines to skip as header
-    MatrixXd matMeas = readCSV(filename, headerLinesToSkip);
-    // cout << "measurement : \n"
-    //      << matMeas << endl;
-
+    // setup orbit propagator
+    double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
+    orbitProp.setPropOption(forceModelsPropOpt);
+    orbitProp.printPropOption();
+    orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
     // UKF state & measurement models
     double absErr = 1E-6;
     double relErr = 1E-6;
     DynamicModel::stf g = accelerationModel;
     DynamicModel f(g, dimState, absErr, relErr);
+    // process noise covariance
+    MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
     UKF::meas_model h = [&groundStation](double t, const VectorXd &x) -> VectorXd
     {
         return measurementModel(t, x, groundStation);
@@ -534,32 +554,35 @@ int main(int argc, char *argv[])
     measNoiseCov << pow(measMdl.errorStd.rightAscensionErr * ARC_SEC, 2), 0,
         0, pow(measMdl.errorStd.declinationErr * ARC_SEC, 2);
 
-    // process noise covariance
-    MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
-
-    double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
-    // setup orbit propagator
-    orbitProp.setPropOption(forceModelsPropOpt);
-    orbitProp.printPropOption();
-    orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
-
+    // read angular measurements from the exiting file
+    string filename = measMdl.measFile;
+    int headerLinesToSkip = 1; // Number of lines to skip as header
+    MatrixXd matMeas = readCSV(filename, headerLinesToSkip);
+    // cout << "measurement : \n"
+    //      << matMeas << endl;
     int dimMeas = measMdl.dimMeas;
+    int closestStartIndex = findClosestIndex(matMeas.col(6).array(), epoch.startMJD);
+    int closestEndIndex = findClosestIndex(matMeas.col(6).array(), epoch.endMJD);
+    cout << closestStartIndex << "\t" << closestEndIndex << endl;
+    int nRows = closestEndIndex - closestStartIndex + 1;
+    VectorXd tSec = matMeas.col(6).array().segment(closestStartIndex, nRows);
     // time intervals relative to the first epoch in MJD
-    VectorXd tSec = (matMeas.col(6).array() - matMeas(0, 6)).matrix() * 86400;
-
+    tSec = (tSec.array() - tSec(0)) * 86400;
     // Extract two angular measurements in the last two columns
-    MatrixXd angMeas = matMeas.block(0, matMeas.cols() - dimMeas, matMeas.rows(), dimMeas);
+    MatrixXd angMeas = matMeas.block(closestStartIndex, matMeas.cols() - dimMeas, nRows, dimMeas);
     // Convert from degress into raidans
     angMeas = angMeas * (M_PI / 180.0);
     // Transpose of angMeas to ensure the measurement in a vector for each time epoch
     angMeas = angMeas.transpose().eval();
-    // cout << angMeas << endl;
+    // vector<string> measStrings({"angular measurements"});
+    // EigenCSV::write(angMeas, measStrings, "angles.csv");
 
+    double dtMax = 60;
     // Initialize UKF & CUT filters
-    UKF ukf(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
-    UKF cut4(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
-    UKF cut6(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
-    UKF cut8(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
+    UKF ukf(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
+    UKF cut4(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
+    UKF cut6(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
+    UKF cut8(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
 
     // HOUSE distributions for state
     HOUSE::Dist distXi(initialCov);
@@ -597,6 +620,9 @@ int main(int argc, char *argv[])
     if (filters.ukf)
     {
         cout << "\tUKF" << '\n';
+        VectorXd propStateVec = f(0, tSec(1), initialStateVec, Vector3d::Zero());
+        cout << "initial state: \t" << setw(24) << setprecision(20) << initialStateVec << endl;
+        cout << "predicted state: \t" << setw(24) << setprecision(20) << propStateVec << endl;
         timer.tick();
         // cout << tSec.size() << endl
         //      << angMeas.rows() << endl
