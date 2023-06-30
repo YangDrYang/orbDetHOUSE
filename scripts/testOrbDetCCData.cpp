@@ -307,6 +307,7 @@ void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo
     YAML::Node snrParams = config["scenario_parameters"];
     snrInfo.epoch.startMJD = snrParams["MJD_start"].as<double>();
     snrInfo.epoch.endMJD = snrParams["MJD_end"].as<double>();
+    snrInfo.epoch.maxTimeStep = snrParams["max_time_step"].as<double>();
     snrInfo.outDir = snrParams["output_directory"].as<string>();
 
     // read orbital parameters (required)
@@ -577,7 +578,7 @@ int main(int argc, char *argv[])
     vector<string> measStrings({"angular measurements"});
     EigenCSV::write(angMeas, measStrings, "angles.csv");
 
-    double dtMax = 60;
+    double dtMax = epoch.maxTimeStep;
     // Initialize UKF & CUT filters
     UKF ukf(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
     UKF cut4(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);

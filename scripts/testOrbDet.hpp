@@ -35,6 +35,7 @@ struct EpochInfo
 {
     double startMJD, endMJD; // MJD in days
     double timeStep;         // time step in seconds
+    double maxTimeStep;      // max time step in seconds
     double timePass;         // time duration in each pass in seconds
 };
 struct FileInfo

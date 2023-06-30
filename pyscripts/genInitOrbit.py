@@ -13,7 +13,7 @@ file_path = directory_path + file_name
 # Read the CSV file into a pandas DataFrame
 obsDF = pd.read_csv(file_path)
 
-pathName = "yamlinputs/"
+pathName = "yamls/"
 yamlName = "inputSentinel6A.yml"
 with open(pathName + yamlName) as f:
     inputDict = yaml.safe_load(f)
