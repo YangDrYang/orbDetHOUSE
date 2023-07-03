@@ -141,7 +141,6 @@ def process_rmse_each_filter_ccdata(
     # print(truth_df.head())
     truth_df = truth_df.iloc[:, 0:7]
     # Read the estimaiton CSV file into a pandas dataframe
-    truth_df = pd.read_csv(od_ref_data_file)
 
     est_file_name = filter_type + "_id_" + str(norad_id) + ".csv"
     # Create an empty dataframe to store the data
@@ -185,7 +184,7 @@ def process_rmse_each_filter_ccdata(
     df["vel_err_rms"] = rms_vel_err
 
     # # Display the final dataframe with the added columns
-    print(df)
+    # print(df)
     # save the errors
     df.to_csv(
         out_folder_path + filter_type + "_err_id_" + str(norad_id) + ".csv",
@@ -287,6 +286,55 @@ def process_nes_each_filter(filter_type, folder_path):
 
     # save the errors
     nes_df.to_csv(folder_path + "nes_" + filter_type + ".csv", index=False)
+
+
+# Normalised Error Square for cc data
+def process_nes_each_filter_ccdata(
+    filter_type, out_folder_path, norad_id, od_ref_data_file
+):
+    # Read the truth CSV file into a pandas dataframe
+    truth_df = pd.read_csv(od_ref_data_file)
+    truth_df = truth_df.iloc[:, 0:7]
+
+    # print("od reference:    \n", truth_df)
+
+    # Read the estimaiton CSV file into a pandas dataframe
+
+    est_file_name = filter_type + "_id_" + str(norad_id) + ".csv"
+    # Create an empty dataframe to store the data
+    est_df = pd.read_csv(out_folder_path + est_file_name)
+    est_state_df = est_df.iloc[:, 0:7]
+    # print("od estimation:   \n", est_state_df)
+
+    est_cov_df = est_df.iloc[:, 7:43]
+    # print("od covariance:   \n", est_cov_df)
+
+    # Initialise an dataframe with two columns
+    nes_df = pd.DataFrame(columns=["tSec", "NES"], dtype=float)
+    nes_df["tSec"] = truth_df["MJD"]
+    for index, row in est_cov_df.iterrows():
+        # Extract the covariance matrix
+        cov = np.array(row.values.reshape(6, 6))
+
+        # Extract the state error
+        state_err = np.array(
+            est_state_df.iloc[index, 1:].values.reshape(6, 1)
+            - truth_df.iloc[index, 1:].values.reshape(6, 1)
+        )
+
+        print("od error::   \n", state_err)
+
+        # print(state_err.T @ np.linalg.inv(cov) @ state_err)
+        # Calculate the squared NES
+        nes_squared = float(state_err.T @ np.linalg.inv(cov) @ state_err)
+        # Assign the squared NES to the DataFrame
+        nes_df.loc[index, "NES"] = nes_squared
+
+    # save the errors
+    nes_df.to_csv(
+        out_folder_path + "nes_" + filter_type + "_id_" + str(norad_id) + ".csv",
+        index=False,
+    )
 
 
 def process_err_each_filter(filter_type, folder_path):
@@ -391,7 +439,24 @@ def process_err_each_filter(filter_type, folder_path):
     fig.savefig("plots/" + filter_type + "_MCS_err.pdf")
 
 
-def process_post_res_each_filter(od_file, stn_file, meas_file, post_res_file):
+def find_closest_row(df, label, identifier):
+    closest_row = None
+    min_diff = float("inf")
+
+    for index, row in df.iterrows():
+        labelled_value = row[label]
+        diff = abs(identifier - labelled_value)
+        if diff < min_diff:
+            closest_row = row
+            min_diff = diff
+
+    return closest_row
+
+
+# Post-residuals for cc data
+def process_post_res_each_filter_ccdata(
+    od_file, stn_file, meas_file, post_res_file, post_res_plot_file
+):
     # Calculate the post residuals
 
     # print(trial_file_names)
@@ -399,9 +464,13 @@ def process_post_res_each_filter(od_file, stn_file, meas_file, post_res_file):
     # Read the real measurement CSV file into a pandas dataframe
     meas_df = pd.read_csv(meas_file)
 
+    # print(meas_df)
+
     # Read the od result CSV file into a pandas dataframe
     od_df = pd.read_csv(od_file)
     od_df = od_df.iloc[:, 0:7]
+
+    # print(od_df)
 
     # Read the station ECI coordinate CSV file into a pandas dataframe
     stn_df = pd.read_csv(stn_file)
@@ -409,87 +478,106 @@ def process_post_res_each_filter(od_file, stn_file, meas_file, post_res_file):
     post_res_df = pd.DataFrame()
 
     for index, meas_row in meas_df.iterrows():
+        # print("meas_row:    ", meas_row)
         # Access the common identifier
         identifier = meas_row["MJD"]
+        # print("identifier1: ", identifier)
 
-        stn_row = stn_df[stn_df["MJD"] == identifier]
+        stn_row = find_closest_row(stn_df, "MJD", identifier)
+        # print("stn_row: ", stn_row)
 
-        post_res_row = pd.DataFrame()
-        post_res_row["MJD"] = identifier
+        post_res_row = pd.DataFrame({"MJD": [identifier]})
+        # print(post_res_row)
 
         # Access the common identifier
-        identifier = meas_row["MJD"] - meas_df.iloc[0, 0]
+        identifier = (meas_row["MJD"] - meas_df.iloc[0, 6]) * 86400
+
+        # print("identifier2: ", identifier)
 
         # Retrieve the corresponding row in od_df using the common identifier
-
-        od_row = od_df[od_df["MJD"] == identifier]
+        od_row = find_closest_row(od_df, "TIME", identifier)
 
         # Access the values from od_row and meas_row for calculations
-
         x_sat = od_row["EST X1"]
         y_sat = od_row["EST X2"]
         z_sat = od_row["EST X3"]
 
-        x_stn = stn_row["X"]
-        y_stn = stn_row["Y"]
-        z_stn = stn_row["Z"]
+        # print("x_sat:")
+        # print(x_sat)
+
+        x_stn = stn_row["X_ECI"]
+        y_stn = stn_row["Y_ECI"]
+        z_stn = stn_row["Z_ECI"]
+
+        # print("x_stn:")
+        # print(x_stn)
 
         # Calculate the range vector between satellite and station
-        p = np.array([x_sat, y_sat, z_sat]) - np.array([x_stn, y_stn, z_stn])
+        p = np.vstack([x_sat, y_sat, z_sat]) - np.vstack([x_stn, y_stn, z_stn])
+        # print("range vector between satellite and station:    ", p)
 
-        # Calculate the right ascension angle
-        post_res_row["RA"] = math.atan2(p[1], p[0])
-        if post_res_row["RA"] < 0:
-            post_res_row["RA"] += 2 * math.pi
-
-        # Calculate the declination angle
-        post_res_row["Dec"] = math.asin(p[2] / np.linalg.norm(p))
+        # Calculate residuals of the right ascension angle
+        epsilon = 1e-2  # Adjust the epsilon value as needed
+        angle_diff = np.arctan2(p[1], p[0]) - meas_row["RA"] / 180 * np.pi
+        if angle_diff >= 2 * np.pi - epsilon:
+            angle_diff -= 2 * np.pi
+        post_res_row["RA"] = angle_diff
+        # post_res_row["RA"] = (np.arctan2(p[1], p[0]) - meas_row["RA"] / 180 * np.pi) % (
+        #     2 * np.pi
+        # )
+        # Calculate residuals of the declination angle
+        post_res_row["Dec"] = (
+            np.arcsin(p[2] / np.linalg.norm(p)) - meas_row["Dec"] / 180 * np.pi
+        )
 
         post_res_df = pd.concat([post_res_df, post_res_row], ignore_index=True)
 
-    # Generate plots for two angles
+    print("post_res_df: ", post_res_df)
+    # # Generate plots for two angles
 
-    # Convert MJD to datetime objects
-    dates = mdates.num2date(post_res_df["MJD"])
+    post_res_df.to_csv(post_res_file, index=False)
 
-    # Create subplots with shared x-axis
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(8, 10))
+    # # Convert MJD to datetime objects
+    # dates = mdates.num2date(post_res_df["MJD"])
 
-    # Plot RA vs MJD
-    ax1.scatter(dates, np.radians(post_res_df["RA"]), color="blue")
-    ax1.set_ylabel("ra res(radians)")
-    # ax1.set_title("ra res vs date")
+    # # Create subplots with shared x-axis
+    # fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, figsize=(8, 10))
 
-    # Plot Dec vs MJD
-    ax2.scatter(dates, np.radians(post_res_df["Dec"]), color="red")
-    ax2.set_xlabel("date (utc)")
-    ax2.set_ylabel("dec res (radians)")
-    # ax2.set_title("dec vs date")
+    # # Plot RA vs MJD
+    # ax1.scatter(dates, np.radians(post_res_df["RA"]), color="blue")
+    # ax1.set_ylabel("ra res(radians)")
+    # # ax1.set_title("ra res vs date")
 
-    # Format x-axis as hours
-    hours = mdates.HourLocator(interval=1)
-    hour_format = mdates.DateFormatter("%H:%M")
-    ax2.xaxis.set_major_locator(hours)
-    ax2.xaxis.set_major_formatter(hour_format)
+    # # Plot Dec vs MJD
+    # ax2.scatter(dates, np.radians(post_res_df["Dec"]), color="red")
+    # ax2.set_xlabel("hour (utc)")
+    # ax2.set_ylabel("dec res (radians)")
+    # # ax2.set_title("dec vs date")
 
-    # Show only the date for the first epoch of each day
-    dates_first_epoch = np.unique([date.date() for date in dates])
-    for date in dates_first_epoch:
-        ax1.axvline(date, color="gray", linestyle="--", alpha=0.5)
-        ax2.axvline(date, color="gray", linestyle="--", alpha=0.5)
+    # # Format x-axis as hours
+    # hours = mdates.HourLocator(interval=2)
+    # hour_format = mdates.DateFormatter("%H:%M")
+    # ax2.xaxis.set_major_locator(hours)
+    # ax2.xaxis.set_major_formatter(hour_format)
 
-    # Show only 1 hour before and 1 hour after the data on x-axis
-    start_time = min(dates) - dt.timedelta(hours=1)
-    end_time = max(dates) + dt.timedelta(hours=1)
-    ax2.set_xlim(start_time, end_time)
+    # # Show only the date for the first epoch of each day
+    # dates_first_epoch = np.unique([date.date() for date in dates])
+    # for date in dates_first_epoch:
+    #     ax1.axvline(date, color="gray", linestyle="--", alpha=0.5)
+    #     ax2.axvline(date, color="gray", linestyle="--", alpha=0.5)
 
-    # Rotate x-axis tick labels and adjust label spacing
-    fig.autofmt_xdate(rotation=45)
-    ax2.tick_params(axis="x", rotation=45, labelsize=10)
+    # # Show only 1 hour before and 1 hour after the data on x-axis
+    # start_time = min(dates) - dt.timedelta(hours=1)
+    # end_time = max(dates) + dt.timedelta(hours=1)
+    # ax2.set_xlim(start_time, end_time)
 
-    # Adjust spacing between subplots
-    plt.subplots_adjust(hspace=0.4)
+    # # Rotate x-axis tick labels and adjust label spacing
+    # fig.autofmt_xdate(rotation=45)
+    # ax2.tick_params(axis="x", rotation=45, labelsize=10)
 
-    plt.tight_layout()
-    # Save the figure
-    plt.savefig(post_res_file)
+    # # Adjust spacing between subplots
+    # plt.subplots_adjust(hspace=0.4)
+
+    # plt.tight_layout()
+    # # Save the figure
+    # plt.savefig(post_res_plot_file)
