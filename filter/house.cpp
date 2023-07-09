@@ -58,24 +58,33 @@ void HOUSE::update(const VectorXd &z)
     VectorXd xm, zm;
 
     for (int i = 0; i < sig.n_pts; i++)
-        Z.col(i) = h(tz, sig.state.col(i), sig.noise.col(i));
+        Z.col(i) = h(tz, sig.state.col(i), sig.noise.col(i)); // Eq. B3
 
-    VectorXd res = z - Z.col(0);
-    cout << "residuals: " << res(0) << "\t" << res(1) << endl;
+    // VectorXd res = z - Z.col(0);
+    // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
     xm = distx.back().mean;
     zm = Z * sig.wgt;
 
-    Pzz = Z * sig.wgt.asDiagonal() * Z.transpose() - zm * zm.transpose();
-    Pzx = Z * sig.wgt.asDiagonal() * sig.state.transpose() - zm * xm.transpose();
+    Pzz = Z * sig.wgt.asDiagonal() * Z.transpose() - zm * zm.transpose();         // Eq. B5
+    Pzx = Z * sig.wgt.asDiagonal() * sig.state.transpose() - zm * xm.transpose(); // Eq. B6
 
     K = Pzz.llt().solve(Pzx).transpose();
 
+    // doesn't use Eq. 8 for covariance. instead, Pu = Pp - K*Pzz*K^T is used.
     Xu = sig.state - K * (Z.colwise() - zm);
 
-    Dist distXu(Xu, sig.wgt);
+    // test Eq. 8
+    Pxx = distx.back().cov - Pzz.llt().solve(Pzx).transpose() * Pzx;
+    PxxL = Pxx.llt().matrixL();
+    MatrixXd Xstd = PxxL.triangularView<Lower>().solve(Xu.colwise() - mean); // standardised states at the sigma points,  covariance, A7/B10
+    skew = Xstd.array().pow(3).matrix() * w;                                 // skewness of the standardised state, Eq. A8/B11
+    kurt = Xstd.array().pow(4).matrix() * w;                                 // kurtosis of the standardised state, Eq. A9/B12
+    cout << "skewness 1:\t" << skew << "kewness 1:\t" << kurt << endl;
 
-    distXu.mean = xm + K * (z - zm);
+    Dist distXu(Xu, sig.wgt);
+    cout << "skewness 2:\t" << distXu.skew << "kewness 2:\t" << distXu.kurt << endl;
+    distXu.mean = xm + K * (z - zm); // Eq. B7
 
     distx.back() = distXu;
 }
@@ -189,16 +198,16 @@ HOUSE::Dist::Dist(const MatrixXd &X, const VectorXd &w)
 
     n = X.rows();
 
-    mean = X * w;
+    mean = X * w; // predicated mean, Eq. A4
 
-    cov = X * w.asDiagonal() * X.transpose() - mean * mean.transpose();
+    cov = X * w.asDiagonal() * X.transpose() - mean * mean.transpose(); // predicated covariance, Eq. A6
 
     covL = cov.llt().matrixL();
 
-    MatrixXd Xstd = covL.triangularView<Lower>().solve(X.colwise() - mean);
+    MatrixXd Xstd = covL.triangularView<Lower>().solve(X.colwise() - mean); // standardised states at the sigma points,  covariance, A7/B10
 
-    skew = Xstd.array().pow(3).matrix() * w;
-    kurt = Xstd.array().pow(4).matrix() * w;
+    skew = Xstd.array().pow(3).matrix() * w; // skewness of the standardised state, Eq. A8/B11
+    kurt = Xstd.array().pow(4).matrix() * w; // kurtosis of the standardised state, Eq. A9/B12
 }
 
 // Generate zero-mean Gaussian distribution
@@ -214,7 +223,7 @@ HOUSE::Dist::Dist(const MatrixXd &S)
     covL = S.llt().matrixL();
 
     skew.setZero(n);
-    kurt.setConstant(n, 3);
+    kurt.setConstant(n, 3); // set a constant value of 3 for all vector elements
 }
 
 // Reset filter
@@ -227,39 +236,6 @@ void HOUSE::reset(double t0, const Dist &distx0)
     t.push_back(t0);
     distx.push_back(distx0);
 }
-
-// // Save results
-// void HOUSE::save(const std::string &filename)
-// {
-
-//     using namespace std;
-
-//     int steps = distx.size();
-
-//     MatrixXd table(steps, 2 * nx + 1);
-
-//     for (int k = 0; k < steps; k++)
-//     {
-
-//         table(k, 0) = t[k];
-
-//         table.row(k).segment(1, nx) = distx[k].mean;
-
-//         table.row(k).tail(nx) = distx[k].cov.diagonal().cwiseSqrt();
-//     }
-
-//     vector<string> header(2 * nx + 1);
-//     header[0] = "TIME";
-//     for (int i = 1; i <= nx; i++)
-//     {
-//         header[i] = "EST X";
-//         header[i + nx] = "STD X";
-//         header[i] += to_string(i);
-//         header[i + nx] += to_string(i);
-//     }
-
-//     EigenCSV::write(table, header, filename);
-// }
 
 // Save results
 void HOUSE::save(const std::string &filename)
