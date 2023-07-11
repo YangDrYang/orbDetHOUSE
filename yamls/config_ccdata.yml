@@ -4,7 +4,7 @@ filter_options:
   UKF: true
   CUT4: true
   CUT6: true
-  num_trials: 1
+  num_trials: 100
 
 # requried
 scenario_parameters:

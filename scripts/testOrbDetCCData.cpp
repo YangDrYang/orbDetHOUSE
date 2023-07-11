@@ -302,6 +302,7 @@ void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo
     filters.ukf = filterOpts["UKF"].as<bool>();
     filters.cut4 = filterOpts["CUT4"].as<bool>();
     filters.cut6 = filterOpts["CUT6"].as<bool>();
+    filters.numTrials = filterOpts["num_trials"].as<int>();
 
     // read scenario parameters (required)
     YAML::Node snrParams = config["scenario_parameters"];
@@ -592,8 +593,6 @@ int main(int argc, char *argv[])
     HOUSE::Dist distw(procNoiseCov);
     // HOUSE distributions for measurement noise
     HOUSE::Dist distn(measNoiseCov);
-    // Initialize HOUSE
-    HOUSE house(f, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0);
 
     string outputFile;
     MatrixXd runTimesMC(1, 4);
@@ -602,19 +601,28 @@ int main(int argc, char *argv[])
     if (filters.house)
     {
         cout << "\tHOUSE" << '\n';
-        timer.tick();
-        house.run(tSec, angMeas);
-        runTimesMC(0) = timer.tock();
 
-        outputFile = snrInfo.outDir + "/house_id_" + noradID + ".csv";
-        ;
-        house.save(outputFile);
+        for (int j = 1; j <= filters.numTrials; j++)
+        {
+            cout << "HOUSE Trial " << j << endl;
+            timer.tick();
+            // Initialize HOUSE with different delta
+            double delta = 0.2 / filters.numTrials * (j - 1);
+            HOUSE house(f, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
+            house.run(tSec, angMeas);
+            runTimesMC(0) = timer.tock();
 
-        // Save Filter run times
-        vector<string> filterStrings({"house"});
-        string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + ".csv";
-        ;
-        EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+            outputFile = snrInfo.outDir + "/house_id_" + noradID + to_string(j) + ".csv";
+            house.save(outputFile);
+
+            // Save Filter run times
+            if (j == 1)
+            {
+                vector<string> filterStrings({"house"});
+                string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + ".csv";
+                EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+            }
+        }
     }
 
     // UKF Filter

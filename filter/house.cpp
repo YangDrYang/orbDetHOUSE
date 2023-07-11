@@ -74,16 +74,16 @@ void HOUSE::update(const VectorXd &z)
     // doesn't use Eq. 8 for covariance. instead, Pu = Pp - K*Pzz*K^T is used.
     Xu = sig.state - K * (Z.colwise() - zm);
 
-    // test Eq. 8
-    MatrixXd Pxx = distx.back().cov - Pzz.llt().solve(Pzx).transpose() * Pzx;
-    MatrixXd PxxL = Pxx.llt().matrixL();
-    MatrixXd Xstd = PxxL.triangularView<Lower>().solve(Xu.colwise() - Xu * sig.wgt); // standardised states at the sigma points,  covariance, A7/B10
-    cout << "skewness 1:\t" << Xstd.array().pow(3).matrix() * sig.wgt << endl
-         << "kurtosis 1:\t" << Xstd.array().pow(4).matrix() * sig.wgt << endl;
+    // // test Eq. 8
+    // MatrixXd Pxx = distx.back().cov - Pzz.llt().solve(Pzx).transpose() * Pzx;
+    // MatrixXd PxxL = Pxx.llt().matrixL();
+    // MatrixXd Xstd = PxxL.triangularView<Lower>().solve(Xu.colwise() - Xu * sig.wgt); // standardised states at the sigma points,  covariance, A7/B10
+    // cout << "skewness 1:\t" << Xstd.array().pow(3).matrix() * sig.wgt << endl
+    //      << "kurtosis 1:\t" << Xstd.array().pow(4).matrix() * sig.wgt << endl;
 
     Dist distXu(Xu, sig.wgt);
-    cout << "skewness 2:\t" << distXu.skew << endl
-         << "kurtosis 2:\t" << distXu.kurt << endl;
+    // cout << "skewness 2:\t" << distXu.skew << endl
+    //      << "kurtosis 2:\t" << distXu.kurt << endl;
     distXu.mean = xm + K * (z - zm); // Eq. B7
 
     distx.back() = distXu;
