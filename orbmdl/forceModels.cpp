@@ -475,6 +475,8 @@ Vector3d Propagator::calculateAcceleration(
 			pmThirdBodyGrva->setThirdBodyStar(eSun);
 			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
 			acc += thirdbodyAcc;
+			cout << "sun attraction yes" << endl;
+
 			if (0)
 			{
 				cout << "Calculated acceleration due to Sun's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
@@ -486,6 +488,8 @@ Vector3d Propagator::calculateAcceleration(
 			pmThirdBodyGrva->setThirdBodyStar(eMoon);
 			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
 			acc += thirdbodyAcc;
+			cout << "moon attraction yes" << endl;
+
 			if (0)
 			{
 				cout << "Calculated acceleration due to Moon's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
@@ -563,6 +567,7 @@ Vector3d Propagator::calculateAcceleration(
 			pmThirdBodyGrva->setThirdBodyStar(ePluto);
 			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
 			acc += thirdbodyAcc;
+
 			if (0)
 			{
 				cout << "Calculated acceleration due to Pluto' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
@@ -576,6 +581,7 @@ Vector3d Propagator::calculateAcceleration(
 
 		relativityAcc = pmGravityModel->relativityEffectsAcc(rSat, vSat);
 		acc += relativityAcc;
+		cout << "relativity yes" << endl;
 
 		if (0)
 		{
@@ -589,6 +595,7 @@ Vector3d Propagator::calculateAcceleration(
 		pmSolarRadPressure->mSRPPara = propOpt.paraSRP;
 		directSRPAcc = pmSolarRadPressure->directSolarRadiationAcc(mMJDUTC, rSat);
 		acc += directSRPAcc;
+		cout << "srp yes" << endl;
 
 		if (0)
 		{
@@ -602,6 +609,8 @@ Vector3d Propagator::calculateAcceleration(
 	{
 		atmDragAcc = calculateDragForce(rSat, vSat, *mIERS, propOpt.paraDrag.dragArea, propOpt.paraDrag.dragCoef, mMJDUTC) / propOpt.paraDrag.satMass;
 		acc += atmDragAcc;
+		cout << "drag yes" << endl;
+
 		if (0)
 		{
 			cout << "Calculated acceleration due to the atmospheric drag: " << setw(14) << mMJDUTC << setw(14) << atmDragAcc.transpose() << endl;

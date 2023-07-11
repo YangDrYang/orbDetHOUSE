@@ -671,7 +671,6 @@ int main(int argc, char *argv[])
         // Save Filter run times
         vector<string> filterStrings({"cut6"});
         string timeFile = snrInfo.outDir + "/run_times_cut6_id_" + noradID + ".csv";
-        ;
         EigenCSV::write(runTimesMC.col(3), filterStrings, timeFile);
     }
 }

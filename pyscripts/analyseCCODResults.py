@@ -20,65 +20,65 @@ od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + ".csv"
 
 # # *************** post-residuals
 
-# # Create a new figure and axes for plot
-# fig, axes = plt.subplots(ncols=len(filters), nrows=2, figsize=(12, 5))
-# # Set the font size
-# plt.rcParams.update({"font.size": 12})
+# Create a new figure and axes for plot
+fig, axes = plt.subplots(ncols=len(filters), nrows=2, figsize=(12, 5))
+# Set the font size
+plt.rcParams.update({"font.size": 12})
 
-# for i, filter_type in enumerate(filters):
-#     # post measurement residuals
-#     od_file = out_folder_path + filter_type + "_id_" + str(norad_id) + ".csv"
-#     post_res_file = (
-#         out_folder_path + filter_type + "_post_res_id_" + str(norad_id) + ".csv"
-#     )
-#     post_res_plot_file = (
-#         plot_folder_path + filter_type + "_post_res_id_" + str(norad_id) + ".pdf"
-#     )
+for i, filter_type in enumerate(filters):
+    # post measurement residuals
+    od_file = out_folder_path + filter_type + "_id_" + str(norad_id) + ".csv"
+    post_res_file = (
+        out_folder_path + filter_type + "_post_res_id_" + str(norad_id) + ".csv"
+    )
+    post_res_plot_file = (
+        plot_folder_path + filter_type + "_post_res_id_" + str(norad_id) + ".pdf"
+    )
 
-#     processing.process_post_res_each_filter_ccdata(
-#         od_file, stn_file, meas_file, post_res_file, post_res_plot_file
-#     )
+    processing.process_post_res_each_filter_ccdata(
+        od_file, stn_file, meas_file, post_res_file, post_res_plot_file
+    )
 
-#     post_res_df = pd.read_csv(post_res_file)
-#     dates = pd.to_datetime(post_res_df["MJD"] + 2400000.5, unit="D", origin="julian")
+    post_res_df = pd.read_csv(post_res_file)
+    dates = pd.to_datetime(post_res_df["MJD"] + 2400000.5, unit="D", origin="julian")
 
-#     # Plot RA vs MJD
-#     axes[0, i].scatter(dates, np.radians(post_res_df["RA"]), color="blue")
-#     axes[0, i].set_ylabel("ra residuals (radians)")
-#     axes[0, i].set_ylim(-1.0e-4, 1.0e-4)
-#     axes[0, i].set_title(filter_type)
+    # Plot RA vs MJD
+    axes[0, i].scatter(dates, np.radians(post_res_df["RA"]), color="blue")
+    axes[0, i].set_ylabel("ra residuals (radians)")
+    axes[0, i].set_ylim(-1.0e-4, 1.0e-4)
+    axes[0, i].set_title(filter_type)
 
-#     # Plot Dec vs MJD
-#     axes[1, i].scatter(dates, np.radians(post_res_df["Dec"]), color="red")
-#     axes[1, i].set_xlabel("hour (utc)")
-#     axes[1, i].set_ylabel("dec residuals (radians)")
-#     axes[1, i].set_ylim(-1.5e-4, 2.0e-5)
+    # Plot Dec vs MJD
+    axes[1, i].scatter(dates, np.radians(post_res_df["Dec"]), color="red")
+    axes[1, i].set_xlabel("hour (utc)")
+    axes[1, i].set_ylabel("dec residuals (radians)")
+    axes[1, i].set_ylim(-1.5e-4, 2.0e-5)
 
-#     # Format x-axis as hours
-#     hours = mdates.HourLocator(interval=6)
-#     hour_format = mdates.DateFormatter("%H:%M")
-#     axes[1, i].xaxis.set_major_locator(hours)
-#     axes[1, i].xaxis.set_major_formatter(hour_format)
+    # Format x-axis as hours
+    hours = mdates.HourLocator(interval=6)
+    hour_format = mdates.DateFormatter("%H:%M")
+    axes[1, i].xaxis.set_major_locator(hours)
+    axes[1, i].xaxis.set_major_formatter(hour_format)
 
-#     # Show only the date for the first epoch of each day
-#     dates_first_epoch = np.unique([date.date() for date in dates])
-#     for date in dates_first_epoch:
-#         axes[0, i].axvline(date, color="gray", linestyle="--", alpha=0.5)
-#         axes[1, i].axvline(date, color="gray", linestyle="--", alpha=0.5)
+    # Show only the date for the first epoch of each day
+    dates_first_epoch = np.unique([date.date() for date in dates])
+    for date in dates_first_epoch:
+        axes[0, i].axvline(date, color="gray", linestyle="--", alpha=0.5)
+        axes[1, i].axvline(date, color="gray", linestyle="--", alpha=0.5)
 
-#     # Show only 1 hour before and 1 hour after the data on x-axis
-#     start_time = min(dates) - dt.timedelta(hours=1)
-#     end_time = max(dates) + dt.timedelta(hours=1)
-#     axes[1, i].set_xlim(start_time, end_time)
+    # Show only 1 hour before and 1 hour after the data on x-axis
+    start_time = min(dates) - dt.timedelta(hours=1)
+    end_time = max(dates) + dt.timedelta(hours=1)
+    axes[1, i].set_xlim(start_time, end_time)
 
-# # Rotate x-axis tick labels and adjust label spacing
-# fig.autofmt_xdate(rotation=45)
-# plt.tight_layout()
-# # plt.show()
+# Rotate x-axis tick labels and adjust label spacing
+fig.autofmt_xdate(rotation=45)
+plt.tight_layout()
+# plt.show()
 
-# post_res_plot_all_file = plot_folder_path + "all_post_res_id_" + str(norad_id) + ".pdf"
-# # Save the figure
-# plt.savefig(post_res_plot_all_file)
+post_res_plot_all_file = plot_folder_path + "all_post_res_id_" + str(norad_id) + ".pdf"
+# Save the figure
+plt.savefig(post_res_plot_all_file)
 
 # *************** seperate sub windows
 meas_df = pd.read_csv(meas_file)
@@ -220,7 +220,7 @@ plt.tight_layout()
 # plt.show()
 fig.savefig("plots/all_pos_abserr_id_" + str(norad_id) + ".pdf")
 # Print the DataFrame with RMS values
-# print(df_pos_rmse)
+print(df_pos_rmse)
 
 
 # *************** absolute error plot for velocity components
@@ -363,13 +363,13 @@ for i, filter_type in enumerate(filters):
 
     # Get the x-axis positions for the bars
     x_pos = np.arange(len(time_windows))
-    print("x_pos:   ", x_pos)
+    # print("x_pos:   ", x_pos)
 
     # Get the x, y, z RMSE values for the current filter type
     x_rmse = filter_data["x_rmse"]
     y_rmse = filter_data["y_rmse"]
     z_rmse = filter_data["z_rmse"]
-    print("x_rmse:   ", x_rmse)
+    # print("x_rmse:   ", x_rmse)
 
     # Plot the x RMSE values as bars
     ax.bar(x_pos, x_rmse, width=0.2, label="x")
