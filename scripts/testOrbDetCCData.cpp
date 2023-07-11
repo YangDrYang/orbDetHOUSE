@@ -612,7 +612,7 @@ int main(int argc, char *argv[])
             house.run(tSec, angMeas);
             runTimesMC(0) = timer.tock();
 
-            outputFile = snrInfo.outDir + "/house_id_" + noradID + to_string(j) + ".csv";
+            outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + to_string(j) + ".csv";
             house.save(outputFile);
 
             // Save Filter run times
