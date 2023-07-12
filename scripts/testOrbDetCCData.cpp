@@ -607,7 +607,7 @@ int main(int argc, char *argv[])
             cout << "HOUSE Trial " << j << endl;
             timer.tick();
             // Initialize HOUSE with different delta
-            double delta = 0.2 / filters.numTrials * (j - 1);
+            double delta = 0.1 / filters.numTrials * (j - 1);
             HOUSE house(f, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
             house.run(tSec, angMeas);
             runTimesMC(0) = timer.tock();

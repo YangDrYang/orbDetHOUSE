@@ -52,7 +52,7 @@ for i, filter_type in enumerate(filters):
     axes[1, i].scatter(dates, np.radians(post_res_df["Dec"]), color="red")
     axes[1, i].set_xlabel("hour (utc)")
     axes[1, i].set_ylabel("dec residuals (radians)")
-    axes[1, i].set_ylim(-1.5e-4, 2.0e-5)
+    axes[1, i].set_ylim(-1.5e-4, 5.0e-5)
 
     # Format x-axis as hours
     hours = mdates.HourLocator(interval=6)
@@ -117,6 +117,9 @@ df_pos_rmse = pd.DataFrame(
 
 # Plot the data with the identified time windows
 fig, ax = plt.subplots(nrows=3, ncols=3, figsize=(15, 10))
+
+# Set the font size
+plt.rcParams.update({"font.size": 12})
 
 # Create a color mapping dictionary
 color_map = {"house": "orange", "ukf": "red", "cut4": "blue", "cut6": "green"}
@@ -232,6 +235,9 @@ df_vel_rmse = pd.DataFrame(
 
 # Plot the data with the identified time windows
 fig, ax = plt.subplots(nrows=3, ncols=3, figsize=(15, 10))
+
+# Set the font size
+plt.rcParams.update({"font.size": 12})
 
 for i, filter_type in enumerate(filters):
     # Read the data into a pandas dataframe
@@ -397,7 +403,7 @@ for i, filter_type in enumerate(filters):
     ax.set_ylim([1, max_pos_rmse])
 
     # Add a legend to the subplot
-    ax.legend()
+    ax.legend(loc="upper left")
 
 # Adjust the spacing between subplots
 plt.tight_layout()
@@ -463,7 +469,7 @@ for i, filter_type in enumerate(filters):
     ax.set_ylim([0.1, max_vel_rmse])
 
     # Add a legend to the subplot
-    ax.legend()
+    ax.legend(loc="upper left")
 
 # Adjust the spacing between subplots
 plt.tight_layout()
