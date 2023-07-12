@@ -1,6 +1,4 @@
 #include "dyn.hpp"
-#include "ode.hpp"
-
 #include <boost/numeric/odeint.hpp>
 #include <iostream>
 #include <vector>
@@ -102,3 +100,25 @@ VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, cons
     //         x0, ti, tf, dt);
     // }
 }
+
+// // Propagate state from ti to tf with noise w using Boost RKF78 integrator
+// VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xmee, const VectorXd &w)
+// {
+//     // Define the error stepper
+//     typedef runge_kutta_cash_karp54<state_type> error_stepper_rkck54;
+
+//     auto my_system = [&](const state_type &xmee, state_type &dxdt, const double t)
+//     {
+//         VectorXd ww = VectorXd::Zero(xmee.size());
+//         VectorXd xx = VectorXd::Map(&xmee[0], xmee.size());
+
+//         VectorXd xeci = coe2eci(mee2coe(xx), GM_Earth)';
+
+//             VectorXd dxdt0 = f(t, xx, ww);
+//         dxdt = *(new vector<double>(dxdt0.data(), dxdt0.data() + dxdt0.size()));
+//     };
+//     double dt = tf - ti;
+//     state_type xd(xi.data(), xi.data() + xi.size());
+//     integrate_adaptive(make_controlled(abstol, reltol, error_stepper_rkck54()), my_system, xd, ti, tf, dt);
+//     return VectorXd::Map(&xd[0], xd.size());
+// }

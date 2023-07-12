@@ -55,7 +55,7 @@ df_pos_rmse = pd.DataFrame(
 
 # Plot the data with the identified time windows
 # fig, ax = plt.subplots(nrows=3, ncols=len(time_windows), figsize=(15, 10))
-fig, ax = plt.subplots(nrows=1, ncols=len(time_windows), figsize=(15, 5))
+fig, ax = plt.subplots(nrows=len(time_windows), ncols=1, figsize=(8, 6))
 
 for j, (start_time, end_time) in enumerate(time_windows):
     start_idx = (stamp >= start_time) & (stamp <= end_time)
@@ -177,7 +177,7 @@ for sub_ax in ax.flat:
     sub_ax.tick_params(axis="both", which="both", labelsize=12)
 
 plt.tight_layout()
-fig.savefig("plots/all_pos_abserr_id_" + str(norad_id) + "_all_thetas.pdf")
+fig.savefig("plots/house_3d_rmse_vs_theta_id_" + str(norad_id) + ".pdf")
 
 # Print the DataFrame with RMS values
 print(df_pos_rmse)
@@ -185,112 +185,3 @@ df_pos_rmse.to_csv(
     out_folder_path + "house_err_id_" + str(norad_id) + "_all_thetas.csv",
     index=False,
 )
-
-
-# # *************** absolute error plot for velocity components
-
-# # Create an empty DataFrame to store RMS values
-# df_vel_rmse = pd.DataFrame(
-#     columns=["filter_type", "time_window", "vx_rmse", "vy_rmse", "vz_rmse"]
-# )
-
-# # Plot the data with the identified time windows
-# fig, ax = plt.subplots(nrows=3, ncols=3, figsize=(15, 10))
-
-# for i, filter_type in enumerate(filters):
-#     # Read the data into a pandas dataframe
-#     err_df = pd.read_csv(
-#         out_folder_path + filter_type + "_err_id_" + str(norad_id) + ".csv"
-#     )
-
-#     # Get the color for the current filter type from the color mapping dictionary
-#     color = color_map.get(
-#         filter_type, "black"
-#     )  # Use black as the default color if not found in the mapping
-
-#     # Plot absolute x errors in desired sub-time windows
-#     for j, (start_time, end_time) in enumerate(time_windows):
-#         start_idx = (stamp >= start_time) & (stamp <= end_time)
-#         vx_errors = err_df["vel_err_x"][start_idx]
-#         vy_errors = err_df["vel_err_y"][start_idx]
-#         vz_errors = err_df["vel_err_z"][start_idx]
-
-#         # Calculate RMS for each error component within the sub-time window
-#         vx_rmse = np.sqrt(np.mean(vx_errors**2))
-#         vy_rmse = np.sqrt(np.mean(vy_errors**2))
-#         vz_rmse = np.sqrt(np.mean(vz_errors**2))
-
-#         # Store the RMS values in the DataFrame
-#         df_vel_rmse = pd.concat(
-#             [
-#                 df_vel_rmse,
-#                 pd.DataFrame(
-#                     {
-#                         "filter_type": [filter_type],
-#                         "time_window": [f"{start_time}-{end_time}"],
-#                         "vx_rmse": [vx_rmse],
-#                         "vy_rmse": [vy_rmse],
-#                         "vz_rmse": [vz_rmse],
-#                     }
-#                 ),
-#             ],
-#             ignore_index=True,
-#         )
-
-#         sub_ax = ax[0, j]
-#         sub_ax.scatter(
-#             stamp[start_idx],
-#             np.abs(err_df["vel_err_x"][start_idx]),
-#             color=color,
-#             label=filter_type,
-#         )
-#         sub_ax.set_xlabel("time (minutes)")
-#         sub_ax.set_ylabel("vx absolute error (m)")
-#         sub_ax.set_yscale("log")
-#         sub_ax.legend()
-
-#     # Plot absolute y errors in desired sub-time windows
-#     for j, (start_time, end_time) in enumerate(time_windows):
-#         sub_ax = ax[1, j]
-#         start_idx = (stamp >= start_time) & (stamp <= end_time)
-#         sub_ax.scatter(
-#             stamp[start_idx],
-#             np.abs(err_df["vel_err_y"][start_idx]),
-#             color=color,
-#             label=filter_type,
-#         )
-#         sub_ax.set_xlabel("time (minutes)")
-#         sub_ax.set_ylabel("vy absolute error (m)")
-#         sub_ax.set_yscale("log")
-#         sub_ax.legend()
-
-#     # Plot absolute z errors in desired sub-time windows
-#     for j, (start_time, end_time) in enumerate(time_windows):
-#         sub_ax = ax[2, j]
-#         start_idx = (stamp >= start_time) & (stamp <= end_time)
-#         sub_ax.scatter(
-#             stamp[start_idx],
-#             np.abs(err_df["vel_err_z"][start_idx]),
-#             color=color,
-#             label=filter_type,
-#         )
-#         sub_ax.set_xlabel("time (minutes)")
-#         sub_ax.set_ylabel("vz absolute error (m)")
-#         sub_ax.set_yscale("log")
-#         sub_ax.legend()
-
-# # Set x-axis limits and x-ticks for each subplot to show all three time windows
-# for i in range(3):
-#     for j, (start_time, end_time) in enumerate(time_windows):
-#         sub_ax = ax[i, j]
-#         sub_ax.set_xlim(start_time, end_time)
-#         sub_ax.set_xticks([start_time, end_time])
-
-# # Set font size for tick labels
-# for sub_ax in ax.flat:
-#     sub_ax.tick_params(axis="both", which="both", labelsize=12)
-# plt.tight_layout()
-# # plt.show()
-# fig.savefig("plots/all_vel_abserr_id_" + str(norad_id) + ".pdf")
-# # Print the DataFrame with RMS values
-# print(df_vel_rmse)
