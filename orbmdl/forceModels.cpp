@@ -619,3 +619,213 @@ Vector3d Propagator::calculateAcceleration(
 
 	return acc;
 }
+
+// Ref.: DOI: 10.2514/1.G003796
+VectorXd Propagator::calculateTimeDerivativeMEE(
+	const VectorXd &meeSat,	   ///< 6 modified equinoctial elements
+	const Matrix3d &mECI2ECEF) ///< Transformation matrix from ECI coordinate to ECEF
+{
+	Vector3d acc = Vector3d::Zero();
+
+	VectorXd rvSat = coe2eci(mee2coe(meeSat), GM_Earth);
+	Vector3d rSat = rvSat.head(3);
+	Vector3d vSat = rvSat.tail(3);
+
+	/*calculate acceleration components
+	 */
+	Vector3d earthgravityAcc = Vector3d::Zero();
+	bool bVarEq = false;
+	if (propOpt.flagEarthGravity)
+	{
+		// Extremely expensive computation
+		earthgravityAcc = pmGravityModel->centralBodyGravityAcc(mMJDUTC, mERPv, rSat, mECI2ECEF, bVarEq);
+		// earthgravityAcc = -MU / (pow(rSat.norm(), 3)) * rSat;
+		if (0)
+		{
+			cout << "Calculated accleration due to the Earth's central body gravity: " << setw(14) << mMJDUTC << setw(14) << earthgravityAcc.transpose() << endl;
+		}
+		acc += earthgravityAcc;
+	}
+
+	Vector3d thirdbodyAcc = Vector3d::Zero();
+	if (propOpt.flagThirdBodyGravity)
+	{
+		double mjdTT = mIERS->TT_UTC(mMJDUTC) / 86400.0 + mMJDUTC;
+		if (propOpt.optThirdBodyGravity.flagSunGrav)
+		{
+			pmThirdBodyGrva->setThirdBodyStar(eSun);
+			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
+			acc += thirdbodyAcc;
+			// cout << "sun attraction yes" << endl;
+
+			if (0)
+			{
+				cout << "Calculated acceleration due to Sun's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
+			}
+		}
+
+		if (propOpt.optThirdBodyGravity.flagMoonGrav)
+		{
+			pmThirdBodyGrva->setThirdBodyStar(eMoon);
+			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
+			acc += thirdbodyAcc;
+			// cout << "moon attraction yes" << endl;
+
+			if (0)
+			{
+				cout << "Calculated acceleration due to Moon's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
+			}
+		}
+
+		if (propOpt.optThirdBodyGravity.flagJupiterGrav)
+		{
+			pmThirdBodyGrva->setThirdBodyStar(eJupiter);
+			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
+			acc += thirdbodyAcc;
+			if (0)
+			{
+				cout << "Calculated acceleration due to Jupiter's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
+			}
+		}
+
+		if (propOpt.optThirdBodyGravity.flagVenusGrav)
+		{
+			pmThirdBodyGrva->setThirdBodyStar(eVenus);
+			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
+			acc += thirdbodyAcc;
+			if (0)
+			{
+				cout << "Calculated acceleration due to Venus' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
+			}
+		}
+
+		if (propOpt.optThirdBodyGravity.flagMarsGrav)
+		{
+			pmThirdBodyGrva->setThirdBodyStar(eMars);
+			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
+			acc += thirdbodyAcc;
+			if (0)
+			{
+				cout << "Calculated acceleration due to Mars' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
+			}
+		}
+
+		if (propOpt.optThirdBodyGravity.flagSaturnGrav)
+		{
+			pmThirdBodyGrva->setThirdBodyStar(eSaturn);
+			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
+			acc += thirdbodyAcc;
+			if (0)
+			{
+				cout << "Calculated acceleration due to Saturn's attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
+			}
+		}
+
+		if (propOpt.optThirdBodyGravity.flagUranusGrav)
+		{
+			pmThirdBodyGrva->setThirdBodyStar(eUranus);
+			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
+			acc += thirdbodyAcc;
+			if (0)
+			{
+				cout << "Calculated acceleration due to Uranus' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
+			}
+		}
+
+		if (propOpt.optThirdBodyGravity.flagNeptuneGrav)
+		{
+			pmThirdBodyGrva->setThirdBodyStar(eNeptune);
+			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
+			acc += thirdbodyAcc;
+			if (0)
+			{
+				cout << "Calculated acceleration due to Neptune' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
+			}
+		}
+
+		if (propOpt.optThirdBodyGravity.flagPlutoGrav)
+		{
+			pmThirdBodyGrva->setThirdBodyStar(ePluto);
+			thirdbodyAcc = pmThirdBodyGrva->accelPointMassGravity(mjdTT, rSat);
+			acc += thirdbodyAcc;
+
+			if (0)
+			{
+				cout << "Calculated acceleration due to Pluto' attraction: " << setw(14) << mMJDUTC << setw(14) << thirdbodyAcc.transpose() << endl;
+			}
+		}
+	}
+
+	Vector3d relativityAcc = Vector3d::Zero();
+	if (propOpt.flagRelativityEffect)
+	{
+
+		relativityAcc = pmGravityModel->relativityEffectsAcc(rSat, vSat);
+		acc += relativityAcc;
+		// cout << "relativity yes" << endl;
+
+		if (0)
+		{
+			cout << "Calculated acceleration due to the relativity effect: " << setw(14) << mMJDUTC << setw(14) << relativityAcc.transpose() << endl;
+		}
+	}
+
+	Vector3d directSRPAcc = Vector3d::Zero();
+	if (propOpt.flagSolarRadiationPressure)
+	{
+		pmSolarRadPressure->mSRPPara = propOpt.paraSRP;
+		directSRPAcc = pmSolarRadPressure->directSolarRadiationAcc(mMJDUTC, rSat);
+		acc += directSRPAcc;
+		// cout << "srp yes" << endl;
+
+		if (0)
+		{
+			cout << "Calculated acceleration due to the direct solar radiation: " << setw(14) << mMJDUTC << setw(14) << directSRPAcc.transpose() << endl;
+		}
+	}
+
+	// Calculate drag
+	Vector3d atmDragAcc = Vector3d::Zero();
+	if (propOpt.flagAtmosphericDrag)
+	{
+		atmDragAcc = calculateDragForce(rSat, vSat, *mIERS, propOpt.paraDrag.dragArea, propOpt.paraDrag.dragCoef, mMJDUTC) / propOpt.paraDrag.satMass;
+		acc += atmDragAcc;
+		// cout << "drag yes" << endl;
+
+		if (0)
+		{
+			cout << "Calculated acceleration due to the atmospheric drag: " << setw(14) << mMJDUTC << setw(14) << atmDragAcc.transpose() << endl;
+		}
+	}
+
+	double S = acc.dot(rSat) / rSat.norm();
+	Vector3d temp1 = rSat.cross(vSat);
+	Vector3d normalVec = temp1.normalized();
+	double N = acc.dot(normalVec);
+	Vector3d temp2 = normalVec.cross(rSat);
+	double C = acc.dot(temp2) / temp2.norm();
+	S = S + GM_Earth / rSat.squaredNorm();
+
+	double p = meeSat(0);
+	double f = meeSat(1);
+	double g = meeSat(2);
+	double h = meeSat(3);
+	double k = meeSat(4);
+	double L = meeSat(5);
+
+	double s = sqrt(1 + h * h + k * k);
+	double w = 1 + f * cos(L) + g * sin(L);
+	double mu = GM_Earth;
+
+	double dp = 2 * p * C * sqrt(p / mu) / w;
+	double df = sqrt(p / mu) * (S * sin(L) + (C * ((w + 1) * cos(L) + f) / w) - (g * N * (h * sin(L) - k * cos(L)) / w));
+	double dg = sqrt(p / mu) * (-S * cos(L) + (C * ((w + 1) * sin(L) + g) / w) + (f * N * (h * sin(L) - k * cos(L)) / w));
+	double dh = sqrt(p / mu) * s * s * N * cos(L) / (2 * w);
+	double dk = sqrt(p / mu) * s * s * N * sin(L) / (2 * w);
+	double dL = sqrt(mu * p) * pow(w / p, 2) + sqrt(p / mu) * (N * (h * sin(L) - k * cos(L)) / w);
+
+	VectorXd dMEESat(6);
+	dMEESat << dp, df, dg, dh, dk, dL;
+
+	return dMEESat;
+}

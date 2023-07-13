@@ -188,6 +188,10 @@ struct Propagator
 		const Vector3d &vSat,		///< Inertial velocity of satellite (m/s)
 		const Matrix3d &mECI2ECEF); ///< Transformation matrix from ECI coordinate to ECEF
 
+	VectorXd calculateTimeDerivativeMEE(
+		const VectorXd &meeSat,		///< 6 modified equinoctial elements
+		const Matrix3d &mECI2ECEF); ///< Transformation matrix from ECI coordinate to ECEF
+
 protected:
 	GravityModel *pmGravityModel;
 	ThirdBodyAttraction *pmThirdBodyGrva;

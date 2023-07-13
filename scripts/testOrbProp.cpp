@@ -105,10 +105,6 @@ VectorXd simpleAccerationModel(double t, const VectorXd &X, const VectorXd &fd)
 VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
 {
     VectorXd Xf(6);
-    Vector3d r;
-    Vector3d v;
-    VectorXd rvECI(6);
-    rvECI = X;
 
     Matrix3d mECI2ECEF = Matrix3d::Identity();
     Matrix3d mdECI2ECEF = Matrix3d::Identity();
@@ -123,12 +119,19 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     Vector3d acceleration;
     orbitProp.updPropagator(epoch.startMJD + tSec / 86400, leapSec, &erpt);
 
-    // calculate acceleration
-    acceleration = orbitProp.calculateAcceleration(X.head(3), X.tail(3), mECI2ECEF);
-
-    // set state vector
-    Xf.head(3) = X.tail(3);
-    Xf.tail(3) = acceleration;
+    if (abs(X(1)) < 1 && abs(X(2)) < 1) // modified equnoctial elements
+    {
+        // calculate acceleration
+        Xf = orbitProp.calculateTimeDerivativeMEE(X, mECI2ECEF);
+    }
+    else // Cartesian elements
+    {
+        // calculate acceleration
+        acceleration = orbitProp.calculateAcceleration(X.head(3), X.tail(3), mECI2ECEF);
+        // set state vector
+        Xf.head(3) = X.tail(3);
+        Xf.tail(3) = acceleration;
+    }
 
     return Xf;
 }
@@ -259,18 +262,20 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
     const char *ephFile = suppFiles.ephFile.c_str();
     pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
 
-    VectorXd rvECI = VectorXd::Zero(6);
     string ecefTag = "ECEF";
     if (stateType == ecefTag)
     {
-        cout << "Converted state from ECEF to ECI\n";
+        cout << "Convert state from ECEF to ECI\n";
         VectorXd rvECI = VectorXd::Zero(6);
         ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialStateVec, rvECI);
         initialStateVec = rvECI;
     }
-    else
+    else if (stateType == "MEE")
     {
+        cout << "Convert state from ECI to MEE\n";
+        VectorXd rvECI = VectorXd::Zero(6);
         rvECI = initialStateVec;
+        initialStateVec = coe2mee(eci2coe(rvECI, GM_Earth));
     }
 }
 
@@ -309,18 +314,15 @@ int main(int argc, char *argv[])
 
     // initialise
     initGlobalVariables(initialStateVec, initialStateType, suppFiles);
-    // // get leap seconds from the table
-    // double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
-
     // setup orbit propagator
     orbitProp.setPropOption(forceModelsPropOpt);
     orbitProp.printPropOption();
     orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
     double absErr = 1E-6;
     double relErr = 1E-6;
-    DynamicModel::stf g = accelerationModel;
-    DynamicModel f(g, dimState, absErr, relErr);
-    VectorXd propStateVec = initialStateVec;
+    DynamicModel::stf accMdl = accelerationModel;
+    DynamicModel orbFun(accMdl, dimState, absErr, relErr);
+
     double time = 0, dt = epoch.timeStep;
     int nTotalSteps = (epoch.endMJD - epoch.startMJD) * 86400 / dt + 1;
     cout << "total steps:\t" << nTotalSteps << endl;
@@ -329,15 +331,34 @@ int main(int argc, char *argv[])
     tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
     MatrixXd tableTrajTruth(nTotalSteps, dimState + 1);
     tableTrajTruth.col(0) = tSec;
-    tableTrajTruth.row(0).tail(dimState) = initialStateVec;
+    if (initialStateType == "MEE")
+    {
+        VectorXd meeSat = initialStateVec;
+        tableTrajTruth.row(0).tail(dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
+    }
+    else
+    {
+        tableTrajTruth.row(0).tail(dimState) = initialStateVec;
+    }
 
+    VectorXd propStateVec = initialStateVec;
     Timer timer;
     timer.tick();
-    for (int k = 0; k < nTotalSteps - 1; k++)
+    for (int k = 1; k < nTotalSteps; k++)
     {
-        propStateVec = f(time, time + dt, propStateVec, Vector3d::Zero());
+        propStateVec = orbFun(time, time + dt, propStateVec, Vector3d::Zero());
         time += dt;
-        tableTrajTruth.row(k + 1).tail(dimState) = propStateVec;
+        if (initialStateType == "MEE")
+        {
+            VectorXd meeSat = propStateVec;
+            tableTrajTruth.row(k).tail(dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
+            // cout << "meeSat:\t" << coe2eci(mee2coe(meeSat), GM_Earth) << endl;
+        }
+        else
+        {
+            tableTrajTruth.row(k).tail(dimState) = propStateVec;
+        }
+
         // cout << "The " << k + 1 << "th time step" << endl;
     }
     cout << "The total time consumption is:\t" << timer.tock() << endl;

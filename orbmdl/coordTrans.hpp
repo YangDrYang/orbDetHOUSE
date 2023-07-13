@@ -29,8 +29,9 @@ void ecef2eciVec_sofa(
 	VectorXd &rvSat_ecef,
 	VectorXd &rvSat_eci);
 
-VectorXd mee2coe(const VectorXd &mee_el);
-
+VectorXd mee2coe(const VectorXd &mee);
+VectorXd coe2mee(const VectorXd &coeEl);
 VectorXd coe2eci(const VectorXd &coeEl, double mu);
+VectorXd eci2coe(const VectorXd &eciEl, double mu);
 
 #endif
