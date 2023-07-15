@@ -64,6 +64,8 @@ void UKF::predict(double tp)
             Xp.col(i) = f(ti, tp, Xi.col(i), W.col(i));
 
         xestp = Xp * wp;
+        cout << "mean in UKF prediction:\t" << endl
+             << xestp << endl;
 
         Pxxp = Xp * wp.asDiagonal() * Xp.transpose() - xestp * xestp.transpose();
 
@@ -101,7 +103,7 @@ void UKF::update(const VectorXd &z)
         Z.col(i) = h(tz, X.col(i));
 
     VectorXd res = z - Z.col(0);
-    cout << "residuals: " << res(0) << "\t" << res(1) << endl;
+    // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
     zm = Z * wu;
 

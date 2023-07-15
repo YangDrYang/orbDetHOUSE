@@ -39,6 +39,8 @@ void HOUSE::predict(double tp)
             Xp.col(i) = f(ti, tp, sig.state.col(i), sig.noise.col(i));
 
         Dist distXp(Xp, sig.wgt);
+        cout << "mean in HOUSE prediction:\t" << endl
+             << distXp.mean << endl;
 
         distx.push_back(distXp);
         t.push_back(tp);
@@ -60,8 +62,8 @@ void HOUSE::update(const VectorXd &z)
     for (int i = 0; i < sig.n_pts; i++)
         Z.col(i) = h(tz, sig.state.col(i), sig.noise.col(i)); // Eq. B3
 
-    // VectorXd res = z - Z.col(0);
-    // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
+    VectorXd res = z - Z.col(0);
+    cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
     xm = distx.back().mean;
     zm = Z * sig.wgt;

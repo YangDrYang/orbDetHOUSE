@@ -94,29 +94,9 @@ void getIERS(double mjd)
     // cout << "dUT1_UTC:  " << dUT1_UTC << "dUTC_TAI: " << dUTC_TAI << "xp:   " << xp << endl;
 }
 
-VectorXd simpleAccerationModel(double t, const VectorXd &X, const VectorXd &fd);
-VectorXd simpleAccerationModel(double t, const VectorXd &X, const VectorXd &fd)
-{
-    VectorXd Xf(6);
-    Vector3d r, v, a;
-    r = X.head(3);
-    v = X.tail(3);
-
-    // Earth's central body gravity acceleration
-    a = -MU / pow(r.norm(), 3) * r;
-
-    Xf.head(3) = v;
-    Xf.tail(3) = a;
-    return Xf;
-}
-
 VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
 {
     VectorXd Xf(6);
-    Vector3d r;
-    Vector3d v;
-    VectorXd rvECI(6);
-    rvECI = X;
 
     Matrix3d mECI2ECEF = Matrix3d::Identity();
     Matrix3d mdECI2ECEF = Matrix3d::Identity();
@@ -132,42 +112,22 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     orbitProp.updPropagator(epoch.startMJD + tSec / 86400, leapSec, &erpt);
 
     // calculate acceleration
-    acceleration = orbitProp.calculateAcceleration(X.head(3), X.tail(3), mECI2ECEF);
+    if (abs(X(1)) < 1 && abs(X(2)) < 1) // modified equnoctial elements
+    {
+        Xf = orbitProp.calculateTimeDerivativeMEE(X, mECI2ECEF);
 
-    // set state vector
-    Xf.head(3) = X.tail(3);
-    Xf.tail(3) = acceleration;
+        // cout << "xf in orbit prediction: \t" << Xf << endl;
+    }
+    else // Cartesian elements
+    {
+
+        acceleration = orbitProp.calculateAcceleration(X.head(3), X.tail(3), mECI2ECEF);
+        // set state vector
+        Xf.head(3) = X.tail(3);
+        Xf.tail(3) = acceleration;
+    }
 
     return Xf;
-}
-
-Vector2d simpleMeasurementModel(double tSec, const VectorXd &satECI, const VectorXd &stnECEF)
-{
-    Vector2d z;
-    Vector3d p;
-    VectorXd rsECEF(6); // = VectorXd::Zero(6);
-    VectorXd stnECI = VectorXd::Zero(6);
-    VectorXd stnECEF_ = stnECEF; // define a new variable that is not a const vector
-
-    ecef2eciVec_sofa(epoch.startMJD + tSec / 86400, iersInstance, stnECEF_, stnECI);
-    // end transformation code
-    p = satECI.head(3) - stnECI.head(3);
-
-    if (p.dot(stnECI.head(3)) >= 0)
-    {
-        // range
-        // azimuth angle
-        z(0) = atan2(p(1), p(0));
-        // elevation angle
-        z(1) = asin(p(2) / p.norm());
-    }
-    // not visible
-    else
-    {
-        z(0) = NO_MEASUREMENT;
-        z(1) = NO_MEASUREMENT;
-    }
-    return z;
 }
 
 Vector2d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &stnECEF)
@@ -191,6 +151,43 @@ Vector2d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &s
     // cout << "epoch" << tSec << endl;
     // cout << "ground station in ECEF " << stnECEF_.transpose() << endl;
     // cout << "ground station in ECI  " << stnECI.transpose() << endl;
+
+    // end transformation code
+    p = satECI.head(3) - stnECI.head(3);
+    v = satECI.tail(3) - stnECI.tail(3);
+
+    // right ascension angle
+    z(0) = atan2(p(1), p(0));
+    if (z(0) < 0)
+    {
+        z(0) += 2 * M_PI;
+    };
+
+    // declination angle
+    z(1) = asin(p(2) / p.norm());
+
+    // cout << "calculated measurements: " << z(0) << "\t" << z(1) << endl;
+
+    return z;
+}
+
+Vector2d measurementMEEModel(double tSec, const VectorXd &satMEE, const VectorXd &stnECEF)
+{
+    Vector2d z;
+    Vector3d p, r, v;
+    VectorXd satECI = VectorXd::Zero(6), stnECI = VectorXd::Zero(6);
+    VectorXd stnECEF_ = stnECEF; // define a new variable that is not a const vector
+
+    // set up the IERS instance
+    getIERS(epoch.startMJD + tSec / 86400);
+
+    // transfer the station coordinate from ECEF to ECI
+    ecef2eciVec_sofa(epoch.startMJD + tSec / 86400, iersInstance, stnECEF_, stnECI);
+
+    // convert the modified equinoctial elements to ECI coordiantes
+    satECI = coe2eci(mee2coe(satMEE), GM_Earth);
+    // cout << "satMEE in measurement\t" << satMEE << endl;
+    // cout << "satECI in measurement\t" << satECI << endl;
 
     // end transformation code
     p = satECI.head(3) - stnECI.head(3);
@@ -453,18 +450,19 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
     const char *ephFile = suppFiles.ephFile.c_str();
     pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
 
-    VectorXd rvECI = VectorXd::Zero(6);
-    string ecefTag = "ECEF";
-    if (stateType == ecefTag)
+    if (stateType == "ECEF")
     {
         cout << "Converted state from ECEF to ECI\n";
         VectorXd rvECI = VectorXd::Zero(6);
         ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialStateVec, rvECI);
         initialStateVec = rvECI;
     }
-    else
+    else if (stateType == "MEE")
     {
+        cout << "Convert state from ECI to MEE\n";
+        VectorXd rvECI = VectorXd::Zero(6);
         rvECI = initialStateVec;
+        initialStateVec = coe2mee(eci2coe(rvECI, GM_Earth));
     }
 }
 
@@ -526,6 +524,7 @@ int main(int argc, char *argv[])
 
     // initialise
     initGlobalVariables(initialStateVec, initialStateType, suppFiles);
+    cout << "initialStateVec\t" << initialStateVec << endl;
 
     // setup orbit propagator
     double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
@@ -535,21 +534,40 @@ int main(int argc, char *argv[])
     // UKF state & measurement models
     double absErr = 1E-6;
     double relErr = 1E-6;
-    DynamicModel::stf g = accelerationModel;
-    DynamicModel f(g, dimState, absErr, relErr);
+    DynamicModel::stf accMdl = accelerationModel;
+    DynamicModel orbFun(accMdl, dimState, absErr, relErr);
     // process noise covariance
     MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
-    UKF::meas_model h = [&groundStation](double t, const VectorXd &x) -> VectorXd
-    {
-        return measurementModel(t, x, groundStation);
-    };
 
-    // HOUSE measurement model
-    HOUSE::meas_model hh = [&groundStation](double t, const VectorXd &x, const VectorXd &n)
-        -> VectorXd
+    // measurement model
+    UKF::meas_model h;
+    HOUSE::meas_model hh;
+    if (initialStateType == "ECI")
     {
-        return measurementModel(t, x, groundStation) + n;
-    };
+        h = [&groundStation](double t, const VectorXd &x) -> VectorXd
+        {
+            return measurementModel(t, x, groundStation);
+        };
+
+        hh = [&groundStation](double t, const VectorXd &x, const VectorXd &n)
+            -> VectorXd
+        {
+            return measurementModel(t, x, groundStation) + n;
+        };
+    }
+    else if (initialStateType == "MEE")
+    {
+        h = [&groundStation](double t, const VectorXd &x) -> VectorXd
+        {
+            return measurementMEEModel(t, x, groundStation);
+        };
+
+        hh = [&groundStation](double t, const VectorXd &x, const VectorXd &n)
+            -> VectorXd
+        {
+            return measurementMEEModel(t, x, groundStation) + n;
+        };
+    }
 
     // measurement noise covariance
     Matrix2d measNoiseCov;
@@ -565,26 +583,29 @@ int main(int argc, char *argv[])
     int dimMeas = measMdl.dimMeas;
     int closestStartIndex = findClosestIndex(matMeas.col(6).array(), epoch.startMJD);
     int closestEndIndex = findClosestIndex(matMeas.col(6).array(), epoch.endMJD);
-    cout << closestStartIndex << "\t" << closestEndIndex << endl;
+    // cout << closestStartIndex << "\t" << closestEndIndex << endl;
     int nRows = closestEndIndex - closestStartIndex + 1;
     VectorXd tSec = matMeas.col(6).array().segment(closestStartIndex, nRows);
     // time intervals relative to the first epoch in MJD
     tSec = (tSec.array() - tSec(0)) * 86400;
-    // Extract two angular measurements in the last two columns
-    MatrixXd angMeas = matMeas.block(closestStartIndex, matMeas.cols() - dimMeas, nRows, dimMeas);
-    // Convert from degress into raidans
-    angMeas = angMeas * (M_PI / 180.0);
-    // Transpose of angMeas to ensure the measurement in a vector for each time epoch
+    // // Extract two angular measurements in the last two columns
+    // MatrixXd angMeas = matMeas.block(closestStartIndex, matMeas.cols() - dimMeas, nRows, dimMeas);
+    // // Convert from degress into raidans
+    // angMeas = angMeas * (M_PI / 180.0);
+    // // Transpose of angMeas to ensure the measurement in a vector for each time epoch
+    // angMeas = angMeas.transpose().eval();
+    // // vector<string> measStrings({"angular measurements"});
+    // // EigenCSV::write(angMeas, measStrings, "angles.csv");
+    // test the prediction step only
+    MatrixXd angMeas = MatrixXd::Constant(nRows, dimMeas, 4 * M_PI);
     angMeas = angMeas.transpose().eval();
-    vector<string> measStrings({"angular measurements"});
-    EigenCSV::write(angMeas, measStrings, "angles.csv");
 
     double dtMax = epoch.maxTimeStep;
     // Initialize UKF & CUT filters
-    UKF ukf(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
-    UKF cut4(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
-    UKF cut6(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
-    UKF cut8(f, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
+    UKF ukf(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
+    UKF cut4(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
+    UKF cut6(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
+    UKF cut8(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
 
     // HOUSE distributions for state
     HOUSE::Dist distXi(initialCov);
@@ -608,7 +629,7 @@ int main(int argc, char *argv[])
             timer.tick();
             // Initialize HOUSE with different delta
             double delta = 0.1 / filters.numTrials * (j - 1);
-            HOUSE house(f, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
+            HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
             house.run(tSec, angMeas);
             runTimesMC(0) = timer.tock();
 
@@ -629,13 +650,10 @@ int main(int argc, char *argv[])
     if (filters.ukf)
     {
         cout << "\tUKF" << '\n';
-        VectorXd propStateVec = f(0, tSec(1), initialStateVec, Vector3d::Zero());
-        cout << "initial state: \t" << setw(24) << setprecision(20) << initialStateVec << endl;
-        cout << "predicted state: \t" << setw(24) << setprecision(20) << propStateVec << endl;
+        // VectorXd propStateVec = orbFun(0, tSec(1), initialStateVec, Vector3d::Zero());
+        // cout << "initial state: \t" << setw(24) << setprecision(20) << initialStateVec << endl;
+        // cout << "predicted state: \t" << setw(24) << setprecision(20) << propStateVec << endl;
         timer.tick();
-        // cout << tSec.size() << endl
-        //      << angMeas.rows() << endl
-        //      << angMeas.cols() << endl;
         ukf.run(tSec, angMeas);
         runTimesMC(1) = timer.tock();
 

@@ -342,32 +342,32 @@ void Propagator::printPropOption()
 {
 
 	// Print the options with right alignment
-	cout << setw(25) << right << "earth_gravity: " << propOpt.flagEarthGravity << endl;
-	cout << setw(25) << right << "gravity_model: " << propOpt.optEarthGravMdl.earthGravMdl << endl;
-	cout << setw(25) << right << "egmAccDeg: " << propOpt.optEarthGravMdl.earthGravAccDeg.mMax << endl;
-	cout << setw(25) << right << "egmAccOrd: " << propOpt.optEarthGravMdl.earthGravAccDeg.nMax << endl;
-	cout << setw(25) << right << "solid_earth_tide: " << propOpt.optTides.flagSolidEarthTides << endl;
-	cout << setw(25) << right << "ocean_tide_loading: " << propOpt.optTides.flagOceanTides << endl;
-	cout << setw(25) << right << "third_body_attraction: " << propOpt.flagThirdBodyGravity << endl;
-	cout << setw(25) << right << "third_body_sun: " << propOpt.optThirdBodyGravity.flagSunGrav << endl;
-	cout << setw(25) << right << "third_body_moon: " << propOpt.optThirdBodyGravity.flagMoonGrav << endl;
-	cout << setw(25) << right << "third_body_planet: " << propOpt.optThirdBodyGravity.flagJupiterGrav << endl;
-	cout << setw(25) << right << "relativity_effect: " << propOpt.flagRelativityEffect << endl;
+	cout << setw(40) << right << "earth_gravity: " << propOpt.flagEarthGravity << endl;
+	cout << setw(40) << right << "gravity_model: " << propOpt.optEarthGravMdl.earthGravMdl << endl;
+	cout << setw(40) << right << "egmAccDeg: " << propOpt.optEarthGravMdl.earthGravAccDeg.mMax << endl;
+	cout << setw(40) << right << "egmAccOrd: " << propOpt.optEarthGravMdl.earthGravAccDeg.nMax << endl;
+	cout << setw(40) << right << "solid_earth_tide: " << propOpt.optTides.flagSolidEarthTides << endl;
+	cout << setw(40) << right << "ocean_tide_loading: " << propOpt.optTides.flagOceanTides << endl;
+	cout << setw(40) << right << "third_body_attraction: " << propOpt.flagThirdBodyGravity << endl;
+	cout << setw(40) << right << "third_body_sun: " << propOpt.optThirdBodyGravity.flagSunGrav << endl;
+	cout << setw(40) << right << "third_body_moon: " << propOpt.optThirdBodyGravity.flagMoonGrav << endl;
+	cout << setw(40) << right << "third_body_planet: " << propOpt.optThirdBodyGravity.flagJupiterGrav << endl;
+	cout << setw(40) << right << "relativity_effect: " << propOpt.flagRelativityEffect << endl;
 
-	cout << setw(25) << right << "atmospheric_drag: " << propOpt.flagAtmosphericDrag << endl;
-	cout << setw(25) << right << "satMass: " << propOpt.paraDrag.satMass << endl;
-	cout << setw(25) << right << "dragArea: " << propOpt.paraDrag.dragArea << endl;
-	cout << setw(25) << right << "dragCoef: " << propOpt.paraDrag.dragCoef << endl;
+	cout << setw(40) << right << "atmospheric_drag: " << propOpt.flagAtmosphericDrag << endl;
+	cout << setw(40) << right << "satMass: " << propOpt.paraDrag.satMass << endl;
+	cout << setw(40) << right << "dragArea: " << propOpt.paraDrag.dragArea << endl;
+	cout << setw(40) << right << "dragCoef: " << propOpt.paraDrag.dragCoef << endl;
 
-	cout << setw(25) << right << "solar_radiation_pressure: " << propOpt.flagSolarRadiationPressure << endl;
-	cout << setw(25) << right << "direct_solar_radiation_pressure: " << propOpt.optSRP.flagDirectSRP << endl;
-	cout << setw(25) << right << "thermal_emission: " << propOpt.optSRP.flagThermalEmission << endl;
-	cout << setw(25) << right << "earth_albedo: " << propOpt.optSRP.flagEarthAlbedo << endl;
-	cout << setw(25) << right << "infrared_radiation: " << propOpt.optSRP.flagInfraredRadiation << endl;
-	cout << setw(25) << right << "srpArea: " << propOpt.paraSRP.srpArea << endl;
-	cout << setw(25) << right << "srpCoef: " << propOpt.paraSRP.srpCoef << endl;
+	cout << setw(40) << right << "solar_radiation_pressure: " << propOpt.flagSolarRadiationPressure << endl;
+	cout << setw(40) << right << "direct_solar_radiation_pressure: " << propOpt.optSRP.flagDirectSRP << endl;
+	cout << setw(40) << right << "thermal_emission: " << propOpt.optSRP.flagThermalEmission << endl;
+	cout << setw(40) << right << "earth_albedo: " << propOpt.optSRP.flagEarthAlbedo << endl;
+	cout << setw(40) << right << "infrared_radiation: " << propOpt.optSRP.flagInfraredRadiation << endl;
+	cout << setw(40) << right << "srpArea: " << propOpt.paraSRP.srpArea << endl;
+	cout << setw(40) << right << "srpCoef: " << propOpt.paraSRP.srpCoef << endl;
 
-	cout << setw(25) << right << "odeInteg: " << propOpt.odeInteg << endl;
+	cout << setw(40) << right << "odeInteg: " << propOpt.odeInteg << endl;
 }
 
 /* initialise the propagator with time, state and necessary parameters
