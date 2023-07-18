@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <cctype>
 
 #define R_EARTH 6371E3
 #define DEG M_PI / 180
@@ -436,7 +437,7 @@ void initEGMCoef(string filename)
     }
 }
 
-void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct FileInfo &suppFiles)
+void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, string stateType, struct FileInfo &suppFiles)
 {
     initEGMCoef(suppFiles.grvFile);
 
@@ -450,19 +451,38 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
     const char *ephFile = suppFiles.ephFile.c_str();
     pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
 
-    if (stateType == "ECEF")
+    double dimState = initialStateVec.size();
+    if (stateType == "ecef")
     {
         cout << "Converted state from ECEF to ECI\n";
-        VectorXd rvECI = VectorXd::Zero(6);
-        ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialStateVec, rvECI);
-        initialStateVec = rvECI;
+        VectorXd satECI = VectorXd::Zero(dimState);
+        ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialStateVec, satECI);
+        initialStateVec = satECI;
     }
-    else if (stateType == "MEE")
+    else if (stateType == "mee")
     {
         cout << "Convert state from ECI to MEE\n";
-        VectorXd rvECI = VectorXd::Zero(6);
-        rvECI = initialStateVec;
-        initialStateVec = coe2mee(eci2coe(rvECI, GM_Earth));
+
+        VectorXd satECI = VectorXd::Zero(dimState);
+        satECI = initialStateVec;
+        MatrixXd rvCov = initialCov;
+
+        const double mu = GM_Earth;
+        initialStateVec = eci2mee(satECI, mu);
+        MatrixXd Pw = MatrixXd::Zero(dimState, dimState);
+
+        // Create a lambda function for the coordinate transformation model
+        UT::trans_model coorTrans = [&mu](const VectorXd &satECI) -> VectorXd
+        {
+            // Perform coordinate transformation and return the result
+            return eci2mee(satECI, mu);
+        };
+        UT utECI2MEE(coorTrans, false, 0, satECI, rvCov, Pw, UT::sig_type::JU, 1);
+        utECI2MEE(initialStateVec, initialCov);
+        // cout << "transformed state by UT:\t" << endl
+        //      << initialStateVec << endl;
+        // cout << "transformed covariance by UT:\t" << endl
+        //      << initialCov << endl;
     }
 }
 
@@ -514,6 +534,9 @@ int main(int argc, char *argv[])
     epoch = snrInfo.epoch;
     const int dimState = initialState.dimState;
     string initialStateType = initialState.initialStateType;
+    // Convert string to lowercase
+    for (char &c : initialStateType)
+        c = tolower(c);
     VectorXd initialStateVec = initialState.initialStateVec;
     MatrixXd initialCov = initialState.initialCovarianceMat;
     const VectorXd groundStation = measMdl.groundStation;
@@ -523,8 +546,11 @@ int main(int argc, char *argv[])
     string noradID = measMdl.measFile.substr(dotPos - 5, 5);
 
     // initialise
-    initGlobalVariables(initialStateVec, initialStateType, suppFiles);
-    cout << "initialStateVec\t" << initialStateVec << endl;
+    initGlobalVariables(initialStateVec, initialCov, initialStateType, suppFiles);
+    cout << "initialStateVec:\t\n"
+         << initialStateVec << endl;
+    cout << "initialCov:\t\n"
+         << initialCov << endl;
 
     // setup orbit propagator
     double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
@@ -542,7 +568,7 @@ int main(int argc, char *argv[])
     // measurement model
     UKF::meas_model h;
     HOUSE::meas_model hh;
-    if (initialStateType == "ECI")
+    if (initialStateType == "eci")
     {
         h = [&groundStation](double t, const VectorXd &x) -> VectorXd
         {
@@ -555,7 +581,7 @@ int main(int argc, char *argv[])
             return measurementModel(t, x, groundStation) + n;
         };
     }
-    else if (initialStateType == "MEE")
+    else if (initialStateType == "mee")
     {
         h = [&groundStation](double t, const VectorXd &x) -> VectorXd
         {
@@ -588,17 +614,17 @@ int main(int argc, char *argv[])
     VectorXd tSec = matMeas.col(6).array().segment(closestStartIndex, nRows);
     // time intervals relative to the first epoch in MJD
     tSec = (tSec.array() - tSec(0)) * 86400;
-    // // Extract two angular measurements in the last two columns
-    // MatrixXd angMeas = matMeas.block(closestStartIndex, matMeas.cols() - dimMeas, nRows, dimMeas);
-    // // Convert from degress into raidans
-    // angMeas = angMeas * (M_PI / 180.0);
-    // // Transpose of angMeas to ensure the measurement in a vector for each time epoch
-    // angMeas = angMeas.transpose().eval();
-    // // vector<string> measStrings({"angular measurements"});
-    // // EigenCSV::write(angMeas, measStrings, "angles.csv");
-    // test the prediction step only
-    MatrixXd angMeas = MatrixXd::Constant(nRows, dimMeas, 4 * M_PI);
+    // Extract two angular measurements in the last two columns
+    MatrixXd angMeas = matMeas.block(closestStartIndex, matMeas.cols() - dimMeas, nRows, dimMeas);
+    // Convert from degress into raidans
+    angMeas = angMeas * (M_PI / 180.0);
+    // Transpose of angMeas to ensure the measurement in a vector for each time epoch
     angMeas = angMeas.transpose().eval();
+    // vector<string> measStrings({"angular measurements"});
+    // EigenCSV::write(angMeas, measStrings, "angles.csv");
+    // // test the prediction step only
+    // MatrixXd angMeas = MatrixXd::Constant(nRows, dimMeas, 4 * M_PI);
+    // angMeas = angMeas.transpose().eval();
 
     double dtMax = epoch.maxTimeStep;
     // Initialize UKF & CUT filters
@@ -633,14 +659,14 @@ int main(int argc, char *argv[])
             house.run(tSec, angMeas);
             runTimesMC(0) = timer.tock();
 
-            outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + to_string(j) + ".csv";
+            outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + "_" + to_string(j) + ".csv";
             house.save(outputFile);
 
             // Save Filter run times
             if (j == 1)
             {
                 vector<string> filterStrings({"house"});
-                string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + ".csv";
+                string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + "_" + initialStateType + ".csv";
                 EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
             }
         }
@@ -657,12 +683,12 @@ int main(int argc, char *argv[])
         ukf.run(tSec, angMeas);
         runTimesMC(1) = timer.tock();
 
-        outputFile = snrInfo.outDir + "/ukf_id_" + noradID + ".csv";
+        outputFile = snrInfo.outDir + "/ukf_id_" + noradID + "_" + initialStateType + ".csv";
         ukf.save(outputFile);
 
         // Save Filter run times
         vector<string> filterStrings({"ukf"});
-        string timeFile = snrInfo.outDir + "/run_times_ukf_id_" + noradID + ".csv";
+        string timeFile = snrInfo.outDir + "/run_times_ukf_id_" + noradID + "_" + initialStateType + ".csv";
         EigenCSV::write(runTimesMC.col(1), filterStrings, timeFile);
     }
 
@@ -674,12 +700,12 @@ int main(int argc, char *argv[])
         cut4.run(tSec, angMeas);
         runTimesMC(2) = timer.tock();
 
-        outputFile = snrInfo.outDir + "/cut4_id_" + noradID + ".csv";
+        outputFile = snrInfo.outDir + "/cut4_id_" + noradID + "_" + initialStateType + ".csv";
         cut4.save(outputFile);
 
         // Save Filter run times
         vector<string> filterStrings({"cut4"});
-        string timeFile = snrInfo.outDir + "/run_times_cut4_id_" + noradID + ".csv";
+        string timeFile = snrInfo.outDir + "/run_times_cut4_id_" + noradID + "_" + initialStateType + ".csv";
         EigenCSV::write(runTimesMC.col(2), filterStrings, timeFile);
     }
 
@@ -691,12 +717,12 @@ int main(int argc, char *argv[])
         cut6.run(tSec, angMeas);
         runTimesMC(3) = timer.tock();
 
-        outputFile = snrInfo.outDir + "/cut6_id_" + noradID + ".csv";
+        outputFile = snrInfo.outDir + "/cut6_id_" + noradID + "_" + initialStateType + ".csv";
         cut6.save(outputFile);
 
         // Save Filter run times
         vector<string> filterStrings({"cut6"});
-        string timeFile = snrInfo.outDir + "/run_times_cut6_id_" + noradID + ".csv";
+        string timeFile = snrInfo.outDir + "/run_times_cut6_id_" + noradID + "_" + initialStateType + ".csv";
         EigenCSV::write(runTimesMC.col(3), filterStrings, timeFile);
     }
 }

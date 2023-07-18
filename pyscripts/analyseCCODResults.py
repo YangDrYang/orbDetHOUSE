@@ -6,12 +6,13 @@ import matplotlib.dates as mdates
 import datetime as dt
 import scipy.stats as stats
 
-filters = ["house", "ukf", "cut4", "cut6"]
-# filters = ["ukf"]
+# filters = ["house", "ukf", "cut4", "cut6"]
+filters = ["ukf"]
 # filters = ["house"]
 # Directory path
 out_folder_path = "out/out_ccdata/"
 plot_folder_path = "plots/"
+state_type = "mee"
 
 norad_id = 46984
 meas_file = "ccdata/meas_data_id_" + str(norad_id) + ".csv"
@@ -29,10 +30,22 @@ for i, filter_type in enumerate(filters):
     # post measurement residuals
     od_file = out_folder_path + filter_type + "_id_" + str(norad_id) + ".csv"
     post_res_file = (
-        out_folder_path + filter_type + "_post_res_id_" + str(norad_id) + ".csv"
+        out_folder_path
+        + filter_type
+        + "_post_res_id_"
+        + str(norad_id)
+        + "_"
+        + state_type
+        + ".csv"
     )
     post_res_plot_file = (
-        plot_folder_path + filter_type + "_post_res_id_" + str(norad_id) + ".pdf"
+        plot_folder_path
+        + filter_type
+        + "_post_res_id_"
+        + str(norad_id)
+        + "_"
+        + state_type
+        + ".pdf"
     )
 
     processing.process_post_res_each_filter_ccdata(
@@ -76,7 +89,9 @@ fig.autofmt_xdate(rotation=45)
 plt.tight_layout()
 # plt.show()
 
-post_res_plot_all_file = plot_folder_path + "all_post_res_id_" + str(norad_id) + ".pdf"
+post_res_plot_all_file = (
+    plot_folder_path + "all_post_res_id_" + str(norad_id) + "_" + state_type + ".pdf"
+)
 # Save the figure
 plt.savefig(post_res_plot_all_file)
 
@@ -130,7 +145,13 @@ for i, filter_type in enumerate(filters):
     )
     # Read the data into a pandas dataframe
     err_df = pd.read_csv(
-        out_folder_path + filter_type + "_err_id_" + str(norad_id) + ".csv"
+        out_folder_path
+        + filter_type
+        + "_err_id_"
+        + str(norad_id)
+        + "_"
+        + state_type
+        + ".csv"
     )
 
     # Get the color for the current filter type from the color mapping dictionary
@@ -221,7 +242,7 @@ for sub_ax in ax.flat:
     sub_ax.tick_params(axis="both", which="both", labelsize=12)
 plt.tight_layout()
 # plt.show()
-fig.savefig("plots/all_pos_abserr_id_" + str(norad_id) + ".pdf")
+fig.savefig("plots/all_pos_abserr_id_" + str(norad_id) + "_" + state_type + ".pdf")
 # Print the DataFrame with RMS values
 print(df_pos_rmse)
 
@@ -242,7 +263,13 @@ plt.rcParams.update({"font.size": 12})
 for i, filter_type in enumerate(filters):
     # Read the data into a pandas dataframe
     err_df = pd.read_csv(
-        out_folder_path + filter_type + "_err_id_" + str(norad_id) + ".csv"
+        out_folder_path
+        + filter_type
+        + "_err_id_"
+        + str(norad_id)
+        + "_"
+        + state_type
+        + ".csv"
     )
 
     # Get the color for the current filter type from the color mapping dictionary
@@ -333,7 +360,7 @@ for sub_ax in ax.flat:
     sub_ax.tick_params(axis="both", which="both", labelsize=12)
 plt.tight_layout()
 # plt.show()
-fig.savefig("plots/all_vel_abserr_id_" + str(norad_id) + ".pdf")
+fig.savefig("plots/all_vel_abserr_id_" + str(norad_id) + "_" + state_type + ".pdf")
 # Print the DataFrame with RMS values
 print(df_vel_rmse)
 
@@ -410,7 +437,7 @@ plt.tight_layout()
 
 # Show the plot
 # plt.show()
-fig.savefig("plots/all_pos_rmse_id_" + str(norad_id) + ".pdf")
+fig.savefig("plots/all_pos_rmse_id_" + str(norad_id) + "_" + state_type + ".pdf")
 
 
 # *************** rmse bar chart for velocity components
@@ -476,7 +503,7 @@ plt.tight_layout()
 
 # Show the plot
 # plt.show()
-fig.savefig("plots/all_vel_rmse_id_" + str(norad_id) + ".pdf")
+fig.savefig("plots/all_vel_rmse_id_" + str(norad_id) + "_" + state_type + ".pdf")
 
 # # *************** normalised error square
 # # flag to determine to process the NES or use existing files for plots

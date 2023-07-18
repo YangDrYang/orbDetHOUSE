@@ -24,14 +24,10 @@ public:
     };
 
     // Dynamical model type
-    typedef function<VectorXd(double, double,
-                              const VectorXd &, const VectorXd &)>
-        dyn_model;
+    typedef function<VectorXd(double, double, const VectorXd &, const VectorXd &)> dyn_model;
 
     // Measurement model type
-    typedef function<VectorXd(double,
-                              const VectorXd &)>
-        meas_model;
+    typedef function<VectorXd(double, const VectorXd &)> meas_model;
 
     // Dimensions of state, measurement, & process noise
     const int nx, nz, nw;

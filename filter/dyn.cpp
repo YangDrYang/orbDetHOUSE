@@ -12,6 +12,9 @@ DynamicModel::DynamicModel(const stf &f_, int n_, double abstol_,
                            double reltol_) : f(f_), n(n_), abstol(abstol_), reltol(reltol_),
                                              work(100 + 21 * n_) {}
 
+// DynamicModel::DynamicModel(const stg &g_) : f(nullptr), g(g_), n(0), abstol(0), reltol(0),
+//                                             work(100 + 21 * 0) {}
+
 // // Propagate state from ti to tf with noise w
 // VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, const VectorXd &w)
 // {
@@ -100,3 +103,8 @@ VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, cons
     //         x0, ti, tf, dt);
     // }
 }
+
+// VectorXd DynamicModel::operator()(VectorXd &xi)
+// {
+//     return g(xi, GM_Earth);
+// }

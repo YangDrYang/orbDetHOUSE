@@ -242,3 +242,8 @@ VectorXd eci2coe(const VectorXd &eciEl, double mu)
 
 	return coeEl;
 }
+
+VectorXd eci2mee(const VectorXd &eciEl, double mu)
+{
+	return coe2mee(eci2coe(eciEl, mu));
+}

@@ -33,5 +33,6 @@ VectorXd mee2coe(const VectorXd &mee);
 VectorXd coe2mee(const VectorXd &coeEl);
 VectorXd coe2eci(const VectorXd &coeEl, double mu);
 VectorXd eci2coe(const VectorXd &eciEl, double mu);
+VectorXd eci2mee(const VectorXd &eciEl, double mu);
 
 #endif
