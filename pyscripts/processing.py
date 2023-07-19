@@ -131,7 +131,7 @@ def process_rmse_each_filter(filter_type, folder_path):
 
 
 def process_rmse_each_filter_ccdata(
-    filter_type, out_folder_path, norad_id, od_ref_data_file
+    filter_type, out_folder_path, norad_id, od_ref_data_file, state_type
 ):
     # folder_path = "out_/"  # replace with the path to your folder
     # Get a sorted list of file names in the folder that start with filter_type
@@ -142,7 +142,7 @@ def process_rmse_each_filter_ccdata(
     truth_df = truth_df.iloc[:, 0:7]
     # Read the estimaiton CSV file into a pandas dataframe
 
-    est_file_name = filter_type + "_id_" + str(norad_id) + ".csv"
+    est_file_name = filter_type + "_id_" + str(norad_id) + "_" + state_type + ".csv"
     # Create an empty dataframe to store the data
     est_df = pd.read_csv(out_folder_path + est_file_name)
 
@@ -187,7 +187,13 @@ def process_rmse_each_filter_ccdata(
     # print(df)
     # save the errors
     df.to_csv(
-        out_folder_path + filter_type + "_err_id_" + str(norad_id) + ".csv",
+        out_folder_path
+        + filter_type
+        + "_err_id_"
+        + str(norad_id)
+        + "_"
+        + state_type
+        + ".csv",
         index=False,
     )
 
@@ -535,7 +541,7 @@ def process_post_res_each_filter_ccdata(
     od_df = pd.read_csv(od_file)
     od_df = od_df.iloc[:, 0:7]
 
-    # print(od_df)
+    print(od_df)
 
     # Read the station ECI coordinate CSV file into a pandas dataframe
     stn_df = pd.read_csv(stn_file)

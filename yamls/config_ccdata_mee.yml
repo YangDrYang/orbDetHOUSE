@@ -1,7 +1,7 @@
 # required
 filter_options:
-  HOUSE: false
-  UKF: true
+  HOUSE: true
+  UKF: false
   CUT4: false
   CUT6: false
   num_trials: 1
@@ -9,7 +9,8 @@ filter_options:
 # requried
 scenario_parameters:
   MJD_start: 59349.51137986922 # 2021-May-15
-  # MJD_end:  59349.51146353704 # 2021-May-17
+  # MJD_end:  59349.51140078588 # 2021-May-17
+  # MJD_end:  59349.51288590162 # 2021-May-17
   MJD_end:  59351.54470621643 # 2021-May-17
   # MJD_start: 59349.51137986922 # 2021-May-15
   # MJD_end:  59349.51250939351
@@ -36,10 +37,10 @@ initial_orbtial_parameters:
   process_noise_covariance:
     - [100, 0, 0, 0, 0, 0]
     - [0, 1.0e-10, 0, 0, 0, 0]
-    - [0, 0, 1.0e-9, 0, 0, 0]
-    - [0, 0, 0, 1.0e-10, 0, 0]
-    - [0, 0, 0, 0, 1.0e-10, 0]
-    - [0, 0, 0, 0, 0, 1.0e-10]
+    - [0, 0, 1.0e-8, 0, 0, 0]
+    - [0, 0, 0, 1.0e-9, 0, 0]
+    - [0, 0, 0, 0, 1.0e-9, 0]
+    - [0, 0, 0, 0, 0, 1.0e-9]
 
 # requried
 measurement_parameters:

@@ -119,14 +119,14 @@ VectorXd mee2coe(const VectorXd &mee)
 	return coe;
 }
 
-VectorXd coe2eci(const VectorXd &coeEl, double mu)
+VectorXd coe2eci(const VectorXd &coe, double mu)
 {
-	double a = coeEl(0);
-	double e = coeEl(1);
-	double i = coeEl(2);
-	double w = coeEl(3);
-	double ohm = coeEl(4);
-	double nu = coeEl(5);
+	double a = coe(0);
+	double e = coe(1);
+	double i = coe(2);
+	double w = coe(3);
+	double ohm = coe(4);
+	double nu = coe(5);
 
 	if (e == 1.0)
 	{
@@ -153,20 +153,20 @@ VectorXd coe2eci(const VectorXd &coeEl, double mu)
 	Vector3d rIjk = tempMat * rPQW;
 	Vector3d vIjk = tempMat * vPQW;
 
-	VectorXd eciEl(6);
-	eciEl << rIjk, vIjk;
-	return eciEl;
+	VectorXd eci(6);
+	eci << rIjk, vIjk;
+	return eci;
 }
 
-VectorXd coe2mee(const VectorXd &coeEl)
+VectorXd coe2mee(const VectorXd &coe)
 {
-	// coeEl = [a, e, i, w, Ohm, nu];
-	double a = coeEl(0);
-	double e = coeEl(1);
-	double i = coeEl(2);
-	double w = coeEl(3);
-	double Ohm = coeEl(4);
-	double nu = coeEl(5);
+	// coe = [a, e, i, w, Ohm, nu];
+	double a = coe(0);
+	double e = coe(1);
+	double i = coe(2);
+	double w = coe(3);
+	double Ohm = coe(4);
+	double nu = coe(5);
 
 	if (abs(e - 1.0) < 1e-12)
 	{
@@ -180,17 +180,17 @@ VectorXd coe2mee(const VectorXd &coeEl)
 	double k = tan(i / 2) * sin(Ohm);
 	double L = Ohm + w + nu;
 
-	VectorXd meeEl(6);
-	meeEl << p, f, g, h, k, L;
+	VectorXd mee(6);
+	mee << p, f, g, h, k, L;
 
-	return meeEl;
+	return mee;
 }
 
-VectorXd eci2coe(const VectorXd &eciEl, double mu)
+VectorXd eci2coe(const VectorXd &eci, double mu)
 {
 	// Format of ECI elements
-	Vector3d rVec = eciEl.head(3);
-	Vector3d vVec = eciEl.tail(3);
+	Vector3d rVec = eci.head(3);
+	Vector3d vVec = eci.tail(3);
 
 	// Step 1:
 	Vector3d hVec = rVec.cross(vVec);
@@ -237,13 +237,18 @@ VectorXd eci2coe(const VectorXd &eciEl, double mu)
 		nu = 2 * M_PI - nu;
 	}
 
-	VectorXd coeEl(6);
-	coeEl << a, e, i, w, Ohm, nu;
+	VectorXd coe(6);
+	coe << a, e, i, w, Ohm, nu;
 
-	return coeEl;
+	return coe;
 }
 
-VectorXd eci2mee(const VectorXd &eciEl, double mu)
+VectorXd eci2mee(const VectorXd &eci, double mu)
 {
-	return coe2mee(eci2coe(eciEl, mu));
+	return coe2mee(eci2coe(eci, mu));
+}
+
+VectorXd mee2eci(const VectorXd &mee, double mu)
+{
+	return coe2eci(mee2coe(mee), mu);
 }

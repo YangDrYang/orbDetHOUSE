@@ -437,8 +437,13 @@ void initEGMCoef(string filename)
     }
 }
 
+// void initGlobalVariables(struct InitialState &initialState, struct FileInfo &suppFiles)
 void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, string stateType, struct FileInfo &suppFiles)
 {
+    // string stateType = initialState.initialStateType;
+    // VectorXd initialStateVec = initialState.initialStateVec;
+    // MatrixXd initialCov = initialState.initialCovarianceMat;
+    // MatrixXd initialCov = initialState.processNoiseCovarianceMat;
     initEGMCoef(suppFiles.grvFile);
 
     erpt = {.n = 0};
@@ -479,10 +484,10 @@ void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, string
         };
         UT utECI2MEE(coorTrans, false, 0, satECI, rvCov, Pw, UT::sig_type::JU, 1);
         utECI2MEE(initialStateVec, initialCov);
-        // cout << "transformed state by UT:\t" << endl
-        //      << initialStateVec << endl;
-        // cout << "transformed covariance by UT:\t" << endl
-        //      << initialCov << endl;
+        cout << "transformed state by UT:\t" << endl
+             << initialStateVec << endl;
+        cout << "transformed covariance by UT:\t" << endl
+             << initialCov << endl;
     }
 }
 
@@ -539,6 +544,8 @@ int main(int argc, char *argv[])
         c = tolower(c);
     VectorXd initialStateVec = initialState.initialStateVec;
     MatrixXd initialCov = initialState.initialCovarianceMat;
+    // process noise covariance
+    MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
     const VectorXd groundStation = measMdl.groundStation;
     // Find the position of the dot (file type extension)
     size_t dotPos = measMdl.measFile.find_last_of('.');
@@ -546,9 +553,11 @@ int main(int argc, char *argv[])
     string noradID = measMdl.measFile.substr(dotPos - 5, 5);
 
     // initialise
+    // initGlobalVariables(initialState, suppFiles);
     initGlobalVariables(initialStateVec, initialCov, initialStateType, suppFiles);
-    cout << "initialStateVec:\t\n"
-         << initialStateVec << endl;
+    cout
+        << "initialStateVec:\t\n"
+        << initialStateVec << endl;
     cout << "initialCov:\t\n"
          << initialCov << endl;
 
@@ -562,8 +571,6 @@ int main(int argc, char *argv[])
     double relErr = 1E-6;
     DynamicModel::stf accMdl = accelerationModel;
     DynamicModel orbFun(accMdl, dimState, absErr, relErr);
-    // process noise covariance
-    MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
 
     // measurement model
     UKF::meas_model h;
@@ -656,11 +663,15 @@ int main(int argc, char *argv[])
             // Initialize HOUSE with different delta
             double delta = 0.1 / filters.numTrials * (j - 1);
             HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
+            // HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0.05);
             house.run(tSec, angMeas);
             runTimesMC(0) = timer.tock();
 
-            outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + "_" + to_string(j) + ".csv";
-            house.save(outputFile);
+            if (filters.numTrials == 1)
+                outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + ".csv";
+            else
+                outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + "_" + to_string(j) + ".csv";
+            house.save(outputFile, initialStateType);
 
             // Save Filter run times
             if (j == 1)
@@ -684,7 +695,7 @@ int main(int argc, char *argv[])
         runTimesMC(1) = timer.tock();
 
         outputFile = snrInfo.outDir + "/ukf_id_" + noradID + "_" + initialStateType + ".csv";
-        ukf.save(outputFile);
+        ukf.save(outputFile, initialStateType);
 
         // Save Filter run times
         vector<string> filterStrings({"ukf"});
@@ -701,7 +712,7 @@ int main(int argc, char *argv[])
         runTimesMC(2) = timer.tock();
 
         outputFile = snrInfo.outDir + "/cut4_id_" + noradID + "_" + initialStateType + ".csv";
-        cut4.save(outputFile);
+        cut4.save(outputFile, initialStateType);
 
         // Save Filter run times
         vector<string> filterStrings({"cut4"});
@@ -718,7 +729,7 @@ int main(int argc, char *argv[])
         runTimesMC(3) = timer.tock();
 
         outputFile = snrInfo.outDir + "/cut6_id_" + noradID + "_" + initialStateType + ".csv";
-        cut6.save(outputFile);
+        cut6.save(outputFile, initialStateType);
 
         // Save Filter run times
         vector<string> filterStrings({"cut6"});

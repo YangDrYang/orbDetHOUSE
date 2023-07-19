@@ -1,11 +1,13 @@
 #ifndef HOUSE_H
 #define HOUSE_H
 
+#include "coordTrans.hpp"
+#include "constants.hpp"
 #include <Eigen/Dense>
-
 #include <vector>
 
 using namespace Eigen;
+using namespace std;
 
 #define NO_MEASUREMENT 99999999
 
@@ -96,10 +98,10 @@ public:
     const double delta;
 
     // History of state estimate distributions
-    std::vector<Dist> distx;
+    vector<Dist> distx;
 
     // Times
-    std::vector<double> t;
+    vector<double> t;
 
     // Maximum time step for dynamical model
     const double dtMax;
@@ -108,7 +110,7 @@ public:
     void reset(double t0, const Dist &distx0);
 
     // Save results
-    void save(const std::string &filename);
+    void save(const string &filename, string stateType);
 };
 
 #endif

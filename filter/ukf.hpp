@@ -1,11 +1,12 @@
 #ifndef UKF_H
 #define UKF_H
 
+#include "coordTrans.hpp"
+#include "constants.hpp"
+#include <Eigen/Dense>
 #include <functional>
 #include <string>
 #include <vector>
-
-#include <Eigen/Dense>
 
 using namespace std;
 using namespace Eigen;
@@ -102,7 +103,7 @@ public:
         const MatrixXd &Pxx0);
 
     // Save results
-    void save(const string &filename);
+    void save(const string &filename, string stateType);
 
     // Directory for CUT files
     static string cut_dir;

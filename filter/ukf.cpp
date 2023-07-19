@@ -64,8 +64,8 @@ void UKF::predict(double tp)
             Xp.col(i) = f(ti, tp, Xi.col(i), W.col(i));
 
         xestp = Xp * wp;
-        cout << "mean in UKF prediction:\t" << endl
-             << xestp << endl;
+        // cout << "mean in UKF prediction:\t" << endl
+        //      << xestp << endl;
 
         Pxxp = Xp * wp.asDiagonal() * Xp.transpose() - xestp * xestp.transpose();
 
@@ -289,7 +289,7 @@ void UKF::reset(
 // }
 
 // Save results
-void UKF::save(const string &filename)
+void UKF::save(const string &filename, string stateType)
 {
 
     int steps = xest.size();
@@ -301,8 +301,10 @@ void UKF::save(const string &filename)
 
         table(k, 0) = t[k];
 
-        table.row(k).segment(1, nx) = xest[k];
-
+        if (stateType == "eci")
+            table.row(k).segment(1, nx) = xest[k];
+        else if (stateType == "mee")
+            table.row(k).segment(1, nx) = mee2eci(xest[k], GM_Earth);
         table.row(k).tail(nx * nx) = Pxx[k].reshaped(1, nx * nx);
     }
 

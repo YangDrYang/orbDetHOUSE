@@ -240,7 +240,7 @@ void HOUSE::reset(double t0, const Dist &distx0)
 }
 
 // Save results
-void HOUSE::save(const std::string &filename)
+void HOUSE::save(const string &filename, string stateType)
 {
 
     using namespace std;
@@ -253,8 +253,10 @@ void HOUSE::save(const std::string &filename)
     {
 
         table(k, 0) = t[k];
-
-        table.row(k).segment(1, nx) = distx[k].mean;
+        if (stateType == "eci")
+            table.row(k).segment(1, nx) = distx[k].mean;
+        else if (stateType == "mee")
+            table.row(k).segment(1, nx) = mee2eci(distx[k].mean, GM_Earth);
 
         table.row(k).tail(nx * nx) = distx[k].cov.reshaped(1, nx * nx);
     }

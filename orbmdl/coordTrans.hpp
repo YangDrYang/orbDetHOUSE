@@ -30,9 +30,10 @@ void ecef2eciVec_sofa(
 	VectorXd &rvSat_eci);
 
 VectorXd mee2coe(const VectorXd &mee);
-VectorXd coe2mee(const VectorXd &coeEl);
-VectorXd coe2eci(const VectorXd &coeEl, double mu);
-VectorXd eci2coe(const VectorXd &eciEl, double mu);
-VectorXd eci2mee(const VectorXd &eciEl, double mu);
+VectorXd coe2mee(const VectorXd &coe);
+VectorXd coe2eci(const VectorXd &coe, double mu);
+VectorXd eci2coe(const VectorXd &eci, double mu);
+VectorXd eci2mee(const VectorXd &eci, double mu);
+VectorXd mee2eci(const VectorXd &mee, double mu);
 
 #endif

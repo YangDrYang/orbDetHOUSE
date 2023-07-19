@@ -48,7 +48,6 @@ DynamicModel::DynamicModel(const stf &f_, int n_, double abstol_,
 // Propagate state from ti to tf with noise w using Boost RKF78 integrator
 VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, const VectorXd &w)
 {
-
     // // Error stepper, used to create the controlled stepper
     // typedef runge_kutta_fehlberg78<state_type> rkf78;
     // // Controlled stepper:
@@ -87,7 +86,7 @@ VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, cons
     // integrate_adaptive(rkf78(), my_system, xd, ti, tf, dt, my_observer);
     // integrate_adaptive(make_controlled(abs_tol, rel_tol, error_stepper_rkck54()), my_system, xd, ti, tf, dt, my_observer);
     integrate_adaptive(make_controlled(abstol, reltol, error_stepper_rkck54()), my_system, xd, ti, tf, dt);
-    return VectorXd::Map(&xd[0], xd.size());
+    return VectorXd::Map(&xd[0], xd.size()) + w;
     // VectorXd x = xi;
     // if (tf > ti)
     // {
