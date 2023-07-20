@@ -15,7 +15,7 @@ scenario_parameters:
   # MJD_end: 59352.559680763894 #2021-May-18  
   # MJD_start: 59349.51288590162
   # MJD_end: 59350.52712098842
-  max_time_step: 60
+  max_time_step: 300
   # this directory must exist
   output_directory: out/out_ccdata
 
@@ -35,12 +35,12 @@ initial_orbtial_parameters:
     - [0, 0, 0, 0, 0.25, 0]
     - [0, 0, 0, 0, 0, 0.04]    
   process_noise_covariance:
-    - [100, 0, 0, 0, 0, 0]
-    - [0, 100, 0, 0, 0, 0]
-    - [0, 0, 100, 0, 0, 0]
-    - [0, 0, 0, 0.0004, 0, 0]
-    - [0, 0, 0, 0, 0.0004, 0]
-    - [0, 0, 0, 0, 0, 0.0004]
+    - [1000, 0, 0, 0, 0, 0]
+    - [0, 1000, 0, 0, 0, 0]
+    - [0, 0, 1000, 0, 0, 0]
+    - [0, 0, 0, 1.0e-6, 0, 0]
+    - [0, 0, 0, 0, 1.0e-6, 0]
+    - [0, 0, 0, 0, 0, 1.0e-6]
 
 # requried
 measurement_parameters:

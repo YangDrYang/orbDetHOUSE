@@ -9,7 +9,7 @@
 using namespace std;
 using namespace Eigen;
 
-// unscented transformation
+// unscented transformation for state xx and covariance Pxx
 void UT::operator()(VectorXd &xx, MatrixXd &Pxx)
 {
 
@@ -31,6 +31,27 @@ void UT::operator()(VectorXd &xx, MatrixXd &Pxx)
     //      << Pf << endl;
     // pass on the covariance
     Pxx = Pf;
+}
+
+// unscented transformation for process noise matrix Pww
+void UT::operator()(MatrixXd &Pww)
+{
+    MatrixXd Xi(nx, nsp), Xp(nx, nsp);
+
+    // Calculate the sigma points in ECI coordinates
+    Xi = xi.rowwise().replicate(nsp) + Pww.llt().matrixL() * Sp.topRows(nx);
+
+    // Transform the sigma points from ECI to MEE coordinates
+    for (int i = 0; i < nsp; i++)
+        Xp.col(i) = gt(Xi.col(i)); // Transform the state using the coordinate transformation model
+    xf = Xp * wp;
+
+    // Calculate transformed process noise covariance in MEE coordinates
+    Pww = Xp * wp.asDiagonal() * Xp.transpose() - xf * xf.transpose();
+
+    // Use the transformed process noise covariance matrix in MEE coordinates as needed
+    cout << "Transformed Pww:\n"
+         << Pww << endl;
 }
 
 // Constructor

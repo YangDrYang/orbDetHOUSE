@@ -59,8 +59,11 @@ public:
         sig_type stype,
         double k);
 
-    // Unscented transformation from ECI xi to MEE xf
+    // Unscented transformation from ECI xi to MEE xf for state and covariance
     void operator()(VectorXd &xx, MatrixXd &Pxx);
+
+    // Unscented transformation from ECI xi to MEE xf for process noise covariance
+    void operator()(MatrixXd &Pww);
 
     // Generate standardized sigma points
     static MatrixXd sigmaSt(sig_type stype, int n, double k);

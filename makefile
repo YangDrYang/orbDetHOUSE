@@ -78,4 +78,4 @@ $(FILTER_OBJ): $(OBJDIR)/filter/%.o : filter/%.cpp
 # ----- CLEAN -----
 .PHONY: clean
 clean:
-	rm -f $(OBJDIR)/*.o $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(OBJDIR)/orbmdl/nrlmsise-00/*.o $(ORBMDL_AR) $(NRLMSISE00_AR) $(OBJDIR)/filter/*.o $(FILTER_AR) $(OBJDIR)/$(FUNDIR)/$(FILENAME)
+	rm -f $(OBJDIR)/*.o $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(OBJDIR)/orbmdl/nrlmsise-00/*.o $(ORBMDL_AR) $(NRLMSISE00_AR) $(OBJDIR)/filter/*.o $(FILTER_AR) $(OBJDIR)/$(FUNDIR)/$(FILENAME).o $(OBJDIR)/$(FUNDIR)/$(FILENAME)

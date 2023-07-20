@@ -356,6 +356,10 @@ void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo
     YAML::Node propFilterSettings = config["propagator_filter_settings"];
     if (parameter = propFilterSettings["earth_gravaity"])
         optFilter.earth_gravity = parameter.as<bool>();
+    if (parameter = propFilterSettings["earth_gravity_model_order"])
+        optFilter.egmAccOrd = parameter.as<double>();
+    if (parameter = propFilterSettings["earth_gravity_model_degree"])
+        optFilter.egmAccDeg = parameter.as<double>();
     if (parameter = propFilterSettings["solid_earth_tide"])
         optFilter.solid_earth_tide = parameter.as<bool>();
     if (parameter = propFilterSettings["ocean_tide_loading"])
@@ -438,12 +442,13 @@ void initEGMCoef(string filename)
 }
 
 // void initGlobalVariables(struct InitialState &initialState, struct FileInfo &suppFiles)
-void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, string stateType, struct FileInfo &suppFiles)
+void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, MatrixXd &procNoiseCov, string stateType, struct FileInfo &suppFiles)
 {
     // string stateType = initialState.initialStateType;
     // VectorXd initialStateVec = initialState.initialStateVec;
     // MatrixXd initialCov = initialState.initialCovarianceMat;
-    // MatrixXd initialCov = initialState.processNoiseCovarianceMat;
+    // MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
+
     initEGMCoef(suppFiles.grvFile);
 
     erpt = {.n = 0};
@@ -468,26 +473,21 @@ void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, string
     {
         cout << "Convert state from ECI to MEE\n";
 
-        VectorXd satECI = VectorXd::Zero(dimState);
-        satECI = initialStateVec;
         MatrixXd rvCov = initialCov;
 
         const double mu = GM_Earth;
-        initialStateVec = eci2mee(satECI, mu);
-        MatrixXd Pw = MatrixXd::Zero(dimState, dimState);
-
         // Create a lambda function for the coordinate transformation model
         UT::trans_model coorTrans = [&mu](const VectorXd &satECI) -> VectorXd
         {
             // Perform coordinate transformation and return the result
             return eci2mee(satECI, mu);
         };
-        UT utECI2MEE(coorTrans, false, 0, satECI, rvCov, Pw, UT::sig_type::JU, 1);
-        utECI2MEE(initialStateVec, initialCov);
-        cout << "transformed state by UT:\t" << endl
-             << initialStateVec << endl;
-        cout << "transformed covariance by UT:\t" << endl
-             << initialCov << endl;
+
+        // calcualte the process noise cov first as the initialStateVec will be overwritten
+        UT utECI2MEENoise(coorTrans, false, 0, initialStateVec, rvCov, procNoiseCov, UT::sig_type::JU, 1);
+        utECI2MEENoise(procNoiseCov);
+        UT utECI2MEEStateCov(coorTrans, false, 0, initialStateVec, rvCov, MatrixXd::Zero(dimState, dimState), UT::sig_type::JU, 1);
+        utECI2MEEStateCov(initialStateVec, initialCov);
     }
 }
 
@@ -552,14 +552,14 @@ int main(int argc, char *argv[])
     // Extract the last five characters without the file type extension
     string noradID = measMdl.measFile.substr(dotPos - 5, 5);
 
-    // initialise
     // initGlobalVariables(initialState, suppFiles);
-    initGlobalVariables(initialStateVec, initialCov, initialStateType, suppFiles);
-    cout
-        << "initialStateVec:\t\n"
-        << initialStateVec << endl;
+    initGlobalVariables(initialStateVec, initialCov, procNoiseCov, initialStateType, suppFiles);
+    cout << "initialStateVec:\t\n"
+         << initialStateVec << endl;
     cout << "initialCov:\t\n"
          << initialCov << endl;
+    cout << "procNoiseCov:\t\n"
+         << procNoiseCov << endl;
 
     // setup orbit propagator
     double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
@@ -634,6 +634,7 @@ int main(int argc, char *argv[])
     // angMeas = angMeas.transpose().eval();
 
     double dtMax = epoch.maxTimeStep;
+    cout << "max time step:\t" << dtMax << endl;
     // Initialize UKF & CUT filters
     UKF ukf(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
     UKF cut4(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);

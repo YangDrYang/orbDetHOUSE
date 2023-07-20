@@ -541,7 +541,7 @@ def process_post_res_each_filter_ccdata(
     od_df = pd.read_csv(od_file)
     od_df = od_df.iloc[:, 0:7]
 
-    print(od_df)
+    # print(od_df)
 
     # Read the station ECI coordinate CSV file into a pandas dataframe
     stn_df = pd.read_csv(stn_file)
@@ -603,7 +603,7 @@ def process_post_res_each_filter_ccdata(
 
         post_res_df = pd.concat([post_res_df, post_res_row], ignore_index=True)
 
-    print("post_res_df: ", post_res_df)
+    # print("post_res_df: ", post_res_df)
     # # Generate plots for two angles
 
     post_res_df.to_csv(post_res_file, index=False)
