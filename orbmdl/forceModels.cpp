@@ -798,13 +798,14 @@ VectorXd Propagator::calculateTimeDerivativeMEE(
 		}
 	}
 
-	double S = acc.dot(rSat) / rSat.norm();
+	// Non-two-body perturbations in the radial, tangential and normal directions, respectively.
+	double aR = acc.dot(rSat) / rSat.norm();
 	Vector3d temp1 = rSat.cross(vSat);
 	Vector3d normalVec = temp1.normalized();
-	double N = acc.dot(normalVec);
+	double aN = acc.dot(normalVec);
 	Vector3d temp2 = normalVec.cross(rSat);
-	double C = acc.dot(temp2) / temp2.norm();
-	S = S + GM_Earth / rSat.squaredNorm();
+	double aT = acc.dot(temp2) / temp2.norm();
+	aR = aR + GM_Earth / rSat.squaredNorm();
 
 	double p = meeSat(0);
 	double f = meeSat(1);
@@ -817,12 +818,12 @@ VectorXd Propagator::calculateTimeDerivativeMEE(
 	double w = 1 + f * cos(L) + g * sin(L);
 	double mu = GM_Earth;
 
-	double dp = 2 * p * C * sqrt(p / mu) / w;
-	double df = sqrt(p / mu) * (S * sin(L) + (C * ((w + 1) * cos(L) + f) / w) - (g * N * (h * sin(L) - k * cos(L)) / w));
-	double dg = sqrt(p / mu) * (-S * cos(L) + (C * ((w + 1) * sin(L) + g) / w) + (f * N * (h * sin(L) - k * cos(L)) / w));
-	double dh = sqrt(p / mu) * s * s * N * cos(L) / (2 * w);
-	double dk = sqrt(p / mu) * s * s * N * sin(L) / (2 * w);
-	double dL = sqrt(mu * p) * pow(w / p, 2) + sqrt(p / mu) * (N * (h * sin(L) - k * cos(L)) / w);
+	double dp = 2 * p * aT * sqrt(p / mu) / w;
+	double df = sqrt(p / mu) * (aR * sin(L) + (aT * ((w + 1) * cos(L) + f) / w) - (g * aN * (h * sin(L) - k * cos(L)) / w));
+	double dg = sqrt(p / mu) * (-aR * cos(L) + (aT * ((w + 1) * sin(L) + g) / w) + (f * aN * (h * sin(L) - k * cos(L)) / w));
+	double dh = sqrt(p / mu) * s * s * aN * cos(L) / (2 * w);
+	double dk = sqrt(p / mu) * s * s * aN * sin(L) / (2 * w);
+	double dL = sqrt(mu * p) * pow(w / p, 2) + sqrt(p / mu) * (aN * (h * sin(L) - k * cos(L)) / w);
 
 	VectorXd dMEESat(6);
 	dMEESat << dp, df, dg, dh, dk, dL;
