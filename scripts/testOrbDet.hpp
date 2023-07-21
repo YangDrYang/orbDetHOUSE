@@ -68,6 +68,8 @@ struct InitialState
     VectorXd initialStateVec;
     MatrixXd initialCovarianceMat;
     MatrixXd processNoiseCovarianceMat;
+    double initialSkewness;
+    double initialKurtosis;
 };
 
 struct Errors

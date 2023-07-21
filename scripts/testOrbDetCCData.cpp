@@ -330,6 +330,8 @@ void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo
         }
     }
     initialState.initialCovarianceMat = tempMat;
+    initialState.initialSkewness = orbitParams["initial_skewness"].as<double>();
+    initialState.initialKurtosis = orbitParams["initial_kurtosis"].as<double>();
 
     tempMat = MatrixXd::Zero(dimState, dimState);
     const YAML::Node &covProNoise = orbitParams["process_noise_covariance"];
@@ -357,9 +359,9 @@ void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo
     if (parameter = propFilterSettings["earth_gravaity"])
         optFilter.earth_gravity = parameter.as<bool>();
     if (parameter = propFilterSettings["earth_gravity_model_order"])
-        optFilter.egmAccOrd = parameter.as<double>();
+        optFilter.egmAccOrd = parameter.as<int>();
     if (parameter = propFilterSettings["earth_gravity_model_degree"])
-        optFilter.egmAccDeg = parameter.as<double>();
+        optFilter.egmAccDeg = parameter.as<int>();
     if (parameter = propFilterSettings["solid_earth_tide"])
         optFilter.solid_earth_tide = parameter.as<bool>();
     if (parameter = propFilterSettings["ocean_tide_loading"])
@@ -544,6 +546,8 @@ int main(int argc, char *argv[])
         c = tolower(c);
     VectorXd initialStateVec = initialState.initialStateVec;
     MatrixXd initialCov = initialState.initialCovarianceMat;
+    double initialSkewness = initialState.initialSkewness;
+    double initialKurtosis = initialState.initialKurtosis;
     // process noise covariance
     MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
     const VectorXd groundStation = measMdl.groundStation;
@@ -554,12 +558,12 @@ int main(int argc, char *argv[])
 
     // initGlobalVariables(initialState, suppFiles);
     initGlobalVariables(initialStateVec, initialCov, procNoiseCov, initialStateType, suppFiles);
-    cout << "initialStateVec:\t\n"
-         << initialStateVec << endl;
-    cout << "initialCov:\t\n"
-         << initialCov << endl;
-    cout << "procNoiseCov:\t\n"
-         << procNoiseCov << endl;
+    // cout << "initialStateVec:\t\n"
+    //      << initialStateVec << endl;
+    // cout << "initialCov:\t\n"
+    //      << initialCov << endl;
+    // cout << "procNoiseCov:\t\n"
+    //      << procNoiseCov << endl;
 
     // setup orbit propagator
     double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
@@ -644,6 +648,9 @@ int main(int argc, char *argv[])
     // HOUSE distributions for state
     HOUSE::Dist distXi(initialCov);
     distXi.mean = initialStateVec;
+    distXi.skew.setConstant(dimState, initialSkewness);
+    distXi.kurt.setConstant(dimState, initialKurtosis);
+
     // HOUSE distributions for state noise
     HOUSE::Dist distw(procNoiseCov);
     // HOUSE distributions for measurement noise

@@ -49,9 +49,9 @@ void UT::operator()(MatrixXd &Pww)
     // Calculate transformed process noise covariance in MEE coordinates
     Pww = Xp * wp.asDiagonal() * Xp.transpose() - xf * xf.transpose();
 
-    // Use the transformed process noise covariance matrix in MEE coordinates as needed
-    cout << "Transformed Pww:\n"
-         << Pww << endl;
+    // // Use the transformed process noise covariance matrix in MEE coordinates as needed
+    // cout << "Transformed Pww:\n"
+    //      << Pww << endl;
 }
 
 // Constructor
