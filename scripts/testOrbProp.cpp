@@ -164,6 +164,10 @@ void readConfigFile(string fileName, ForceModels &optProp, struct ScenarioInfo &
     YAML::Node propFilterSettings = config["propagator_truth_settings"];
     if (parameter = propFilterSettings["earth_gravaity"])
         optProp.earth_gravity = parameter.as<bool>();
+    if (parameter = propFilterSettings["earth_gravity_model_order"])
+        optProp.egmAccOrd = parameter.as<int>();
+    if (parameter = propFilterSettings["earth_gravity_model_degree"])
+        optProp.egmAccDeg = parameter.as<int>();
     if (parameter = propFilterSettings["solid_earth_tide"])
         optProp.solid_earth_tide = parameter.as<bool>();
     if (parameter = propFilterSettings["ocean_tide_loading"])
@@ -346,7 +350,7 @@ int main(int argc, char *argv[])
     timer.tick();
     for (int k = 1; k < nTotalSteps; k++)
     {
-        propStateVec = orbFun(time, time + dt, propStateVec, Vector3d::Zero());
+        propStateVec = orbFun(time, time + dt, propStateVec, VectorXd::Zero(6));
         time += dt;
         if (initialStateType == "MEE")
         {

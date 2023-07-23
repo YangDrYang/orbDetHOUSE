@@ -83,5 +83,5 @@ propagator_filter_settings:
 # optional
 supporting_files:
   gravity_file: ./auxdata/GGM03S.txt
-  ephemeris_file: ./auxdata/unxp2000.405
+  ephemeris_file: ./auxdata/linux_p1550p2650.440
   ERP_file: ./auxdata/cod21587.erp
