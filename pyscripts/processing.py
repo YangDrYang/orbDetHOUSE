@@ -361,7 +361,7 @@ def process_nes_each_filter(filter_type, folder_path):
 
 # Normalised Error Square for cc data
 def process_nes_each_filter_ccdata(
-    filter_type, out_folder_path, norad_id, od_ref_data_file
+    filter_type, out_folder_path, norad_id, od_ref_data_file, state_type
 ):
     # Read the truth CSV file into a pandas dataframe
     truth_df = pd.read_csv(od_ref_data_file)
@@ -371,7 +371,7 @@ def process_nes_each_filter_ccdata(
 
     # Read the estimaiton CSV file into a pandas dataframe
 
-    est_file_name = filter_type + "_id_" + str(norad_id) + ".csv"
+    est_file_name = filter_type + "_id_" + str(norad_id) + "_" + state_type + ".csv"
     # Create an empty dataframe to store the data
     est_df = pd.read_csv(out_folder_path + est_file_name)
     est_state_df = est_df.iloc[:, 0:7]
@@ -393,7 +393,7 @@ def process_nes_each_filter_ccdata(
             - truth_df.iloc[index, 1:].values.reshape(6, 1)
         )
 
-        print("od error::   \n", state_err)
+        # print("od error:   \n", state_err)
 
         # print(state_err.T @ np.linalg.inv(cov) @ state_err)
         # Calculate the squared NES
@@ -403,7 +403,14 @@ def process_nes_each_filter_ccdata(
 
     # save the errors
     nes_df.to_csv(
-        out_folder_path + "nes_" + filter_type + "_id_" + str(norad_id) + ".csv",
+        out_folder_path
+        + "nes_"
+        + filter_type
+        + "_id_"
+        + str(norad_id)
+        + "_"
+        + state_type
+        + ".csv",
         index=False,
     )
 

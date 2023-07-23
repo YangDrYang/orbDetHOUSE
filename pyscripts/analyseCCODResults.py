@@ -12,8 +12,8 @@ filters = ["house", "ukf", "cut4", "cut6"]
 # Directory path
 out_folder_path = "out/out_ccdata/"
 plot_folder_path = "plots/"
-state_type = "mee"
-# state_type = "eci"
+# state_type = "mee"
+state_type = "eci"
 
 norad_id = 46984
 meas_file = "ccdata/meas_data_id_" + str(norad_id) + ".csv"
@@ -529,54 +529,62 @@ plt.tight_layout()
 # plt.show()
 fig.savefig("plots/all_vel_rmse_id_" + str(norad_id) + "_" + state_type + ".pdf")
 
-# # *************** normalised error square
-# # flag to determine to process the NES or use existing files for plots
-# flag_proc = 1
+# *************** normalised error square
+# flag to determine to process the NES or use existing files for plots
+flag_proc = 1
 
-# # Set the alpha value
-# alpha = 0.05
-# # Calculate the degrees of freedom
-# dof = 6 - 1
-# # Calculate the chi-square value at the alpha/2 probability level
-# chi2_lower = stats.chi2.ppf(alpha / 2, dof)
-# # Calculate the chi-square value at the 1-alpha/2 probability level
-# chi2_upper = stats.chi2.ppf(1 - alpha / 2, dof)
+# Set the alpha value
+alpha = 0.05
+# Calculate the degrees of freedom
+dof = 6 - 1
+# Calculate the chi-square value at the alpha/2 probability level
+chi2_lower = stats.chi2.ppf(alpha / 2, dof)
+# Calculate the chi-square value at the 1-alpha/2 probability level
+chi2_upper = stats.chi2.ppf(1 - alpha / 2, dof)
 
-# # Create a new figure and axes for logarithmic plot
-# fig, ax = plt.subplots(ncols=1, figsize=(5, 4))
+# Create a new figure and axes for logarithmic plot
+fig, ax = plt.subplots(ncols=1, figsize=(5, 4))
 
-# for filter_type in filters:
-#     if flag_proc:
-#         processing.process_nes_each_filter_ccdata(
-#             filter_type, out_folder_path, norad_id, od_ref_data_file
-#         )
+for filter_type in filters:
+    if flag_proc:
+        processing.process_nes_each_filter_ccdata(
+            filter_type, out_folder_path, norad_id, od_ref_data_file, state_type
+        )
 
-#     # Read CSV file into a pandas dataframe
-#     df = pd.read_csv(
-#         out_folder_path + "nes_" + filter_type + "_id_" + str(norad_id) + ".csv"
-#     )
+    # Read CSV file into a pandas dataframe
+    df = pd.read_csv(
+        out_folder_path
+        + "nes_"
+        + filter_type
+        + "_id_"
+        + str(norad_id)
+        + "_"
+        + state_type
+        + ".csv"
+    )
 
-#     # Plot the data on the axes
-#     ax.scatter(df["tSec"], df["NES"], s=3, label=filter_type)
+    # Plot the data on the axes
+    ax.scatter(df["tSec"], df["NES"], s=3, label=filter_type)
 
-#     if filter_type == "cut6":
-#         # Add a horizontal line for the upper bound
-#         ax.axhline(y=chi2_upper, color="r", linestyle="--", label="upper bound")
-#         # Add a horizontal line for the lower bound
-#         ax.axhline(y=chi2_lower, color="k", linestyle="--", label="lower bound")
-#     else:
-#         # Add a horizontal line for the upper bound
-#         ax.axhline(y=chi2_upper, color="r", linestyle="--")
-#         # Add a horizontal line for the lower bound
-#         ax.axhline(y=chi2_lower, color="k", linestyle="--")
+    if filter_type == "cut6":
+        # Add a horizontal line for the upper bound
+        ax.axhline(y=chi2_upper, color="r", linestyle="--", label="upper bound")
+        # Add a horizontal line for the lower bound
+        ax.axhline(y=chi2_lower, color="k", linestyle="--", label="lower bound")
+    else:
+        # Add a horizontal line for the upper bound
+        ax.axhline(y=chi2_upper, color="r", linestyle="--")
+        # Add a horizontal line for the lower bound
+        ax.axhline(y=chi2_lower, color="k", linestyle="--")
 
-# # Add labels and title
-# ax.set_xlabel("time elapsed (s)")
-# ax.set_ylabel("normalised error square (m)")
-# # ax.set_ylim([-1, 15])
-# # ax.set_title("nes")
-# ax.legend()
+# Add labels and title
+ax.set_xlabel("time elapsed (s)")
+ax.set_ylabel("normalised error square (m)")
+# ax.set_ylim([-1, 15])
+# ax.set_title("nes")
+ax.legend()
 
-# plt.show()
-# plt.tight_layout()
-# fig.savefig(plot_folder_path + "all_nes_id_" + str(norad_id) + ".pdf")
+plt.tight_layout()
+fig.savefig(
+    plot_folder_path + "all_nes_id_" + str(norad_id) + "_" + state_type + ".pdf"
+)

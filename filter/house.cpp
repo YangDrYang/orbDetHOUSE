@@ -83,8 +83,8 @@ void HOUSE::update(const VectorXd &z)
     //      << "kurtosis 1:\t" << Xstd.array().pow(4).matrix() * sig.wgt << endl;
 
     Dist distXu(Xu, sig.wgt);
-    // cout << "skewness 2:\t" << distXu.skew << endl
-    //      << "kurtosis 2:\t" << distXu.kurt << endl;
+    cout << "skewness 2:\t" << distXu.skew << endl
+         << "kurtosis 2:\t" << distXu.kurt << endl;
     distXu.mean = xm + K * (z - zm); // Eq. B7
 
     distx.back() = distXu;
