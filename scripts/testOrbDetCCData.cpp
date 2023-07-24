@@ -478,7 +478,6 @@ void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, Matrix
         MatrixXd rvCov = initialCov;
 
         const double mu = GM_Earth;
-        const VectorXd rvECI = initialStateVec;
 
         UT::trans_model coorTransECI2MEE = [&mu](const VectorXd &satECI) -> VectorXd
         {
@@ -486,7 +485,7 @@ void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, Matrix
             return eci2mee(satECI, mu);
         };
         // convert procNoiseCov from RIC to ECI first
-
+        procNoiseCov = ric2eci(procNoiseCov, initialStateVec);
         // calcualte the process noise cov first as the initialStateVec will be overwritten
         UT utECI2MEENoise(coorTransECI2MEE, false, 0, initialStateVec, rvCov, procNoiseCov, UT::sig_type::JU, 1);
         utECI2MEENoise(procNoiseCov);

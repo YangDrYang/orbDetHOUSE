@@ -258,7 +258,7 @@ VectorXd ric2eci(const VectorXd &ric, const VectorXd &eci)
 }
 
 // Function to rotate the RIC covariance matrix to the ECI frame based on ECI state vector
-MatrixXd ric2eci(const MatrixXd &ric, const Vector3d &eci)
+MatrixXd ric2eci(const MatrixXd &ric, const VectorXd &eci)
 {
 	// Reshape r and v vectors if input as column vector
 	Vector3d rvec = eci.head(3);
