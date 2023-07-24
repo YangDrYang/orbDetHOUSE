@@ -44,12 +44,12 @@ initial_orbtial_parameters:
   #   - [0, 0, 0, 0, 1.0e-9, 0]
   #   - [0, 0, 0, 0, 0, 1.0e-9]
   process_noise_covariance: # eci coordinate
-    - [100, 0, 0, 0, 0, 0]
-    - [0, 100, 0, 0, 0, 0]
-    - [0, 0, 100, 0, 0, 0]
-    - [0, 0, 0, 0.000025, 0, 0]
-    - [0, 0, 0, 0, 0.000025, 0]
-    - [0, 0, 0, 0, 0, 0.000025]
+    - [25, 0, 0, 0, 0, 0]
+    - [0, 25, 0, 0, 0, 0]
+    - [0, 0, 25, 0, 0, 0]
+    - [0, 0, 0, 0.0002, 0, 0]
+    - [0, 0, 0, 0, 0.0002, 0]
+    - [0, 0, 0, 0, 0, 0.0002]
 
 # requried
 measurement_parameters:
@@ -63,6 +63,23 @@ measurement_parameters:
   declination_error: 3
 
 
+# # optional, if not defined they will be set to default values
+# propagator_filter_settings:
+#   earth_gravity_model_order: 100
+#   earth_gravity_model_degree: 100
+#   third_body_attraction: true
+#   third_body_sun: true
+#   third_body_moon: true
+#   solid_earth_tide: true
+#   ocean_tide_loading: true
+#   solar_radiation_pressure : true
+#   atmospheric_drag: true
+#   relativity_effect: true
+#   srpCoef: 1.23
+#   srpArea: 8.73
+#   dragCoef: 2.0
+#   dragArea: 4.091655
+#   satMass: 961.831
 # optional, if not defined they will be set to default values
 propagator_filter_settings:
   earth_gravity_model_order: 20

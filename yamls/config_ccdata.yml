@@ -1,9 +1,9 @@
 # required
 filter_options:
   HOUSE: true
-  UKF: false
-  CUT4: false
-  CUT6: false
+  UKF: true
+  CUT4: true
+  CUT6: true
   num_trials: 1
 
 # requried
@@ -15,7 +15,7 @@ scenario_parameters:
   # MJD_end: 59352.559680763894 #2021-May-18  
   # MJD_start: 59349.51288590162
   # MJD_end: 59350.52712098842
-  max_time_step: 45
+  max_time_step: 60
   # this directory must exist
   output_directory: out/out_ccdata
 
@@ -43,9 +43,9 @@ initial_orbtial_parameters:
     # - [0, 0, 0, 0.000025, 0, 0]
     # - [0, 0, 0, 0, 0.000025, 0]
     # - [0, 0, 0, 0, 0, 0.000025]
-    - [1, 0, 0, 0, 0, 0]
-    - [0, 1, 0, 0, 0, 0]
-    - [0, 0, 1, 0, 0, 0]
+    - [4, 0, 0, 0, 0, 0]
+    - [0, 4, 0, 0, 0, 0]
+    - [0, 0, 4, 0, 0, 0]
     - [0, 0, 0, 0.000004, 0, 0]
     - [0, 0, 0, 0, 0.000004, 0]
     - [0, 0, 0, 0, 0, 0.000004]    

@@ -252,3 +252,31 @@ VectorXd mee2eci(const VectorXd &mee, double mu)
 {
 	return coe2eci(mee2coe(mee), mu);
 }
+
+VectorXd ric2eci(const VectorXd &ric, const VectorXd &eci)
+{
+}
+
+// Function to rotate the RIC covariance matrix to the ECI frame based on ECI state vector
+MatrixXd ric2eci(const MatrixXd &ric, const Vector3d &eci)
+{
+	// Reshape r and v vectors if input as column vector
+	Vector3d rvec = eci.head(3);
+	Vector3d vvec = eci.tail(3);
+
+	// Setting up unit vectors in the RIC directions
+	Vector3d h = rvec.cross(vvec);
+	Vector3d rhat = rvec.normalized();
+	Vector3d chat = h.normalized();
+	Vector3d ihat = chat.cross(rhat);
+
+	// RIC to ECI rotation matrix
+	Matrix3d RICtoECI;
+	RICtoECI << rhat, ihat, chat;
+
+	MatrixXd RICtoECI6x6 = MatrixXd::Zero(6, 6);
+	RICtoECI6x6.block(0, 0, 3, 3) = RICtoECI;
+	RICtoECI6x6.block(3, 3, 3, 3) = RICtoECI;
+	// Rotating covariance matrix from RIC to ECI coordinates
+	return RICtoECI6x6 * ric * RICtoECI6x6.transpose();
+}

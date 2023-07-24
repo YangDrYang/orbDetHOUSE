@@ -478,17 +478,19 @@ void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, Matrix
         MatrixXd rvCov = initialCov;
 
         const double mu = GM_Earth;
-        // Create a lambda function for the coordinate transformation model
-        UT::trans_model coorTrans = [&mu](const VectorXd &satECI) -> VectorXd
+        const VectorXd rvECI = initialStateVec;
+
+        UT::trans_model coorTransECI2MEE = [&mu](const VectorXd &satECI) -> VectorXd
         {
             // Perform coordinate transformation and return the result
             return eci2mee(satECI, mu);
         };
+        // convert procNoiseCov from RIC to ECI first
 
         // calcualte the process noise cov first as the initialStateVec will be overwritten
-        UT utECI2MEENoise(coorTrans, false, 0, initialStateVec, rvCov, procNoiseCov, UT::sig_type::JU, 1);
+        UT utECI2MEENoise(coorTransECI2MEE, false, 0, initialStateVec, rvCov, procNoiseCov, UT::sig_type::JU, 1);
         utECI2MEENoise(procNoiseCov);
-        UT utECI2MEEStateCov(coorTrans, false, 0, initialStateVec, rvCov, MatrixXd::Zero(dimState, dimState), UT::sig_type::JU, 1);
+        UT utECI2MEEStateCov(coorTransECI2MEE, false, 0, initialStateVec, rvCov, MatrixXd::Zero(dimState, dimState), UT::sig_type::JU, 1);
         utECI2MEEStateCov(initialStateVec, initialCov);
     }
 }
@@ -558,12 +560,12 @@ int main(int argc, char *argv[])
 
     // initGlobalVariables(initialState, suppFiles);
     initGlobalVariables(initialStateVec, initialCov, procNoiseCov, initialStateType, suppFiles);
-    // cout << "initialStateVec:\t\n"
-    //      << initialStateVec << endl;
-    // cout << "initialCov:\t\n"
-    //      << initialCov << endl;
-    // cout << "procNoiseCov:\t\n"
-    //      << procNoiseCov << endl;
+    cout << "initialStateVec:\t\n"
+         << initialStateVec << endl;
+    cout << "initialCov:\t\n"
+         << initialCov << endl;
+    cout << "procNoiseCov:\t\n"
+         << procNoiseCov << endl;
 
     // setup orbit propagator
     double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));

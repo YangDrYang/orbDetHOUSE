@@ -12,8 +12,8 @@ filters = ["house", "ukf", "cut4", "cut6"]
 # Directory path
 out_folder_path = "out/out_ccdata/"
 plot_folder_path = "plots/"
-# state_type = "mee"
-state_type = "eci"
+state_type = "mee"
+# state_type = "eci"
 
 norad_id = 46984
 meas_file = "ccdata/meas_data_id_" + str(norad_id) + ".csv"
@@ -257,6 +257,8 @@ plt.tight_layout()
 # plt.show()
 fig.savefig("plots/all_pos_abserr_id_" + str(norad_id) + "_" + state_type + ".pdf")
 # Print the DataFrame with RMS values
+# Set the number of decimal places to 2 for printing
+pd.options.display.float_format = "{:.3f}".format
 print(df_pos_rmse)
 
 
