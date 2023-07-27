@@ -1,9 +1,10 @@
 # required
 filter_options:
-  HOUSE: true
+  square_root: true
+  HOUSE: false
   UKF: true
-  CUT4: true
-  CUT6: true
+  CUT4: false
+  CUT6: false
   num_trials: 1
 
 # requried

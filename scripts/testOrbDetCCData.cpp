@@ -296,6 +296,7 @@ void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo
 
     // read filter options (required)
     YAML::Node filterOpts = config["filter_options"];
+    filters.squareRoot = filterOpts["square_root"].as<bool>();
     filters.house = filterOpts["HOUSE"].as<bool>();
     filters.ukf = filterOpts["UKF"].as<bool>();
     filters.cut4 = filterOpts["CUT4"].as<bool>();
@@ -640,11 +641,6 @@ int main(int argc, char *argv[])
 
     double dtMax = epoch.maxTimeStep;
     cout << "max time step:\t" << dtMax << endl;
-    // Initialize UKF & CUT filters
-    UKF ukf(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
-    UKF cut4(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
-    UKF cut6(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
-    UKF cut8(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
 
     // HOUSE distributions for state
     HOUSE::Dist distXi(initialCov);
@@ -695,17 +691,32 @@ int main(int argc, char *argv[])
     // UKF Filter
     if (filters.ukf)
     {
-        cout << "\tUKF" << '\n';
-        // VectorXd propStateVec = orbFun(0, tSec(1), initialStateVec, Vector3d::Zero());
-        // cout << "initial state: \t" << setw(24) << setprecision(20) << initialStateVec << endl;
-        // cout << "predicted state: \t" << setw(24) << setprecision(20) << propStateVec << endl;
-        timer.tick();
-        ukf.run(tSec, angMeas);
-        runTimesMC(1) = timer.tock();
+        if (filters.squareRoot)
+        {
+            cout << "\tSRUKF" << '\n';
+            // Initialize UKF & CUT filters
+            SRUKF srukf(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
 
-        outputFile = snrInfo.outDir + "/ukf_id_" + noradID + "_" + initialStateType + ".csv";
-        ukf.save(outputFile, initialStateType);
+            timer.tick();
+            srukf.run(tSec, angMeas);
+            runTimesMC(1) = timer.tock();
 
+            outputFile = snrInfo.outDir + "/ukf_id_" + noradID + "_" + initialStateType + ".csv";
+            srukf.save(outputFile, initialStateType);
+        }
+        else
+        {
+            cout << "\tUKF" << '\n';
+            // Initialize UKF & CUT filters
+            UKF ukf(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
+
+            timer.tick();
+            ukf.run(tSec, angMeas);
+            runTimesMC(1) = timer.tock();
+
+            outputFile = snrInfo.outDir + "/ukf_id_" + noradID + "_" + initialStateType + ".csv";
+            ukf.save(outputFile, initialStateType);
+        }
         // Save Filter run times
         vector<string> filterStrings({"ukf"});
         string timeFile = snrInfo.outDir + "/run_times_ukf_id_" + noradID + "_" + initialStateType + ".csv";
@@ -716,6 +727,8 @@ int main(int argc, char *argv[])
     if (filters.cut4)
     {
         cout << "\tCUT-4" << '\n';
+        UKF cut4(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
+
         timer.tick();
         cut4.run(tSec, angMeas);
         runTimesMC(2) = timer.tock();
@@ -733,6 +746,8 @@ int main(int argc, char *argv[])
     if (filters.cut6)
     {
         cout << "\tCUT-6" << '\n';
+        UKF cut6(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
+
         timer.tick();
         cut6.run(tSec, angMeas);
         runTimesMC(3) = timer.tock();

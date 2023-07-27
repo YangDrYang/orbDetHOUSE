@@ -19,6 +19,7 @@
 #include "jpl_eph.hpp"
 
 // filter headers
+#include "srukf.hpp"
 #include "house.hpp"
 #include "ukf.hpp"
 #include "ut.hpp"
@@ -53,6 +54,7 @@ struct ScenarioInfo
 
 struct Filters
 {
+    bool squareRoot;
     bool house;
     bool ukf;
     bool cut4;
