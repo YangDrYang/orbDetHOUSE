@@ -19,6 +19,7 @@
 #include "jpl_eph.hpp"
 
 // filter headers
+#include "srhouse.hpp"
 #include "srukf.hpp"
 #include "house.hpp"
 #include "ukf.hpp"

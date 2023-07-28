@@ -10,12 +10,13 @@ filter_options:
 # requried
 scenario_parameters:
   MJD_start: 59349.51137986922 # 2021-May-15
+  MJD_end: 59349.51137986922 # 2021-May-15
   # MJD_end:  59349.51140078588 # 2021-May-17
   # MJD_end:  59349.51288590162 # 2021-May-17
-  MJD_end:  59351.54470621643 # 2021-May-17
+  # MJD_end:  59351.54470621643 # 2021-May-17
   # MJD_start: 59349.51137986922 # 2021-May-15
   # MJD_end:  59349.51250939351
-  max_time_step: 15
+  max_time_step: 60
   # this directory must exist
   output_directory: out/out_ccdata
 

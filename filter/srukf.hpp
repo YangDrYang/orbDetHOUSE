@@ -94,7 +94,6 @@ public:
         const VectorXd &xm0,
         const MatrixXd &Sxx0);
 
-    // Save results
     void save(const string &filename, string stateType);
 
     // Directory for CUT files
@@ -102,7 +101,4 @@ public:
 };
 
 MatrixXd cholupdate(MatrixXd matL, MatrixXd matW, double alpha);
-MatrixXd forwardSubstitute(const MatrixXd &matA, const MatrixXd &matB);
-MatrixXd backwardSubstitute(const MatrixXd &matA, const MatrixXd &matB);
-
 #endif

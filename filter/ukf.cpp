@@ -18,8 +18,10 @@ void UKF::predict(double tp)
 
     xesti = xest.back();
     Pxxi = Pxx.back();
-    // cout << xesti << endl;
-    // cout << Pxxi << endl;
+    // cout << "initial xest: \n"
+    //      << xesti << endl;
+    // cout << "initial Pxx: \n"
+    //      << Pxxi << endl;
 
     double ti = t.back();
 
@@ -64,13 +66,16 @@ void UKF::predict(double tp)
             Xp.col(i) = f(ti, tp, Xi.col(i), W.col(i));
 
         xestp = Xp * wp;
-        // cout << "mean in UKF prediction:\t" << endl
+        // cout << "mean in UKF prediction:\n"
         //      << xestp << endl;
 
         Pxxp = Xp * wp.asDiagonal() * Xp.transpose() - xestp * xestp.transpose();
 
         if (addw)
             Pxxp += Pww;
+
+        // cout << "covariance in UKF prediction:\n"
+        //      << Pxxp << endl;
 
         t.push_back(tp);
         xest.push_back(xestp);
@@ -90,8 +95,10 @@ void UKF::update(const VectorXd &z)
     Pxxp = Pxx.back();
 
     // cout << "dimensions of meas: \t" << nz << endl;
-    // cout << xestp << endl;
-    // cout << Pxxp << endl;
+    // cout << "predicted xest: \n"
+    //      << xestp << endl;
+    // cout << "predicted Pxx: \n"
+    //      << Pxxp << endl;
 
     double tz = t.back();
 
@@ -102,7 +109,7 @@ void UKF::update(const VectorXd &z)
     for (int i = 0; i < nsu; i++)
         Z.col(i) = h(tz, X.col(i));
 
-    VectorXd res = z - Z.col(0);
+    // VectorXd res = z - Z.col(0);
     // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
     zm = Z * wu;
@@ -111,11 +118,22 @@ void UKF::update(const VectorXd &z)
 
     Pzx = Z * wu.asDiagonal() * X.transpose() - zm * xestp.transpose();
 
+    // cout << "measurement covariance Pzz: \n"
+    //      << Pzz << endl;
+    // cout << "cross covariance Pzx: \n"
+    //      << Pzx << endl;
+
     K = Pzz.llt().solve(Pzx).transpose();
+    // cout << "Kalman gain: \n"
+    //      << K << endl;
 
     xestu = xestp + K * (z - zm);
+    // cout << "updated xest: \n"
+    //      << xestu << endl;
 
     Pxxu = Pxxp - K * Pzx;
+    // cout << "updated Pxx: \n"
+    //      << Pxxu << endl;
 
     xest.back() = xestu;
     Pxx.back() = Pxxu;
@@ -128,7 +146,7 @@ void UKF::run(const VectorXd &tz, const MatrixXd &Z)
 {
     for (int i = 0; i < tz.size(); i++)
     {
-        // cout << "the " << i << "th epoch" << endl;
+        cout << "the " << i << "th epoch" << endl;
         predict(tz(i));
         // only update if given a measurment
         if (abs(Z(1, i)) <= M_PI * 2)
@@ -258,36 +276,6 @@ void UKF::reset(
     Pxx.push_back(Pxx0);
 }
 
-// // Save results
-// void UKF::save(const string& filename) {
-
-//     int steps = xest.size();
-
-//     MatrixXd table(steps, 2*nx+1);
-
-//     for (int k = 0; k < steps; k++) {
-
-//         table(k,0) = t[k];
-
-//         table.row(k).segment(1, nx) = xest[k];
-
-//         table.row(k).tail(nx) = Pxx[k].diagonal().cwiseSqrt();
-
-//     }
-
-//     vector<string> header(2*nx+1);
-//     header[0] = "TIME";
-//     for (int i = 1; i <= nx; i++) {
-//         header[i]    = "EST X";
-//         header[i+nx] = "STD X";
-//         header[i]    += to_string(i);
-//         header[i+nx] += to_string(i);
-//     }
-
-//     EigenCSV::write(table, header, filename);
-
-// }
-
 // Save results
 void UKF::save(const string &filename, string stateType)
 {
@@ -305,7 +293,11 @@ void UKF::save(const string &filename, string stateType)
             table.row(k).segment(1, nx) = xest[k];
         else if (stateType == "mee")
             table.row(k).segment(1, nx) = mee2eci(xest[k], GM_Earth);
-        table.row(k).tail(nx * nx) = Pxx[k].reshaped(1, nx * nx);
+        // table.row(k).tail(nx * nx) = Pxx[k].reshaped(1, nx * nx);
+
+        // Use Eigen::Map to copy the covariance matrix elements directly
+        Map<MatrixXd> covMatrixMap(table.row(k).tail(nx * nx).data(), nx, nx);
+        covMatrixMap = Pxx[k];
     }
 
     vector<string> header(nx * (nx + 1) + 1);

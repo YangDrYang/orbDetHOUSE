@@ -659,31 +659,51 @@ int main(int argc, char *argv[])
 
     if (filters.house)
     {
-        cout << "\tHOUSE" << '\n';
-
-        for (int j = 1; j <= filters.numTrials; j++)
+        if (filters.squareRoot)
         {
-            cout << "HOUSE Trial " << j << endl;
+            cout << "\tSRHOUSE" << '\n';
+
             timer.tick();
-            // Initialize HOUSE with different delta
-            double delta = 0.1 / filters.numTrials * (j - 1);
-            HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
-            // HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0.05);
-            house.run(tSec, angMeas);
+            SRHOUSE srhouse(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0.0);
+            srhouse.run(tSec, angMeas);
             runTimesMC(0) = timer.tock();
 
-            if (filters.numTrials == 1)
-                outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + ".csv";
-            else
-                outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + "_" + to_string(j) + ".csv";
-            house.save(outputFile, initialStateType);
+            outputFile = snrInfo.outDir + "/srhouse_id_" + noradID + "_" + initialStateType + ".csv";
+            srhouse.save(outputFile, initialStateType);
 
             // Save Filter run times
-            if (j == 1)
+            vector<string> filterStrings({"house"});
+            string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + "_" + initialStateType + ".csv";
+            EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+        }
+        else
+        {
+            cout << "\tHOUSE" << '\n';
+
+            for (int j = 1; j <= filters.numTrials; j++)
             {
-                vector<string> filterStrings({"house"});
-                string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + "_" + initialStateType + ".csv";
-                EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+                cout << "HOUSE Trial " << j << endl;
+                timer.tick();
+                // Initialize HOUSE with different delta
+                double delta = 0.1 / filters.numTrials * (j - 1);
+                HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
+                // HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0.05);
+                house.run(tSec, angMeas);
+                runTimesMC(0) = timer.tock();
+
+                if (filters.numTrials == 1)
+                    outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + ".csv";
+                else
+                    outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + "_" + to_string(j) + ".csv";
+                house.save(outputFile, initialStateType);
+
+                // Save Filter run times
+                if (j == 1)
+                {
+                    vector<string> filterStrings({"house"});
+                    string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + "_" + initialStateType + ".csv";
+                    EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+                }
             }
         }
     }
@@ -701,7 +721,7 @@ int main(int argc, char *argv[])
             srukf.run(tSec, angMeas);
             runTimesMC(1) = timer.tock();
 
-            outputFile = snrInfo.outDir + "/ukf_id_" + noradID + "_" + initialStateType + ".csv";
+            outputFile = snrInfo.outDir + "/srukf_id_" + noradID + "_" + initialStateType + ".csv";
             srukf.save(outputFile, initialStateType);
         }
         else
@@ -726,15 +746,31 @@ int main(int argc, char *argv[])
     // CUT-4 Filter
     if (filters.cut4)
     {
-        cout << "\tCUT-4" << '\n';
-        UKF cut4(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
+        if (filters.squareRoot)
+        {
+            cout << "\tSRCUT-4" << '\n';
+            // Initialize UKF & CUT filters
+            SRUKF srcut4(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
 
-        timer.tick();
-        cut4.run(tSec, angMeas);
-        runTimesMC(2) = timer.tock();
+            timer.tick();
+            srcut4.run(tSec, angMeas);
+            runTimesMC(2) = timer.tock();
 
-        outputFile = snrInfo.outDir + "/cut4_id_" + noradID + "_" + initialStateType + ".csv";
-        cut4.save(outputFile, initialStateType);
+            outputFile = snrInfo.outDir + "/srcut4_id_" + noradID + "_" + initialStateType + ".csv";
+            srcut4.save(outputFile, initialStateType);
+        }
+        else
+        {
+            cout << "\tCUT-4" << '\n';
+            UKF cut4(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
+
+            timer.tick();
+            cut4.run(tSec, angMeas);
+            runTimesMC(2) = timer.tock();
+
+            outputFile = snrInfo.outDir + "/cut4_id_" + noradID + "_" + initialStateType + ".csv";
+            cut4.save(outputFile, initialStateType);
+        }
 
         // Save Filter run times
         vector<string> filterStrings({"cut4"});
@@ -745,15 +781,31 @@ int main(int argc, char *argv[])
     // Cut-6 Filter
     if (filters.cut6)
     {
-        cout << "\tCUT-6" << '\n';
-        UKF cut6(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
+        if (filters.squareRoot)
+        {
+            cout << "\tSRCUT-6" << '\n';
+            // Initialize UKF & CUT filters
+            SRUKF srcut6(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
 
-        timer.tick();
-        cut6.run(tSec, angMeas);
-        runTimesMC(3) = timer.tock();
+            timer.tick();
+            srcut6.run(tSec, angMeas);
+            runTimesMC(3) = timer.tock();
 
-        outputFile = snrInfo.outDir + "/cut6_id_" + noradID + "_" + initialStateType + ".csv";
-        cut6.save(outputFile, initialStateType);
+            outputFile = snrInfo.outDir + "/srcut6_id_" + noradID + "_" + initialStateType + ".csv";
+            srcut6.save(outputFile, initialStateType);
+        }
+        else
+        {
+            cout << "\tCUT-6" << '\n';
+            UKF cut6(orbFun, h, true, 0, dtMax, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
+
+            timer.tick();
+            cut6.run(tSec, angMeas);
+            runTimesMC(3) = timer.tock();
+
+            outputFile = snrInfo.outDir + "/cut6_id_" + noradID + "_" + initialStateType + ".csv";
+            cut6.save(outputFile, initialStateType);
+        }
 
         // Save Filter run times
         vector<string> filterStrings({"cut6"});

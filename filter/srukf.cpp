@@ -43,53 +43,6 @@ MatrixXd cholupdate(MatrixXd matL, MatrixXd matW, double alpha)
     return matLo;
 }
 
-MatrixXd forwardSubstitute(const MatrixXd &matA, const MatrixXd &matB)
-{
-    int rows = matA.rows();
-    int cols = matB.cols();
-
-    MatrixXd matX(rows, cols);
-
-    for (int k = 0; k < cols; ++k)
-    {
-        for (int i = 0; i < rows; ++i)
-        {
-            double accumulation = matB(i, k);
-            for (int j = 0; j < i; ++j)
-            {
-                accumulation -= matA(i, j) * matX(j, k);
-            }
-
-            matX(i, k) = accumulation / matA(i, i);
-        }
-    }
-    return matX;
-}
-
-MatrixXd backwardSubstitute(const MatrixXd &matA, const MatrixXd &matB)
-{
-    int rows = matA.rows();
-    int cols = matB.cols();
-
-    MatrixXd matX(rows, cols);
-
-    for (int k = 0; k < cols; ++k)
-    {
-        for (int i = rows - 1; i >= 0; --i)
-        {
-            double accumulation = matB(i, k);
-
-            for (int j = rows - 1; j > i; --j)
-            {
-                accumulation -= matA(i, j) * matX(j, k);
-            }
-
-            matX(i, k) = accumulation / matA(i, i);
-        }
-    }
-    return matX;
-}
-
 // Prediction step
 void SRUKF::predict(double tp)
 {
@@ -99,8 +52,11 @@ void SRUKF::predict(double tp)
 
     xesti = xest.back();
     matSxxi = Sxx.back();
-    // cout << "matSxxi size:\t" << matSxxi.rows() << "\t" << matSxxi.cols() << endl;
-    // cout << "matSxxi value:\t" << matSxxi << endl;
+    cout << "xesti value: \n"
+         << xesti << endl;
+    cout << "matSxxi size:\t" << matSxxi.rows() << "\t" << matSxxi.cols() << endl;
+    cout << "matSxxi value:\n"
+         << matSxxi << endl;
 
     double ti = t.back();
 
@@ -127,10 +83,10 @@ void SRUKF::predict(double tp)
             matC << matRes, Sww;
             // cout << "matC value:\t" << matC << endl;
             // cout << "matC size:\t" << matC.rows() << "\t" << matC.cols() << endl;
-            ColPivHouseholderQR<MatrixXd> qr(matC.transpose());
+            HouseholderQR<MatrixXd> qr(matC.transpose());
             // Get the upper triangular matrix from the factorization
             MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
-            MatrixXd matS = matS2.block(0, 0, nx, nx);
+            MatrixXd matS = matS2.block(0, 0, nx, nx).transpose();
             // cout << "matS:\n"
             //      << matS << endl;
             // cout << "matS size:\t" << matS.rows() << "\t" << matS.cols() << endl;
@@ -138,7 +94,10 @@ void SRUKF::predict(double tp)
             //      << matS2 << endl;
             // cout << "matS2 size:\t" << matS2.rows() << "\t" << matS2.cols() << endl;
             // Update the Cholesky decomposition with the nth vector
-            MatrixXd matSxxp = cholupdate(matS.transpose(), matXp.col(nx) - xestp, wp(nx));
+            MatrixXd matSxxp = cholupdate(matS, matXp.col(nx) - xestp, wp(nx));
+            // LLT<MatrixXd, Lower> lltOfS(matS);
+            // lltOfS.rankUpdate(matXp.col(nx) - xestp, wp(nx));
+            // MatrixXd matSxxp = matS;
             // cout << "matSxxp:\n"
             //      << matSxxp << endl;
             xesti = xestp;
@@ -153,8 +112,8 @@ void SRUKF::predict(double tp)
             matXp.col(i) = f(ti, tp, matXi.col(i), matW.col(i));
 
         xestp = matXp * wp;
-        // cout << "mean in SRUKF prediction:\t" << endl
-        //      << xestp << endl;
+        cout << "mean in SRUKF prediction:\n"
+             << xestp << endl;
 
         MatrixXd matRes(nx, 2 * nx);
         MatrixXd matxestp = xestp.replicate(1, nx);
@@ -166,22 +125,20 @@ void SRUKF::predict(double tp)
         matC << matRes, Sww;
         // cout << "matC value:\t" << matC << endl;
         // cout << "matC size:\t" << matC.rows() << "\t" << matC.cols() << endl;
-        ColPivHouseholderQR<MatrixXd> qr(matC.transpose());
+        HouseholderQR<MatrixXd> qr(matC.transpose());
         // Get the upper triangular matrix from the factorization
         MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
-        MatrixXd matS = matS2.block(0, 0, nx, nx);
-        // cout << "matS:\n"
-        //      << matS << endl;
-        // cout << "matS size:\t" << matS.rows() << "\t" << matS.cols() << endl;
-        // cout << "matS2:\n"
-        //      << matS2 << endl;
-        // cout << "matS2 size:\t" << matS2.rows() << "\t" << matS2.cols() << endl;
-        // cout << "weight\t" << wp(nx)
-        //      << "vector\t" << matXp.col(nx) - xestp << endl;
+        MatrixXd matS = matS2.block(0, 0, nx, nx).transpose();
         // Update the Cholesky decomposition with the nth vector
-        MatrixXd matSxxp = cholupdate(matS.transpose(), matXp.col(nx) - xestp, wp(nx));
+        MatrixXd matSxxp = cholupdate(matS, matXp.col(nx) - xestp, wp(nx));
+        // LLT<MatrixXd, Lower> lltOfS(matS);
+        // lltOfS.rankUpdate(matXp.col(nx) - xestp, wp(nx));
+        // MatrixXd matSxxp = matS;
         // cout << "matSxxp size:\t" << matSxxp.rows() << "\t" << matSxxp.cols() << endl;
-        // cout << "matSxxp value:\t" << matSxxp << endl;
+        cout << "matSxxp value:\n"
+             << matSxxp << endl;
+        cout << "predicted covariance:\n"
+             << matSxxp * matSxxp.transpose() << endl;
 
         t.push_back(tp);
         xest.push_back(xestp);
@@ -200,9 +157,11 @@ void SRUKF::update(const VectorXd &z)
     xestp = xest.back();
     matSxxp = Sxx.back();
 
-    // cout << "dimensions of meas: \t" << nz << endl;
-    // cout << xestp << endl;
-    // cout << Sxxp << endl;
+    cout << "dimensions of meas: \t" << nz << endl;
+    cout << "predicted xest: \n"
+         << xestp << endl;
+    cout << "predicted Pxx: \n"
+         << matSxxp * matSxxp.transpose() << endl;
 
     double tz = t.back();
 
@@ -212,7 +171,7 @@ void SRUKF::update(const VectorXd &z)
     for (int i = 0; i < nsu; i++)
         matZ.col(i) = h(tz, matX.col(i));
 
-    // VectorXd res = z - Z.col(0);
+    // VectorXd res = z - matZ.col(0);
     // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
     zm = matZ * wu;
@@ -221,49 +180,74 @@ void SRUKF::update(const VectorXd &z)
     MatrixXd matRes(nz, 2 * nx);
     matRes << matZ.leftCols(nx) - matzm, matZ.rightCols(nx) - matzm;
     MatrixXd matC(nz, 2 * nx + nz);
-    // cout << "Snn size:\t" << Snn.rows() << "\t" << Snn.cols() << endl;
+    // // cout << "Snn size:\t" << Snn.rows() << "\t" << Snn.cols() << endl;
     matC << sqrt(wu(0)) * matRes, Snn;
     // cout << "matC size:\t" << matC.rows() << "\t" << matC.cols() << endl;
-    ColPivHouseholderQR<MatrixXd> qr(matC.transpose());
+    // cout << "matC:\n"
+    //      << matC << endl;
+    HouseholderQR<MatrixXd> qr(matC.transpose());
     // Get the upper triangular matrix from the factorization
     MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
-    MatrixXd matS = matS2.block(0, 0, nz, nz);
+    // Get the lower triangular matrix
+    MatrixXd matS = matS2.block(0, 0, nz, nz).transpose();
     // cout << "matS:\n"
     //      << matS << endl;
     // cout << "matS size:\t" << matS.rows() << "\t" << matS.cols() << endl;
-    // cout << "matS2:\n"
+    // // cout << "matS2:\n"
     //      << matS2 << endl;
     // cout << "matS2 size:\t" << matS2.rows() << "\t" << matS2.cols() << endl;
     // Update the Cholesky decomposition with the nth vector
-    MatrixXd matSzz = cholupdate(matS.transpose(), matZ.col(nx) - zm, wu(nx));
-    // cout << "matSzz:\n"
-    //      << matSzz << endl;
+    MatrixXd matSzz = cholupdate(matS, matZ.col(nx) - zm, wu(nx));
+    // LLT<MatrixXd, Lower> lltOfS(matS);
+    // lltOfS.rankUpdate(matZ.col(nx) - zm, wu(nx));
+    // matSzz = matS;
+    // cout << matZ.col(nx) - zm << "\t" << wu(nx) << endl;
+    cout << "matSzz:\n"
+         << matSzz << endl;
+    cout << "measurement covariance Pzz: \n"
+         << matSzz * matSzz.transpose() << endl;
+
     matPzx = matZ * wu.asDiagonal() * matX.transpose() - zm * xestp.transpose();
+
+    cout << "cross covariance Pzx: \n"
+         << matPzx << endl;
     // Kalman Gain
-    MatrixXd matK1 = matSzz.colPivHouseholderQr().solve(matPzx);
-    MatrixXd matK2 = matSzz.transpose().colPivHouseholderQr().solve(matK1);
+    MatrixXd matK1 = matSzz.householderQr().solve(matPzx);
+    MatrixXd matK2 = matSzz.transpose().householderQr().solve(matK1);
     matK = matK2.transpose();
-    // cout << "debugging K:\n"
-    //      << matK << endl;
+    cout << "Kalman gain:\n"
+         << matK << endl;
 
     // Update the state
     xestu = xestp + matK * (z - zm);
-    // cout << "updated x:\t" << xestu << endl;
+    cout << "updated xest: \n"
+         << xestu << endl;
 
     // Create a temporary matrix to hold the result of K * Szz
     MatrixXd matU = matK * matSzz;
-    // cout << "matSxxp:\n"
-    //      << matSxxp << endl;
+    cout << "matU:\n"
+         << matU << endl;
     // Update the covariance
+    cout << "Sxxp:\n"
+         << matSxxp << endl;
+    // LLT<MatrixXd, Lower> lltOfSxxp(matSxxp);
+    // for (int j = 0; j < matU.cols(); j++)
+    // {
+    //     lltOfSxxp.rankUpdate(matU.col(j), -1.0);
+    //     cout << "rankUpdate middle result:\n"
+    //          << j << matSxxp << endl;
+    // }
+    // matSxxu = matSxxp;
     matSxxu = cholupdate(matSxxp, matU, -1.0);
-    // cout << "Sxxu:\n"
-    //      << matSxxu << endl;
+    cout << "Sxxu:\n"
+         << matSxxu << endl;
+    cout << "updated Pxx: \n"
+         << matSxxu * matSxxu.transpose() << endl;
 
     xest.back() = xestu;
     Sxx.back() = matSxxu;
     Pxx.back() = matSxxu * matSxxu.transpose();
-
-    // cout << xestu << endl;
+    cout << Sxx[0] << endl;
 }
 
 // Run filter for sequence of measurements
@@ -334,22 +318,51 @@ VectorXd SRUKF::sigmaWt(UKF::sig_type stype, int n, double k)
 // Reset filter
 void SRUKF::reset(double t0, const VectorXd &xm0, const MatrixXd &Pxx0)
 {
-    t.clear();
-    xest.clear();
-    Sxx.clear();
-
-    t.push_back(t0);
-    xest.push_back(xm0);
-    Pxx.push_back(Pxx0);
-    LLT<MatrixXd> lltOfPxx(Pxx0);
-    Sxx.push_back(lltOfPxx.matrixL());
+    UKF::reset(t0, xm0, Pxx0);
+    Sxx.push_back(Pxx0.llt().matrixL());
 }
 
 // Save results for SRUKF
+// void SRUKF::save(const string &filename, string stateType)
+// {
+//     // You can reuse the save function from the base class UKF
+//     UKF::save(filename, stateType);
+// }
 void SRUKF::save(const string &filename, string stateType)
 {
-    // You can reuse the save function from the base class UKF
-    UKF::save(filename, stateType);
+
+    int steps = xest.size();
+
+    MatrixXd table(steps, nx * (nx + 1) + 1);
+
+    for (int k = 0; k < steps; k++)
+    {
+
+        table(k, 0) = t[k];
+
+        if (stateType == "eci")
+            table.row(k).segment(1, nx) = xest[k];
+        else if (stateType == "mee")
+            table.row(k).segment(1, nx) = mee2eci(xest[k], GM_Earth);
+        // table.row(k).tail(nx * nx) = Pxx[k].reshaped(1, nx * nx);
+
+        // Use Eigen::Map to copy the covariance matrix elements directly
+        Map<MatrixXd> covMatrixMap(table.row(k).tail(nx * nx).data(), nx, nx);
+        covMatrixMap = Pxx[k];
+    }
+
+    vector<string> header(nx * (nx + 1) + 1);
+    header[0] = "TIME";
+    for (int i = 1; i <= nx; i++)
+    {
+        header[i] = "EST X";
+        header[i + nx * i] = "STD X";
+        header[i] += to_string(i);
+        header[i + nx * i] += to_string(i);
+    }
+
+    EigenCSV::write(table, header, filename);
 }
+
 // Default location for CUT files
 string SRUKF::cut_dir = "CUT/";
