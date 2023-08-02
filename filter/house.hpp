@@ -11,6 +11,40 @@ using namespace std;
 
 #define NO_MEASUREMENT 99999999
 
+// Distribution type
+class Dist
+{
+
+public:
+    int n;
+
+    VectorXd mean, skew, kurt;
+    MatrixXd cov, covL;
+
+    // Generate distribution from sigma points & weights
+    Dist(const MatrixXd &X, const VectorXd &w);
+
+    // Generate zero-mean Gaussian distribution
+    Dist(const MatrixXd &S);
+
+    // Generate an empty distribution
+    Dist();
+};
+
+// Augmented state sigma point type
+class Sigma
+{
+
+public:
+    int n_state, n_noise, n_pts;
+
+    MatrixXd state, noise;
+    VectorXd wgt;
+
+    Sigma(const Dist &distX, const Dist &distW, double delta);
+    Sigma(const Dist &distX, const Dist &distW);
+};
+
 class HOUSE
 {
 
@@ -24,36 +58,6 @@ public:
     typedef std::function<VectorXd(double,
                                    const VectorXd &, const VectorXd &)>
         meas_model;
-
-    // Distribution type
-    class Dist
-    {
-
-    public:
-        int n;
-
-        VectorXd mean, skew, kurt;
-        MatrixXd cov, covL;
-
-        // Generate distribution from sigma points & weights
-        Dist(const MatrixXd &X, const VectorXd &w);
-
-        // Generate zero-mean Gaussian distribution
-        Dist(const MatrixXd &S);
-    };
-
-    // Augmented state sigma point type
-    class Sigma
-    {
-
-    public:
-        int n_state, n_noise, n_pts;
-
-        MatrixXd state, noise;
-        VectorXd wgt;
-
-        Sigma(const Dist &distX, const Dist &distW, double delta);
-    };
 
     // Constructor
     HOUSE(

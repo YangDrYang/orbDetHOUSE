@@ -26,41 +26,6 @@ public:
                                    const VectorXd &, const VectorXd &)>
         meas_model;
 
-    // Distribution type
-    class Dist
-    {
-
-    public:
-        int n;
-
-        VectorXd mean, skew, kurt;
-        MatrixXd cov, covL;
-
-        // Generate distribution from sigma points & weights
-        Dist(const MatrixXd &X, const VectorXd &w);
-
-        // Generate zero-mean Gaussian distribution
-        Dist(const MatrixXd &S);
-
-        // Generate an empty distribution
-        Dist();
-    };
-
-    // Augmented state sigma point type
-    class Sigma
-    {
-
-    public:
-        int n_state, n_noise, n_pts;
-
-        MatrixXd state, noise;
-        VectorXd wgt;
-
-        double delta;
-
-        Sigma(const Dist &distX, const Dist &distW);
-    };
-
     // Constructor
     SRHOUSE(
         const dyn_model &f_,
@@ -99,6 +64,9 @@ public:
 
     // Distribution of measurement noise
     const Dist distv;
+
+    // Minimal weight at mean
+    const double delta;
 
     // History of state estimate distributions
     vector<Dist> distx;

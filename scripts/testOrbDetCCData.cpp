@@ -643,15 +643,15 @@ int main(int argc, char *argv[])
     cout << "max time step:\t" << dtMax << endl;
 
     // HOUSE distributions for state
-    HOUSE::Dist distXi(initialCov);
+    Dist distXi(initialCov);
     distXi.mean = initialStateVec;
     distXi.skew.setConstant(dimState, initialSkewness);
     distXi.kurt.setConstant(dimState, initialKurtosis);
 
     // HOUSE distributions for state noise
-    HOUSE::Dist distw(procNoiseCov);
+    Dist distw(procNoiseCov);
     // HOUSE distributions for measurement noise
-    HOUSE::Dist distn(measNoiseCov);
+    Dist distn(measNoiseCov);
 
     string outputFile;
     MatrixXd runTimesMC(1, 4);

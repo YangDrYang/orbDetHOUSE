@@ -1,8 +1,8 @@
 # required
 filter_options:
-  square_root: true
-  HOUSE: false
-  UKF: true
+  square_root: false
+  HOUSE: true
+  UKF: false
   CUT4: false
   CUT6: false
   num_trials: 1
@@ -10,13 +10,14 @@ filter_options:
 # requried
 scenario_parameters:
   MJD_start: 59349.51137986922 # 2021-May-15
-  MJD_end: 59349.51137986922 # 2021-May-15
+  # MJD_end: 59349.51137986922 # 2021-May-15
   # MJD_end:  59349.51140078588 # 2021-May-17
   # MJD_end:  59349.51288590162 # 2021-May-17
-  # MJD_end:  59351.54470621643 # 2021-May-17
+  MJD_end:  59351.54470621643 # 2021-May-17
   # MJD_start: 59349.51137986922 # 2021-May-15
   # MJD_end:  59349.51250939351
-  max_time_step: 60
+  # max_time_step: 60
+  max_time_step: 1800
   # this directory must exist
   output_directory: out/out_ccdata
 
@@ -38,20 +39,20 @@ initial_orbtial_parameters:
     - [0, 0, 0, 0, 0, 0.04]    
   initial_skewness: -1.6
   initial_kurtosis: 10    
-  # process_noise_covariance: # ric coordinate
-  #   - [25, 0, 0, 0, 0, 0]
-  #   - [0, 25, 0, 0, 0, 0]
-  #   - [0, 0, 25, 0, 0, 0]
-  #   - [0, 0, 0, 0.0002, 0, 0]
-  #   - [0, 0, 0, 0, 0.0002, 0]
-  #   - [0, 0, 0, 0, 0, 0.0002]
   process_noise_covariance: # ric coordinate
-    - [10, 0, 0, 0, 0, 0]
-    - [0, 10, 0, 0, 0, 0]
-    - [0, 0, 10, 0, 0, 0]
-    - [0, 0, 0, 0.000002, 0, 0]
-    - [0, 0, 0, 0, 0.000002, 0]
-    - [0, 0, 0, 0, 0, 0.000002]
+    - [25, 0, 0, 0, 0, 0]
+    - [0, 25, 0, 0, 0, 0]
+    - [0, 0, 25, 0, 0, 0]
+    - [0, 0, 0, 0.0002, 0, 0]
+    - [0, 0, 0, 0, 0.0002, 0]
+    - [0, 0, 0, 0, 0, 0.0002]
+  # process_noise_covariance: # ric coordinate
+  #   - [10, 0, 0, 0, 0, 0]
+  #   - [0, 10, 0, 0, 0, 0]
+  #   - [0, 0, 10, 0, 0, 0]
+  #   - [0, 0, 0, 0.000002, 0, 0]
+  #   - [0, 0, 0, 0, 0.000002, 0]
+  #   - [0, 0, 0, 0, 0, 0.000002]
 
 # requried
 measurement_parameters:
@@ -66,38 +67,38 @@ measurement_parameters:
 
 
 # optional, if not defined they will be set to default values
-propagator_filter_settings:
-  earth_gravity_model_order: 100
-  earth_gravity_model_degree: 100
-  third_body_attraction: true
-  third_body_sun: true
-  third_body_moon: true
-  solid_earth_tide: true
-  ocean_tide_loading: true
+# propagator_filter_settings:
+  # earth_gravity_model_order: 100
+  # earth_gravity_model_degree: 100
+  # third_body_attraction: true
+  # third_body_sun: true
+  # third_body_moon: true
+  # solid_earth_tide: true
+  # ocean_tide_loading: true
+  # solar_radiation_pressure : true
+  # atmospheric_drag: true
+  # relativity_effect: true
+  # srpCoef: 1.23
+  # srpArea: 8.73
+  # dragCoef: 2.0
+  # dragArea: 4.091655
+  # satMass: 961.831
+# propagator_filter_settings:
+  earth_gravity_model_order: 20
+  earth_gravity_model_degree: 20
+  third_body_attraction: false
+  third_body_sun: false
+  third_body_moon: false
+  solid_earth_tide: false
+  ocean_tide_loading: false
   solar_radiation_pressure : true
   atmospheric_drag: true
-  relativity_effect: true
+  relativity_effect: false
   srpCoef: 1.23
   srpArea: 8.73
   dragCoef: 2.0
   dragArea: 4.091655
   satMass: 961.831
-# propagator_filter_settings:
-#   earth_gravity_model_order: 20
-#   earth_gravity_model_degree: 20
-#   third_body_attraction: false
-#   third_body_sun: false
-#   third_body_moon: false
-#   solid_earth_tide: false
-#   ocean_tide_loading: false
-#   solar_radiation_pressure : true
-#   atmospheric_drag: true
-#   relativity_effect: false
-#   srpCoef: 1.23
-#   srpArea: 8.73
-#   dragCoef: 2.0
-#   dragArea: 4.091655
-#   satMass: 961.831
 
 # optional
 supporting_files:
