@@ -289,6 +289,7 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     snrInfo.epoch.endMJD = simParams["MJD_end"].as<double>();
     snrInfo.epoch.timeStep = simParams["time_step"].as<double>();
     snrInfo.epoch.timePass = simParams["time_pass"].as<double>();
+    snrInfo.epoch.maxTimeStep = simParams["max_time_step"].as<double>();
     snrInfo.outDir = simParams["output_directory"].as<string>();
 
     // read orbital parameters (required)
@@ -577,9 +578,11 @@ int main(int argc, char *argv[])
     MatrixXd tableMeasTruth(nTotalSteps, dimMeas + 1);
     tableMeasTruth.col(0) = tSec;
     timer.tick();
+    VectorXd zeroVec(6); // 6D zero vector
+    zeroVec.setZero();   // Set all elements to zero
     for (int k = 0; k < nTotalSteps - 1; k++)
     {
-        propStateVec = f(time, time + dt, propStateVec, Vector3d::Zero());
+        propStateVec = f(time, time + dt, propStateVec, zeroVec);
         time += dt;
         tableTrajTruth.row(k + 1).tail(dimState) = propStateVec;
     }
@@ -647,20 +650,20 @@ int main(int argc, char *argv[])
     // // EigenCSV::write(runTimeTruth, truthString, trajTruthFile, true);
 
     // Initialize UKF & CUT filters
-    UKF ukf(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
-    UKF cut4(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
-    UKF cut6(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
-    UKF cut8(f, h, true, 0, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
+    UKF ukf(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
+    UKF cut4(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
+    UKF cut6(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
+    UKF cut8(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
 
     // HOUSE distributions for state
-    HOUSE::Dist distXi(initialCov);
+    Dist distXi(initialCov);
     distXi.mean = initialState.initialStateVec;
     // HOUSE distributions for state noise
-    HOUSE::Dist distw(procNoiseCov);
+    Dist distw(procNoiseCov);
     // HOUSE distributions for measurement noise
-    HOUSE::Dist distn(measNoiseCov);
+    Dist distn(measNoiseCov);
     // Initialize HOUSE
-    HOUSE house(f, hh, dimMeas, 0, distXi, distw, distn, 0);
+    HOUSE house(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
 
     // Normal noise generator
     mt19937_64 gen;
@@ -764,7 +767,7 @@ int main(int argc, char *argv[])
             outputFile = snrInfo.outDir + "/house_";
             outputFile += to_string(j);
             outputFile += ".csv";
-            house.save(outputFile);
+            house.save(outputFile, "ECI");
         }
 
         // UKF Filter
@@ -780,7 +783,7 @@ int main(int argc, char *argv[])
             outputFile = snrInfo.outDir + "/ukf_";
             outputFile += to_string(j);
             outputFile += ".csv";
-            ukf.save(outputFile);
+            ukf.save(outputFile, "ECI");
         }
 
         // CUT-4 Filter
@@ -794,7 +797,7 @@ int main(int argc, char *argv[])
             outputFile = snrInfo.outDir + "/cut4_";
             outputFile += to_string(j);
             outputFile += ".csv";
-            cut4.save(outputFile);
+            cut4.save(outputFile, "ECI");
         }
 
         // Cut-6 Filter
@@ -808,7 +811,7 @@ int main(int argc, char *argv[])
             outputFile = snrInfo.outDir + "/cut6_";
             outputFile += to_string(j);
             outputFile += ".csv";
-            cut6.save(outputFile);
+            cut6.save(outputFile, "ECI");
         }
     }
     if (filters.house)
