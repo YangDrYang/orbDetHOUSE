@@ -295,7 +295,7 @@ def process_nes_each_filter(filter_type, folder_path):
         # print(trial_df.head())
         trial_state_df = trial_df.iloc[:, 0:7]
         trial_cov_df = trial_df.iloc[:, 7:43]
-        # print(trial_cov_df)
+        print(trial_cov_df)
 
         # Check which elements are NaN using isna()
         nan_mask = trial_state_df.isna()

@@ -8,12 +8,12 @@ import numpy as np
 # filters = ["ukf"]
 # filters = ["cut6"]
 # filters = ["house", "ukf", "cut4", "cut6"]
-# filters = ["house", "ukf", "cut4"]
+filters = ["house", "ukf", "cut4"]
 # filters = ["house", "cut4", "cut6"]
-filters = ["house", "ukf"]
+# filters = ["house", "ukf"]
 
-# folder_path = "out/out_dense/"
-folder_path = "out/out_sparse/"
+folder_path = "out/out_dense/"
+# folder_path = "out/out_sparse/"
 # folder_path = "out/"
 
 # Create a new figure and axes for logarithmic plot

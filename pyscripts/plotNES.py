@@ -8,11 +8,11 @@ import scipy.stats as stats
 
 # reference: https://kalman-filter.com/normalized-estimation-error-squared/
 
-filters = ["house", "ukf", "cut4", "cut6"]
+# filters = ["house", "ukf", "cut4", "cut6"]
+filters = ["cut4"]
 
-# folder_path = "out_dense/"
-folder_path = "out_sparse/"
-# folder_path = "out/"
+folder_path = "out/out_dense/"
+# folder_path = "out/out_sparse/"
 
 # flag to determine to process the NES or use existing files for plots
 flag_proc = 1

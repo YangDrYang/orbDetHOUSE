@@ -293,11 +293,8 @@ void UKF::save(const string &filename, string stateType)
             table.row(k).segment(1, nx) = xest[k];
         else if (stateType == "mee")
             table.row(k).segment(1, nx) = mee2eci(xest[k], GM_Earth);
-        // table.row(k).tail(nx * nx) = Pxx[k].reshaped(1, nx * nx);
 
-        // Use Eigen::Map to copy the covariance matrix elements directly
-        Map<MatrixXd> covMatrixMap(table.row(k).tail(nx * nx).data(), nx, nx);
-        covMatrixMap = Pxx[k];
+        table.row(k).tail(nx * nx) = Pxx[k].reshaped(1, nx * nx);
     }
 
     vector<string> header(nx * (nx + 1) + 1);
