@@ -22,7 +22,7 @@ Dependencies
 - CUTpoints by N. Adurthi, P. Singla, and T. Singh: https://github.com/nadurthi/CUTpoints using the Matlab function cut_sigma_points.m to generate .csv files in the CUT directory
 - Eigen: https://eigen.tuxfamily.org/
 - Boost Installation: https://www.boost.org/doc/libs/1_69_0/more/getting_started/unix-variants.html#easy-build-and-install
-- Yaml-cpp
+- Yaml-cpp: https://github.com/jbeder/yaml-cpp
 
 Analysis and plot
 
