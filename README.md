@@ -1,35 +1,39 @@
-# HOUSE: The Higher-Order Unscented Estimator
+# OrbDetHOUSE: The Higher-Order Unscented Estimator for Orbit Determination
 
-Running:
+Dependencies:
 
-- the repo includes an executable compiled for windows
-- parameters can be set using the config.yaml file
-- by default the program will read the "config.yaml" file, however
-  you can provide an argument to read a different yaml file (e.g. "./filter_testing other.yaml")
-- Note file options in the yaml file do not yet affect the program, the program will read fromt the supplied
-  input file and output to the out directory
-- ./bin/scripts/testOrbDetCCData ./yamls/config_ccdata.yml
-
-Compiling:
-
-- use g++ --std=c++11
-- compilation is handled by the makefile, run make to rebuild (make must be installed)
-- the binary object files are stored in the bin directory
-- make FILENAME=testOrbDetCCData
-
-Dependencies
-
-- CUTpoints by N. Adurthi, P. Singla, and T. Singh: https://github.com/nadurthi/CUTpoints using the Matlab function cut_sigma_points.m to generate .csv files in the CUT directory
+- HOUSE by Z. Stojanovski and D. Savransky: https://github.com/SIOSlab/HOUSE.git
+- CUTpoints by N. Adurthi, P. Singla, and T. Singh: https://github.com/nadurthi/CUTpoints using the Matlab function cut_sigma_points.m to generate .csv files in the "CUT" directory
+- SOFA: http://www.iausofa.org/2021_0512.html
+- nrlmsise-00: https://github.com/magnific0/nrlmsise-00.git
+- jpl_eph: https://github.com/Bill-Gray/jpl_eph.git
 - Eigen: https://eigen.tuxfamily.org/
 - Boost Installation: https://www.boost.org/doc/libs/1_69_0/more/getting_started/unix-variants.html#easy-build-and-install
 - Yaml-cpp: https://github.com/jbeder/yaml-cpp
 
-Analysis and plot
+Compiling:
 
-- call R to run processing_all.r and plot_rmse_all.r sequently
+- compilation is handled by the makefile, run make to rebuild (make must be installed) or clean main functions in the "scripts" directory.
+- examples: make FILENAME=testOrbProp and make FILENAME=testOrbProp clean
+- the binary object files are stored in the "bin/bin_sub" directory
 
-Note: be careful with the directory of Eigen/Boost and Yaml-cpp, better to install them using CMake inside their filefolders
-Note: ode.hpp and ode.cpp are released under the GNU Lesser General Public License
-(https://www.gnu.org/licenses/lgpl-3.0.en.html)
+Running:
 
-# HOUSE
+- the repo includes an executable compiled for MacBook
+- parameters can be set using the yaml files in the yamls directory
+- by default the program will read the "config.yaml" file, however
+  you can provide an argument to read a different yaml file
+- example: bin/scripts/testOrbProp yamls/config_orb.yml
+- output files will be saved into the "out/out_sub" directory
+
+Analysis and plot:
+
+- call python functions in the "pyscripts" directory after install relevant python packages
+- analysis results will be saved in the "out/out_sub" directory and plots will be saved in the "plots" directory
+
+Note:
+
+- be careful with the directory of Eigen, Boost and Yaml-cpp, better to install them using CMake inside their file folders
+- adjust the directories in Makefile accordingly to include these libraries
+
+# OrbDetHOUSE

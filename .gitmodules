@@ -1,9 +1,0 @@
-[submodule "eigen"]
-	path = eigen
-	url = https://gitlab.com/libeigen/eigen.git
-[submodule "CUTpoints"]
-	path = CUTpoints
-	url = https://github.com/nadurthi/CUTpoints.git
-[submodule "yaml-cpp"]
-	path = yaml-cpp
-	url = https://github.com/jbeder/yaml-cpp.git
