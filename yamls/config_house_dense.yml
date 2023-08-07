@@ -43,15 +43,15 @@ initial_orbtial_parameters:
     - [4, 0, 0, 0, 0, 0]
     - [0, 4, 0, 0, 0, 0]
     - [0, 0, 4, 0, 0, 0]
-    - [0, 0, 0, 0.04, 0, 0]
-    - [0, 0, 0, 0, 0.04, 0]
-    - [0, 0, 0, 0, 0, 0.04]
+    - [0, 0, 0, 0.0025, 0, 0]
+    - [0, 0, 0, 0, 0.0025, 0]
+    - [0, 0, 0, 0, 0, 0.0025]     
     # - [1.0e-9, 0, 0, 0, 0, 0]
     # - [0, 1.0e-9, 0, 0, 0, 0]
     # - [0, 0, 1.0e-9, 0, 0, 0]
     # - [0, 0, 0, 1.0e-9, 0, 0]
     # - [0, 0, 0, 0, 1.0e-9, 0]
-    # - [0, 0, 0, 0, 0, 1.0e-9]    
+    # - [0, 0, 0, 0, 0, 1.0e-9]           
 
 # requried
 measurement_parameters:
@@ -82,19 +82,14 @@ propagator_truth_settings:
 
 # optional, if not defined they will be set to default values
 propagator_filter_settings:
-  third_body_attraction: true
-  third_body_sun: true
-  third_body_moon: true
+  third_body_attraction: false
+  third_body_sun: false
+  third_body_moon: false
   solid_earth_tide: false
   ocean_tide_loading: false
-  solar_radiation_pressure : true
-  atmospheric_drag: true
-  relativity_effect: true
+  solar_radiation_pressure : false
+  atmospheric_drag: false
+  relativity_effect: false
   srpCoef: 1.23
   srpArea : 0.136488 # 2 * PI  * pow(0.974 / 2, 2) * sin(0) + 1.034 * 0.132
   satMass : 61.14  
-
-file_options:
-  ERP_file: cod15657.erp
-  gravity_file: GGMOS3.txt
-  ephemeris_file: unxp2000.405

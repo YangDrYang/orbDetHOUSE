@@ -340,6 +340,10 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     YAML::Node propTruthSettings = config["propagator_truth_settings"];
     if (parameter = propTruthSettings["earth_gravaity"])
         optTruth.earth_gravity = parameter.as<bool>();
+    if (parameter = propTruthSettings["earth_gravity_model_order"])
+        optTruth.egmAccOrd = parameter.as<int>();
+    if (parameter = propTruthSettings["earth_gravity_model_degree"])
+        optTruth.egmAccDeg = parameter.as<int>();
     if (parameter = propTruthSettings["solid_earth_tide"])
         optTruth.solid_earth_tide = parameter.as<bool>();
     if (parameter = propTruthSettings["ocean_tide_loading"])
@@ -381,6 +385,10 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     YAML::Node propFilterSettings = config["propagator_filter_settings"];
     if (parameter = propFilterSettings["earth_gravaity"])
         optFilter.earth_gravity = parameter.as<bool>();
+    if (parameter = propFilterSettings["earth_gravity_model_order"])
+        optFilter.egmAccOrd = parameter.as<int>();
+    if (parameter = propFilterSettings["earth_gravity_model_degree"])
+        optFilter.egmAccDeg = parameter.as<int>();
     if (parameter = propFilterSettings["solid_earth_tide"])
         optFilter.solid_earth_tide = parameter.as<bool>();
     if (parameter = propFilterSettings["ocean_tide_loading"])
@@ -482,7 +490,7 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType)
     // set up the IERS instance
     getIERS(epoch.startMJD);
 
-    pJPLEph = jpl_init_ephemeris("./auxdata/unxp2000.405", nullptr, nullptr);
+    pJPLEph = jpl_init_ephemeris("./auxdata/linux_p1550p2650.440", nullptr, nullptr);
 
     VectorXd rvECI = VectorXd::Zero(6);
     string ecefTag = "ECEF";
@@ -563,6 +571,7 @@ int main(int argc, char *argv[])
 
     // simulate ground-truth trajectory and generate non-corrupted measurement vectors
     orbitProp.setPropOption(forceModelsTruthOpt);
+    orbitProp.printPropOption();
     orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
     VectorXd propStateVec = initialStateVec;
     double time = 0, dt = epoch.timeStep;
@@ -664,6 +673,7 @@ int main(int argc, char *argv[])
     Dist distn(measNoiseCov);
     // Initialize HOUSE
     HOUSE house(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
+    SRHOUSE srhouse(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
 
     // Normal noise generator
     mt19937_64 gen;
@@ -701,11 +711,13 @@ int main(int argc, char *argv[])
         }
 
         house.reset(0, distXi);
+        srhouse.reset(0, distXi);
         ukf.reset(0, initialState_, initialCov);
         cut4.reset(0, initialState_, initialCov);
         cut6.reset(0, initialState_, initialCov);
 
         orbitProp.setPropOption(forceModelsFilterOpt);
+        orbitProp.printPropOption();
         orbitProp.initPropagator(initialState_, epoch.startMJD, leapSec, &erpt, egm, pJPLEph); // reset propagator
 
         // // Generate Measurement vectors
@@ -761,13 +773,15 @@ int main(int argc, char *argv[])
         {
             cout << "\tHOUSE" << '\n';
             timer.tick();
-            house.run(tSec, measCorrupted);
+            srhouse.run(tSec, measCorrupted);
+            // house.run(tSec, measCorrupted);
             runTimesMC(j - 1, 0) = timer.tock();
 
             outputFile = snrInfo.outDir + "/house_";
             outputFile += to_string(j);
             outputFile += ".csv";
-            house.save(outputFile, "ECI");
+            srhouse.save(outputFile, "eci");
+            // house.save(outputFile, "eci");
         }
 
         // UKF Filter
@@ -783,7 +797,7 @@ int main(int argc, char *argv[])
             outputFile = snrInfo.outDir + "/ukf_";
             outputFile += to_string(j);
             outputFile += ".csv";
-            ukf.save(outputFile, "ECI");
+            ukf.save(outputFile, "eci");
         }
 
         // CUT-4 Filter
@@ -797,7 +811,7 @@ int main(int argc, char *argv[])
             outputFile = snrInfo.outDir + "/cut4_";
             outputFile += to_string(j);
             outputFile += ".csv";
-            cut4.save(outputFile, "ECI");
+            cut4.save(outputFile, "eci");
         }
 
         // Cut-6 Filter
@@ -811,7 +825,7 @@ int main(int argc, char *argv[])
             outputFile = snrInfo.outDir + "/cut6_";
             outputFile += to_string(j);
             outputFile += ".csv";
-            cut6.save(outputFile, "ECI");
+            cut6.save(outputFile, "eci");
         }
     }
     if (filters.house)

@@ -8,8 +8,9 @@ import scipy.stats as stats
 
 # reference: https://kalman-filter.com/normalized-estimation-error-squared/
 
-# filters = ["house", "ukf", "cut4", "cut6"]
-filters = ["cut4"]
+filters = ["ukf", "cut4", "cut6", "house"]
+# filters = ["house", "ukf"]
+# filters = ["cut4"]
 
 folder_path = "out/out_dense/"
 # folder_path = "out/out_sparse/"
@@ -39,7 +40,7 @@ for filter_type in filters:
     # Plot the data on the axes
     ax.scatter(df["tSec"], df["NES"], s=3, label=filter_type)
 
-    if filter_type == "cut6":
+    if filter_type == "house":
         # Add a horizontal line for the upper bound
         ax.axhline(y=chi2_upper, color="r", linestyle="--", label="upper bound")
         # Add a horizontal line for the lower bound

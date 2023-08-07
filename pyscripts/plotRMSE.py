@@ -8,7 +8,8 @@ import numpy as np
 # filters = ["ukf"]
 # filters = ["cut6"]
 # filters = ["house", "ukf", "cut4", "cut6"]
-filters = ["house", "ukf", "cut4"]
+filters = ["ukf", "cut4", "cut6", "house"]
+# filters = ["house", "ukf", "cut4"]
 # filters = ["house", "cut4", "cut6"]
 # filters = ["house", "ukf"]
 
@@ -113,21 +114,3 @@ for i in range(len(medians)):
 
 plt.tight_layout()
 fig.savefig("plots/all_rmse_violin.pdf")
-
-# # Create a new figure and axes for logarithmic plot
-# fig_vel, ax_vel = plt.subplots()
-
-# for filter_type in filters:
-#     # Read CSV file into a pandas dataframe
-#     df = pd.read_csv("plots/" + filter_type + "_trajectory_error.csv")
-
-#     # Plot the data on the axes
-#     ax_vel.plot(df["tSec"], df["vel_err_rms"], label=filter_type)
-
-# # Add labels and title
-# ax_vel.set_xlabel("time_lapse (s)")
-# ax_vel.set_ylabel("velocity errors (m/s)")
-# ax_vel.set_ylim([-0.5, 1])
-# ax_vel.set_title("logarithmic 3D velocity rmse")
-# ax_vel.legend()
-# fig_vel.savefig("plots/all_vel_rmse.pdf")
