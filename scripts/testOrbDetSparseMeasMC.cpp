@@ -215,6 +215,55 @@ Vector4d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &s
     return z;
 }
 
+// Function to delete multiple columns from a MatrixXd
+MatrixXd deleteColumns(const MatrixXd &initMatrix, const vector<int> &colsToDelete)
+{
+    int rows = initMatrix.rows();
+    int cols = initMatrix.cols();
+    int numColsToDelete = colsToDelete.size();
+
+    // Create a new matrix with the specified columns deleted
+    MatrixXd resMatrix(rows, cols - numColsToDelete);
+
+    int resultCol = 0;
+    for (int col = 0; col < cols; ++col)
+    {
+        // Check if the column index is in the list of columns to delete
+        if (find(colsToDelete.begin(), colsToDelete.end(), col) == colsToDelete.end())
+        {
+            // Copy the column to the result matrix
+            resMatrix.col(resultCol) = initMatrix.col(col);
+            ++resultCol;
+        }
+    }
+
+    return resMatrix;
+}
+
+// Function to delete elements from a VectorXd based on the specified column indices
+VectorXd deleteElements(const VectorXd &initVector, const vector<int> &elesToDelete)
+{
+    int size = initVector.size();
+    int numColsToDelete = elesToDelete.size();
+
+    // Create a new VectorXd with the specified elements deleted
+    VectorXd resVector(size - numColsToDelete);
+
+    int resultIndex = 0;
+    for (int i = 0; i < size; ++i)
+    {
+        // Check if the element index is in the list of columns to delete
+        if (find(elesToDelete.begin(), elesToDelete.end(), i) == elesToDelete.end())
+        {
+            // Copy the element to the resVector VectorXd
+            resVector(resultIndex) = initVector(i);
+            ++resultIndex;
+        }
+    }
+
+    return resVector;
+}
+
 // // Function to generate a noise matrix for a window of epochs
 MatrixXd generateNoiseMatrix(int seed, int nEpoch, const MatrixXd &covariance)
 {
@@ -276,6 +325,7 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
 
     // read filter options (required)
     YAML::Node filterOpts = config["filter_options"];
+    filters.squareRoot = filterOpts["square_root"].as<bool>();
     filters.house = filterOpts["HOUSE"].as<bool>();
     filters.ukf = filterOpts["UKF"].as<bool>();
     filters.cut4 = filterOpts["CUT4"].as<bool>();
@@ -726,6 +776,7 @@ int main(int argc, char *argv[])
 
         // copy measurement truth to measurement corrupted
         MatrixXd measCorrupted(dimMeas, nTotalSteps);
+        vector<int> indNoMeas;
         // for each time step
         for (int k = 0; k < nTotalSteps; k++)
         {
@@ -760,28 +811,47 @@ int main(int argc, char *argv[])
 
                 // indMeas++;
             }
+            // else
+            // {
+            //     indNoMeas.push_back(k);
+            // }
         }
+        // tSec = deleteElements(tSec, indNoMeas);
+        // measCorrupted = deleteColumns(measCorrupted, indNoMeas);
         // // save corrupted measurment data
         // cout << "running to here" << endl;
         // string measFile = snrInfo.outDir + "/meas_";
         // measFile += to_string(j);
         // measFile += ".csv";
-        // EigenCSV::write(tableMeas.topRows(indMeas), headerMeas, measFile, true);
+        // EigenCSV::write(measCorrupted, headerMeas, measFile, true);
 
         string outputFile;
         if (filters.house)
         {
-            cout << "\tHOUSE" << '\n';
-            timer.tick();
-            srhouse.run(tSec, measCorrupted);
-            // house.run(tSec, measCorrupted);
-            runTimesMC(j - 1, 0) = timer.tock();
+            if (filters.squareRoot)
+            {
+                cout << "\tSRHOUSE" << '\n';
+                timer.tick();
+                srhouse.run(tSec, measCorrupted);
+                runTimesMC(j - 1, 0) = timer.tock();
 
-            outputFile = snrInfo.outDir + "/house_";
-            outputFile += to_string(j);
-            outputFile += ".csv";
-            srhouse.save(outputFile, "eci");
-            // house.save(outputFile, "eci");
+                outputFile = snrInfo.outDir + "/srhouse_";
+                outputFile += to_string(j);
+                outputFile += ".csv";
+                srhouse.save(outputFile, "eci");
+            }
+            else
+            {
+                cout << "\tHOUSE" << '\n';
+                timer.tick();
+                house.run(tSec, measCorrupted);
+                runTimesMC(j - 1, 0) = timer.tock();
+
+                outputFile = snrInfo.outDir + "/house_";
+                outputFile += to_string(j);
+                outputFile += ".csv";
+                house.save(outputFile, "eci");
+            }
         }
 
         // UKF Filter
@@ -830,10 +900,19 @@ int main(int argc, char *argv[])
     }
     if (filters.house)
     {
-        // Save Filter run times
-        vector<string> filterStrings({"house"});
-        string timeFile = snrInfo.outDir + "/run_times_house.csv";
-        EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+        if (filters.squareRoot)
+        {
+            // Save Filter run times
+            vector<string> filterStrings({"srhouse"});
+            string timeFile = snrInfo.outDir + "/run_times_srhouse.csv";
+            EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+        }
+        else
+        { // Save Filter run times
+            vector<string> filterStrings({"house"});
+            string timeFile = snrInfo.outDir + "/run_times_house.csv";
+            EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+        }
     }
     if (filters.ukf)
     {

@@ -3,7 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-folder_path = "out/out_sparse/"  # replace with the path to your folder
+# folder_path = "out/out_sparse/"  # replace with the path to your folder
+folder_path = "out/out_dense/"  # replace with the path to your folder
 # Get a sorted list of file names in the folder that start with "ukf_"
 # trial_file_names = sorted(
 #     [

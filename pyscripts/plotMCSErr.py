@@ -6,7 +6,8 @@ import seaborn as sns
 
 # filters = ["ukf"]
 # filters = ["cut6"]
-filters = ["ukf", "cut4", "cut6", "house"]
+# filters = ["ukf", "cut4", "cut6", "house"]
+filters = ["ukf", "cut4", "cut6", "house", "srhouse"]
 # filters = ["house", "ukf"]
 
 folder_path = "out/out_dense/"

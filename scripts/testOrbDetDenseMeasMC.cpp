@@ -256,6 +256,7 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
 
     // read filter options (required)
     YAML::Node filterOpts = config["filter_options"];
+    filters.squareRoot = filterOpts["square_root"].as<bool>();
     filters.house = filterOpts["HOUSE"].as<bool>();
     filters.ukf = filterOpts["UKF"].as<bool>();
     filters.cut4 = filterOpts["CUT4"].as<bool>();
@@ -606,6 +607,7 @@ int main(int argc, char *argv[])
     Dist distn(measNoiseCov);
     // Initialize HOUSE
     HOUSE house(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
+    SRHOUSE srhouse(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
 
     // Normal noise generator
     mt19937_64 gen;
@@ -635,6 +637,7 @@ int main(int argc, char *argv[])
         }
 
         house.reset(0, distXi);
+        srhouse.reset(0, distXi);
         ukf.reset(0, initialState_, initialCov);
         cut4.reset(0, initialState_, initialCov);
         cut6.reset(0, initialState_, initialCov);
@@ -666,15 +669,30 @@ int main(int argc, char *argv[])
         string outputFile;
         if (filters.house)
         {
-            cout << "\tHOUSE" << '\n';
-            timer.tick();
-            house.run(tSec, measCorrupted);
-            runTimesMC(j - 1, 0) = timer.tock();
+            if (filters.squareRoot)
+            {
+                cout << "\tSRHOUSE" << '\n';
+                timer.tick();
+                srhouse.run(tSec, measCorrupted);
+                runTimesMC(j - 1, 0) = timer.tock();
 
-            outputFile = snrInfo.outDir + "/house_";
-            outputFile += to_string(j);
-            outputFile += ".csv";
-            house.save(outputFile, "eci");
+                outputFile = snrInfo.outDir + "/srhouse_";
+                outputFile += to_string(j);
+                outputFile += ".csv";
+                srhouse.save(outputFile, "eci");
+            }
+            else
+            {
+                cout << "\tHOUSE" << '\n';
+                timer.tick();
+                house.run(tSec, measCorrupted);
+                runTimesMC(j - 1, 0) = timer.tock();
+
+                outputFile = snrInfo.outDir + "/house_";
+                outputFile += to_string(j);
+                outputFile += ".csv";
+                house.save(outputFile, "eci");
+            }
         }
 
         // UKF Filter

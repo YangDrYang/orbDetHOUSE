@@ -513,8 +513,11 @@ def process_err_each_filter(filter_type, folder_path):
 
     plt.tight_layout()
 
+    start_index = folder_path.index("_") + 1
+    end_index = folder_path.rindex("/")
+    keyword = folder_path[start_index:end_index]
     # plt.show()
-    fig.savefig("plots/" + filter_type + "_MCS_err.pdf")
+    fig.savefig("plots/" + filter_type + "_" + keyword + "_MCS_err.pdf")
 
 
 def find_closest_row(df, label, identifier):

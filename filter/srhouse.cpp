@@ -90,8 +90,10 @@ void SRHOUSE::predict(double tp)
         Dist distxi = distx.back();
         while (tp > ti + dtMax)
         {
-            // Sigma sig(distxi, distw);
-            Sigma sig(distxi, distw, 0);
+            Sigma sig(distxi, distw);
+            if (sig.wgt(0) < -0.1)
+                sig = Sigma(distxi, distw, 0);
+            // Sigma sig(distxi, distw, 0);
 
             MatrixXd Xp(nx, sig.n_pts);
 
@@ -118,8 +120,10 @@ void SRHOUSE::predict(double tp)
             ti += dtMax;
         }
 
-        // Sigma sig(distxi, distw);
-        Sigma sig(distxi, distw, 0);
+        Sigma sig(distxi, distw);
+        if (sig.wgt(0) < -0.1)
+            sig = Sigma(distxi, distw, 0);
+        // Sigma sig(distxi, distw, 0);
 
         MatrixXd Xp(nx, sig.n_pts);
 
@@ -142,12 +146,12 @@ void SRHOUSE::predict(double tp)
         distXp.skew = Xstd.array().pow(3).matrix() * sig.wgt;                                   // skewness of the standardised state, Eq. A8/B11
         distXp.kurt = Xstd.array().pow(4).matrix() * sig.wgt;                                   // kurtosis of the standardised state, Eq. A9/B12
 
-        cout << "mean in SRHOUSE prediction:\t" << endl
-             << distXp.mean << endl;
-        cout << "covariance in SRHOUSE prediction:\t" << endl
-             << distXp.cov << endl;
-        cout << "covariance lower triangle in SRHOUSE prediction:\t" << endl
-             << distXp.covL << endl;
+        // cout << "mean in SRHOUSE prediction:\t" << endl
+        //      << distXp.mean << endl;
+        // cout << "covariance in SRHOUSE prediction:\t" << endl
+        //      << distXp.cov << endl;
+        // cout << "covariance lower triangle in SRHOUSE prediction:\t" << endl
+        //      << distXp.covL << endl;
 
         distx.push_back(distXp);
         t.push_back(tp);
@@ -159,8 +163,10 @@ void SRHOUSE::update(const VectorXd &z)
 {
     double tz = t.back();
 
-    // Sigma sig(distx.back(), distv);
-    Sigma sig(distx.back(), distv, 0);
+    Sigma sig(distx.back(), distv);
+    // if (sig.wgt(0) < -0.1)
+    //     sig = Sigma(distx.back(), distv, 0);
+    // Sigma sig(distx.back(), distv, 0);
 
     MatrixXd Z(nz, sig.n_pts), Pzz(nz, nz), Pzx(nz, nx), K(nx, nz),
         Xu(nx, sig.n_pts);
@@ -191,8 +197,8 @@ void SRHOUSE::update(const VectorXd &z)
     // Kalman Gain
     MatrixXd matK = matSzz.transpose().householderQr().solve(matSzz.householderQr().solve(Pzx));
     K = matK.transpose();
-    cout << "Kalman gain: \n"
-         << K << endl;
+    // cout << "Kalman gain: \n"
+    //      << K << endl;
 
     Dist distXu;
     distXu.n = nx;
@@ -205,16 +211,16 @@ void SRHOUSE::update(const VectorXd &z)
     distXu.skew = Xstd.array().pow(3).matrix() * sig.wgt;                                         // skewness of the standardised state, Eq. A8/B11
     distXu.kurt = Xstd.array().pow(4).matrix() * sig.wgt;                                         // kurtosis of the standardised state, Eq. A9/B12
 
-    cout << "updated mean: \n"
-         << distXu.mean << endl;
-    cout << "updated covariance: \n"
-         << distXu.cov << endl;
-    cout << "updated covariance lower triangle: \n"
-         << distXu.covL << endl;
-    cout << "updated skewness: \n"
-         << distXu.skew << endl;
-    cout << "updated kurtosis: \n"
-         << distXu.kurt << endl;
+    // cout << "updated mean: \n"
+    //      << distXu.mean << endl;
+    // cout << "updated covariance: \n"
+    //      << distXu.cov << endl;
+    // cout << "updated covariance lower triangle: \n"
+    //      << distXu.covL << endl;
+    // cout << "updated skewness: \n"
+    //      << distXu.skew << endl;
+    // cout << "updated kurtosis: \n"
+    //      << distXu.kurt << endl;
     // // doesn't use Eq. 8 for covariance. instead, Pu = Pp - K*Pzz*K^T is used.
     // Xu = sig.state - K * (Z.colwise() - zm);
 

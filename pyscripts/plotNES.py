@@ -8,12 +8,15 @@ import scipy.stats as stats
 
 # reference: https://kalman-filter.com/normalized-estimation-error-squared/
 
-filters = ["ukf", "cut4", "cut6", "house"]
+filters = ["ukf", "cut4", "cut6", "house", "srhouse"]
 # filters = ["house", "ukf"]
 # filters = ["cut4"]
 
 folder_path = "out/out_dense/"
 # folder_path = "out/out_sparse/"
+start_index = folder_path.index("_") + 1
+end_index = folder_path.rindex("/")
+keyword = folder_path[start_index:end_index]
 
 # flag to determine to process the NES or use existing files for plots
 flag_proc = 1
@@ -40,7 +43,7 @@ for filter_type in filters:
     # Plot the data on the axes
     ax.scatter(df["tSec"], df["NES"], s=3, label=filter_type)
 
-    if filter_type == "house":
+    if filter_type == filters[-1]:
         # Add a horizontal line for the upper bound
         ax.axhline(y=chi2_upper, color="r", linestyle="--", label="upper bound")
         # Add a horizontal line for the lower bound
@@ -60,4 +63,4 @@ ax.legend()
 
 
 plt.tight_layout()
-fig.savefig("plots/all_nes.pdf")
+fig.savefig("plots/all_nes_." + keyword + ".pdf")

@@ -5,17 +5,19 @@ import processing
 import seaborn as sns
 import numpy as np
 
-# filters = ["ukf"]
-# filters = ["cut6"]
-# filters = ["house", "ukf", "cut4", "cut6"]
-filters = ["ukf", "cut4", "cut6", "house"]
+filters = ["ukf", "cut4", "cut6", "house", "srhouse"]
+# filters = ["ukf", "cut4", "cut6", "house"]
 # filters = ["house", "ukf", "cut4"]
 # filters = ["house", "cut4", "cut6"]
 # filters = ["house", "ukf"]
+# filters = ["srhouse"]
 
-folder_path = "out/out_dense/"
-# folder_path = "out/out_sparse/"
+# folder_path = "out/out_dense/"
+folder_path = "out/out_sparse/"
 # folder_path = "out/"
+start_index = folder_path.index("_") + 1
+end_index = folder_path.rindex("/")
+keyword = folder_path[start_index:end_index]
 
 # Create a new figure and axes for logarithmic plot
 fig, ax = plt.subplots(ncols=2, figsize=(10, 5))
@@ -47,7 +49,7 @@ ax[1].set_title("3D velocity rmse")
 ax[1].legend()
 
 plt.tight_layout()
-fig.savefig("plots/all_rmse.pdf")
+fig.savefig("plots/all_rmse_" + keyword + ".pdf")
 
 # Create a new figure and axes for violin plot
 fig, ax = plt.subplots(ncols=2, figsize=(10, 5))
@@ -113,4 +115,4 @@ for i in range(len(medians)):
     )
 
 plt.tight_layout()
-fig.savefig("plots/all_rmse_violin.pdf")
+fig.savefig("plots/all_rmse_violin_" + keyword + ".pdf")
