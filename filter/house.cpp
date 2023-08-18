@@ -77,8 +77,8 @@ Sigma::Sigma(const Dist &distX, const Dist &distW, double delta)
             kw(i) += mmin - m;
     }
 
-    cx = (4 * kx.array() - 3 * sx.array().square()).sqrt();
-    cw = (4 * kw.array() - 3 * sw.array().square()).sqrt();
+    cx = (4 * kx.array() - 3 * sx.array().square()).sqrt(); // cx = ax + bx, Eqs. (51-52)
+    cw = (4 * kw.array() - 3 * sw.array().square()).sqrt(); // cw = aw + bw, Eqs. (51-52)
 
     ax = (sx + cx) / 2;
     aw = (sw + cw) / 2;
@@ -94,6 +94,7 @@ Sigma::Sigma(const Dist &distX, const Dist &distW, double delta)
     wgt.segment(1 + 2 * nx, nw) = aw.cwiseProduct(cw).cwiseInverse();
     wgt.segment(1 + 2 * nx + nw, nw) = bw.cwiseProduct(cw).cwiseInverse();
 
+    // Eq. (56)
     S = (kx.array() - sx.array().square()).inverse().sum() + (kw.array() - sw.array().square()).inverse().sum();
 
     wgt(0) = 1 - S;

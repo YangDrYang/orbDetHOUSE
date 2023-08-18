@@ -33,6 +33,10 @@ multiStatePearsonator::multiStatePearsonator(const VectorXd &means,
 {
     for (size_t i = 0; i < means.size(); ++i)
     {
+        // cout << "means " << means(i) << endl;
+        // cout << "stds " << stds(i) << endl;
+        // cout << "skews " << skews(i) << endl;
+        // cout << "kurts " << kurts(i) << endl;
         typeIV state(means(i), stds(i), skews(i), kurts(i));
         states.push_back(state);
     }

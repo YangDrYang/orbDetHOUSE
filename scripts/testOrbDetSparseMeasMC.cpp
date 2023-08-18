@@ -363,7 +363,6 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
         }
     }
     initialState.initialCovarianceMat = tempMat;
-
     tempMat = MatrixXd::Zero(dimState, dimState);
     const YAML::Node &covProNoise = orbitParams["process_noise_covariance"];
     for (int i = 0; i < dimState; ++i)
@@ -723,7 +722,7 @@ int main(int argc, char *argv[])
     Dist distn(measNoiseCov);
     // Initialize HOUSE
     HOUSE house(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
-    SRHOUSE srhouse(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
+    SRHOUSE srhouse(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, -0.1);
 
     // Normal noise generator
     mt19937_64 gen;

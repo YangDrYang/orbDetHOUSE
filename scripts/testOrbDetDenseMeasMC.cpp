@@ -607,7 +607,7 @@ int main(int argc, char *argv[])
     Dist distn(measNoiseCov);
     // Initialize HOUSE
     HOUSE house(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
-    SRHOUSE srhouse(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
+    SRHOUSE srhouse(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, -0.5);
 
     // Normal noise generator
     mt19937_64 gen;
@@ -741,10 +741,20 @@ int main(int argc, char *argv[])
     }
     if (filters.house)
     {
-        // Save Filter run times
-        vector<string> filterStrings({"house"});
-        string timeFile = snrInfo.outDir + "/run_times_house.csv";
-        EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+        if (filters.squareRoot)
+        {
+            // Save Filter run times
+            vector<string> filterStrings({"srhouse"});
+            string timeFile = snrInfo.outDir + "/run_times_srhouse.csv";
+            EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+        }
+        else
+        {
+            // Save Filter run times
+            vector<string> filterStrings({"house"});
+            string timeFile = snrInfo.outDir + "/run_times_house.csv";
+            EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+        }
     }
     if (filters.ukf)
     {

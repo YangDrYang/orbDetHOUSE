@@ -2,6 +2,7 @@
 #define MULTIPEARSON_HPP
 
 #include <Eigen/Dense>
+#include <iostream>
 #include <random>
 #include <cmath>
 #include <vector>
@@ -50,7 +51,12 @@ public:
     {
         VectorXd noise = VectorXd::Zero(stateIdx);
         for (size_t i = 0; i < stateIdx; ++i)
+        {
+            // cout << "states[i]:\t" << states[i].a << " " << states[i].r << " " << states[i].lambda << " " << states[i].gamma << endl;
+            // cout << "states[i](urng):\t" << states[i](urng) << endl;
             noise(i) = states[i](urng);
+        }
+
         return noise;
     }
 };

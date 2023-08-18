@@ -251,11 +251,14 @@ MatrixXd generatePearsonNoiseMatrix(int seed, int nEpoch,
     MatrixXd noise(means.size(), nEpoch);
     for (int i = 0; i < nEpoch; i++)
     {
+        // cout << "means " << means << endl;
+        // cout << "stds " << stds << endl;
+        // cout << "skews " << skews << endl;
+        // cout << "kurts " << kurts << endl;
         // Create a Pearson type IV noise generator
         multiStatePearsonator pearsonGenerator(means, stds, skews, kurts);
         noise.col(i) = pearsonGenerator(gen, means.size());
     }
-
     return noise;
 }
 
@@ -374,6 +377,8 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
         }
     }
     initialState.initialCovarianceMat = tempMat;
+    initialState.initialSkewness = orbitParams["initial_skewness"].as<double>();
+    initialState.initialKurtosis = orbitParams["initial_kurtosis"].as<double>();
 
     tempMat = MatrixXd::Zero(dimState, dimState);
     const YAML::Node &covProNoise = orbitParams["process_noise_covariance"];
@@ -396,11 +401,19 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     measMdl.errorStd.elevationErr = measParams["azimuth_error"].as<double>();
     measMdl.errorStd.rangeErr = measParams["range_error"].as<double>();
     measMdl.errorStd.rangeRateErr = measParams["range_rate_error"].as<double>();
+    tempVec = measParams["meas_skewness"].as<vector<double>>();
+    measMdl.errorStd.skewnessVec = stdVec2EigenVec(tempVec);
+    tempVec = measParams["meas_kurtosis"].as<vector<double>>();
+    measMdl.errorStd.kurtosisVec = stdVec2EigenVec(tempVec);
 
     // read propagator settings (optional)
     YAML::Node propTruthSettings = config["propagator_truth_settings"];
     if (parameter = propTruthSettings["earth_gravaity"])
         optTruth.earth_gravity = parameter.as<bool>();
+    if (parameter = propTruthSettings["earth_gravity_model_order"])
+        optTruth.egmAccOrd = parameter.as<int>();
+    if (parameter = propTruthSettings["earth_gravity_model_degree"])
+        optTruth.egmAccDeg = parameter.as<int>();
     if (parameter = propTruthSettings["solid_earth_tide"])
         optTruth.solid_earth_tide = parameter.as<bool>();
     if (parameter = propTruthSettings["ocean_tide_loading"])
@@ -442,6 +455,10 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     YAML::Node propFilterSettings = config["propagator_filter_settings"];
     if (parameter = propFilterSettings["earth_gravaity"])
         optFilter.earth_gravity = parameter.as<bool>();
+    if (parameter = propFilterSettings["earth_gravity_model_order"])
+        optFilter.egmAccOrd = parameter.as<int>();
+    if (parameter = propFilterSettings["earth_gravity_model_degree"])
+        optFilter.egmAccDeg = parameter.as<int>();
     if (parameter = propFilterSettings["solid_earth_tide"])
         optFilter.solid_earth_tide = parameter.as<bool>();
     if (parameter = propFilterSettings["ocean_tide_loading"])
@@ -483,7 +500,7 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
 VectorXd stdVec2EigenVec(const vector<double> &stdVec)
 {
     VectorXd eigenVec(stdVec.size());
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < stdVec.size(); i++)
     {
         eigenVec(i) = stdVec[i];
     }
@@ -611,6 +628,11 @@ int main(int argc, char *argv[])
         return measurementModel(t, x, groundStation) + n;
     };
 
+    int dimMeas = measMdl.dimMeas;
+    VectorXd measSkewnessVec = measMdl.errorStd.skewnessVec;
+    VectorXd measKurtosisVec = measMdl.errorStd.kurtosisVec;
+    // VectorXd measSkewnessVec = VectorXd::Zero(dimMeas);
+    // VectorXd measKurtosisVec = VectorXd::Zero(dimMeas);
     Matrix4d measNoiseCov;
     measNoiseCov << pow(measMdl.errorStd.azimuthErr * ARC_SEC, 2), 0, 0, 0,
         0, pow(measMdl.errorStd.azimuthErr * ARC_SEC, 2), 0, 0,
@@ -635,7 +657,6 @@ int main(int argc, char *argv[])
     MatrixXd tableTrajTruth(nTotalSteps, dimState + 1);
     tableTrajTruth.col(0) = tSec;
     tableTrajTruth.row(0).tail(dimState) = initialStateVec;
-    int dimMeas = measMdl.dimMeas;
     MatrixXd measTruth(dimMeas, nTotalSteps);
     MatrixXd tableMeasTruth(nTotalSteps, dimMeas + 1);
     tableMeasTruth.col(0) = tSec;
@@ -720,22 +741,26 @@ int main(int argc, char *argv[])
     // HOUSE distributions for state
     Dist distXi(initialCov);
     distXi.mean = initialState.initialStateVec;
+    distXi.skew.setConstant(dimState, initialState.initialSkewness);
+    distXi.kurt.setConstant(dimState, initialState.initialKurtosis);
     // HOUSE distributions for state noise
     Dist distw(procNoiseCov);
     // HOUSE distributions for measurement noise
     Dist distn(measNoiseCov);
+    bool isPearson = true;
+    if (isPearson)
+    {
+        distn.skew = measSkewnessVec;
+        distn.kurt = measKurtosisVec;
+    }
+
     // Initialize HOUSE
     HOUSE house(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, 0);
+    SRHOUSE srhouse(f, hh, dimMeas, 0, epoch.maxTimeStep, distXi, distw, distn, -0.1);
 
     // Normal noise generator
     mt19937_64 gen;
     normal_distribution<double> dist;
-
-    // // Function to generate noise matrix for a window of epochs based on the noise type
-    // MatrixXd generateNoiseMatrix(int seed, int nEpoch,
-    //                              const VectorXd &means, const MatrixXd &covariance,
-    //                              const VectorXd &skews, const VectorXd &kurts,
-    //                              bool usePearsonNoise)
 
     // perform trials
     for (int j = 1; j <= numTrials; j++)
@@ -743,8 +768,9 @@ int main(int argc, char *argv[])
         cout << "Trial " << j << endl;
 
         int seed = j;
-        MatrixXd matInitNoise = generateNoiseMatrix(seed, 1, VectorXd::Zero(dimState), initialCov, VectorXd::Zero(dimState), VectorXd::Zero(dimState), 0);
-        MatrixXd matMeasNoise = generateNoiseMatrix(seed, nTotalSteps, VectorXd::Zero(dimState), measNoiseCov, VectorXd::Zero(dimState), VectorXd::Zero(dimState), 0);
+
+        MatrixXd matInitNoise = generateNoiseMatrix(seed, 1, VectorXd::Zero(dimState), initialCov, distXi.skew, distXi.kurt, isPearson);
+        MatrixXd matMeasNoise = generateNoiseMatrix(seed, nTotalSteps, VectorXd::Zero(dimMeas), measNoiseCov, measSkewnessVec, measKurtosisVec, isPearson);
         // string noiseFile = snrInfo.outDir + "/noise.csv";
         // vector<string> proNoiseString;
         // proNoiseString.push_back("process noise");
@@ -755,8 +781,8 @@ int main(int argc, char *argv[])
         // EigenCSV::write(matMeasNoise, measNoiseString, noiseFile, true);
 
         VectorXd initialState_;
-        // cout << filters.initNoise << endl
-        //      << matInitNoise.col(0) << endl;
+        cout << filters.initNoise << endl
+             << matInitNoise.col(0) << endl;
         if (filters.initNoise)
         {
             // corrupt initial state
@@ -767,8 +793,8 @@ int main(int argc, char *argv[])
         {
             initialState_ = initialStateVec;
         }
-
         house.reset(0, distXi);
+        srhouse.reset(0, distXi);
         ukf.reset(0, initialState_, initialCov);
         cut4.reset(0, initialState_, initialCov);
         cut6.reset(0, initialState_, initialCov);
@@ -828,15 +854,30 @@ int main(int argc, char *argv[])
         string outputFile;
         if (filters.house)
         {
-            cout << "\tHOUSE" << '\n';
-            timer.tick();
-            house.run(tSec, measCorrupted);
-            runTimesMC(j - 1, 0) = timer.tock();
+            if (filters.squareRoot)
+            {
+                cout << "\tSRHOUSE" << '\n';
+                timer.tick();
+                srhouse.run(tSec, measCorrupted);
+                runTimesMC(j - 1, 0) = timer.tock();
 
-            outputFile = snrInfo.outDir + "/house_";
-            outputFile += to_string(j);
-            outputFile += ".csv";
-            house.save(outputFile, "eci");
+                outputFile = snrInfo.outDir + "/srhouse_";
+                outputFile += to_string(j);
+                outputFile += ".csv";
+                srhouse.save(outputFile, "eci");
+            }
+            else
+            {
+                cout << "\tHOUSE" << '\n';
+                timer.tick();
+                house.run(tSec, measCorrupted);
+                runTimesMC(j - 1, 0) = timer.tock();
+
+                outputFile = snrInfo.outDir + "/house_";
+                outputFile += to_string(j);
+                outputFile += ".csv";
+                house.save(outputFile, "eci");
+            }
         }
 
         // UKF Filter

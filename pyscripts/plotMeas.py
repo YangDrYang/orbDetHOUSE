@@ -1,10 +1,16 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 
+if len(sys.argv) < 2:
+    folder_path = "out/out_dense/"
+    # folder_path = "out/out_sparse/"
+    # folder_path = "out/out_sparse_pearson/"
+    # folder_path = "out/"
+else:
+    folder_path = sys.argv[1]
 
-# folder_path = "out/out_sparse/"  # replace with the path to your folder
-folder_path = "out/out_dense/"  # replace with the path to your folder
 # Get a sorted list of file names in the folder that start with "ukf_"
 # trial_file_names = sorted(
 #     [

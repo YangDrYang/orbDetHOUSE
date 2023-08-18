@@ -1,8 +1,8 @@
 # required
 filter_options:
-  square_root: true
-  HOUSE: true
-  UKF: false
+  square_root: false
+  HOUSE: false
+  UKF: true
   CUT4: false
   CUT6: false
   init_noise: true
@@ -14,12 +14,12 @@ simulation_parameters:
   time_step: 10
   # time duration of each pass in seconds
   time_pass: 120
-  max_time_step: 1800  
+  max_time_step: 60  
   MJD_start: 55200.0 # 2010-JAN-04
-  MJD_end: 55200.2 #5.757212410879634e+4
-  # this directory must exist
-  # output_directory: out
-  output_directory: out/out_dense
+  MJD_end: 55200.2 
+  # # this directory must exist
+  # # output_directory: out
+  output_directory: out/out_sparse
 
 # requried
 initial_orbtial_parameters:
@@ -41,18 +41,18 @@ initial_orbtial_parameters:
     # - [-9.237, 0, 0, 0, 6.798e-3, 3.145e-3]
     # - [-5.333, 0, 0, 0, 3.145e-3, 3.166e-3]
   process_noise_covariance:
-    - [1, 0, 0, 0, 0, 0]
-    - [0, 1, 0, 0, 0, 0]
-    - [0, 0, 1, 0, 0, 0]
+    - [4, 0, 0, 0, 0, 0]
+    - [0, 4, 0, 0, 0, 0]
+    - [0, 0, 4, 0, 0, 0]
     - [0, 0, 0, 0.0001, 0, 0]
     - [0, 0, 0, 0, 0.0001, 0]
-    - [0, 0, 0, 0, 0, 0.0001]     
+    - [0, 0, 0, 0, 0, 0.0001]  
     # - [1.0e-9, 0, 0, 0, 0, 0]
     # - [0, 1.0e-9, 0, 0, 0, 0]
     # - [0, 0, 1.0e-9, 0, 0, 0]
     # - [0, 0, 0, 1.0e-9, 0, 0]
     # - [0, 0, 0, 0, 1.0e-9, 0]
-    # - [0, 0, 0, 0, 0, 1.0e-9]           
+    # - [0, 0, 0, 0, 0, 1.0e-9]    
 
 # requried
 measurement_parameters:
@@ -69,6 +69,8 @@ measurement_parameters:
 
 # optional, if not defined they will be set to default values
 propagator_truth_settings:
+  earth_gravity_model_order: 100
+  earth_gravity_model_degree: 100
   third_body_attraction: true
   third_body_sun: true
   third_body_moon: true
@@ -83,6 +85,8 @@ propagator_truth_settings:
 
 # optional, if not defined they will be set to default values
 propagator_filter_settings:
+  earth_gravity_model_order: 20
+  earth_gravity_model_degree: 20
   third_body_attraction: false
   third_body_sun: false
   third_body_moon: false

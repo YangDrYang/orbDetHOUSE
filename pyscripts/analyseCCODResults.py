@@ -6,7 +6,7 @@ import matplotlib.dates as mdates
 import datetime as dt
 import scipy.stats as stats
 
-filters = ["house", "ukf", "cut4", "cut6"]
+filters = ["ukf", "cut4", "cut6", "house"]
 # filters = ["ukf"]
 # filters = ["house"]
 # Directory path

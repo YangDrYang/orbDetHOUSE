@@ -91,9 +91,9 @@ void SRHOUSE::predict(double tp)
         while (tp > ti + dtMax)
         {
             Sigma sig(distxi, distw);
-            if (sig.wgt(0) < -0.1)
+            if (sig.wgt(0) < delta)
                 sig = Sigma(distxi, distw, 0);
-            // Sigma sig(distxi, distw, 0);
+            // Sigma sig(distxi, distw, delta);
 
             MatrixXd Xp(nx, sig.n_pts);
 
@@ -121,9 +121,9 @@ void SRHOUSE::predict(double tp)
         }
 
         Sigma sig(distxi, distw);
-        if (sig.wgt(0) < -0.1)
+        if (sig.wgt(0) < delta)
             sig = Sigma(distxi, distw, 0);
-        // Sigma sig(distxi, distw, 0);
+        // Sigma sig(distxi, distw, delta);
 
         MatrixXd Xp(nx, sig.n_pts);
 
@@ -164,9 +164,9 @@ void SRHOUSE::update(const VectorXd &z)
     double tz = t.back();
 
     Sigma sig(distx.back(), distv);
-    // if (sig.wgt(0) < -0.1)
-    //     sig = Sigma(distx.back(), distv, 0);
-    // Sigma sig(distx.back(), distv, 0);
+    if (sig.wgt(0) < delta)
+        sig = Sigma(distx.back(), distv, 0);
+    // Sigma sig(distx.back(), distv, delta);
 
     MatrixXd Z(nz, sig.n_pts), Pzz(nz, nz), Pzx(nz, nx), K(nx, nz),
         Xu(nx, sig.n_pts);
@@ -175,8 +175,8 @@ void SRHOUSE::update(const VectorXd &z)
     for (int i = 0; i < sig.n_pts; i++)
         Z.col(i) = h(tz, sig.state.col(i), sig.noise.col(i)); // Eq. B3
 
-    VectorXd res = z - Z.col(0);
-    cout << "residuals: " << res(0) << "\t" << res(1) << endl;
+    // VectorXd res = z - Z.col(0);
+    // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
     cout << "weight:\t" << sig.wgt.transpose() << endl;
     xm = distx.back().mean;

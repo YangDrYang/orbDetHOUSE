@@ -664,7 +664,7 @@ int main(int argc, char *argv[])
             cout << "\tSRHOUSE" << '\n';
 
             timer.tick();
-            SRHOUSE srhouse(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0.0);
+            SRHOUSE srhouse(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, -1.0);
             srhouse.run(tSec, angMeas);
             runTimesMC(0) = timer.tock();
 
@@ -672,8 +672,8 @@ int main(int argc, char *argv[])
             srhouse.save(outputFile, initialStateType);
 
             // Save Filter run times
-            vector<string> filterStrings({"house"});
-            string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + "_" + initialStateType + ".csv";
+            vector<string> filterStrings({"srhouse"});
+            string timeFile = snrInfo.outDir + "/run_times_srhouse_id_" + noradID + "_" + initialStateType + ".csv";
             EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
         }
         else

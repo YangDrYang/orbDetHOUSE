@@ -4,6 +4,7 @@ import matplotlib.ticker as ticker
 import processing
 import seaborn as sns
 import numpy as np
+import sys
 
 filters = ["ukf", "cut4", "cut6", "house", "srhouse"]
 # filters = ["ukf", "cut4", "cut6", "house"]
@@ -12,9 +13,13 @@ filters = ["ukf", "cut4", "cut6", "house", "srhouse"]
 # filters = ["house", "ukf"]
 # filters = ["srhouse"]
 
-# folder_path = "out/out_dense/"
-folder_path = "out/out_sparse/"
-# folder_path = "out/"
+if len(sys.argv) < 2:
+    folder_path = "out/out_dense/"
+    # folder_path = "out/out_sparse/"
+    # folder_path = "out/out_sparse_pearson/"
+    # folder_path = "out/"
+else:
+    folder_path = sys.argv[1]
 start_index = folder_path.index("_") + 1
 end_index = folder_path.rindex("/")
 keyword = folder_path[start_index:end_index]
