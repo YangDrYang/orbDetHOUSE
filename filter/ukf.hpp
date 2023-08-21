@@ -104,6 +104,7 @@ public:
 
     // Save results
     void save(const string &filename, string stateType);
+    void save(const string &filename);
 
     // Directory for CUT files
     static string cut_dir;

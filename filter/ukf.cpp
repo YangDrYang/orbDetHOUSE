@@ -19,7 +19,7 @@ void UKF::predict(double tp)
     xesti = xest.back();
     Pxxi = Pxx.back();
     // cout << "initial xest: \n"
-    //      << xesti << endl;
+    //      << xesti.transpose() << endl;
     // cout << "initial Pxx: \n"
     //      << Pxxi << endl;
 
@@ -96,7 +96,7 @@ void UKF::update(const VectorXd &z)
 
     // cout << "dimensions of meas: \t" << nz << endl;
     // cout << "predicted xest: \n"
-    //      << xestp << endl;
+    //      << xestp.transpose() << endl;
     // cout << "predicted Pxx: \n"
     //      << Pxxp << endl;
 
@@ -148,11 +148,12 @@ void UKF::run(const VectorXd &tz, const MatrixXd &Z)
     {
         cout << "the " << i << "th epoch" << endl;
         predict(tz(i));
-        // only update if given a measurment
-        if (abs(Z(1, i)) <= M_PI * 2)
-        {
-            update(Z.col(i));
-        }
+        update(Z.col(i));
+        // // only update if given a measurment
+        // if (abs(Z(1, i)) <= M_PI * 2)
+        // {
+        //     update(Z.col(i));
+        // }
     }
 }
 
@@ -310,5 +311,35 @@ void UKF::save(const string &filename, string stateType)
     EigenCSV::write(table, header, filename);
 }
 
+// Save results
+void UKF::save(const string &filename)
+{
+
+    int steps = xest.size();
+
+    MatrixXd table(steps, 2 * nx + 1);
+
+    for (int k = 0; k < steps; k++)
+    {
+
+        table(k, 0) = t[k];
+
+        table.row(k).segment(1, nx) = xest[k];
+
+        table.row(k).tail(nx) = Pxx[k].diagonal().cwiseSqrt();
+    }
+
+    vector<string> header(2 * nx + 1);
+    header[0] = "TIME";
+    for (int i = 1; i <= nx; i++)
+    {
+        header[i] = "EST X";
+        header[i + nx] = "STD X";
+        header[i] += to_string(i);
+        header[i + nx] += to_string(i);
+    }
+
+    EigenCSV::write(table, header, filename);
+}
 // Default location for CUT files
 string UKF::cut_dir = "CUT/";

@@ -287,3 +287,36 @@ void HOUSE::save(const string &filename, string stateType)
 
     EigenCSV::write(table, header, filename);
 }
+
+// Save results
+void HOUSE::save(const std::string &filename)
+{
+
+    using namespace std;
+
+    int steps = distx.size();
+
+    MatrixXd table(steps, 2 * nx + 1);
+
+    for (int k = 0; k < steps; k++)
+    {
+
+        table(k, 0) = t[k];
+
+        table.row(k).segment(1, nx) = distx[k].mean;
+
+        table.row(k).tail(nx) = distx[k].cov.diagonal().cwiseSqrt();
+    }
+
+    vector<string> header(2 * nx + 1);
+    header[0] = "TIME";
+    for (int i = 1; i <= nx; i++)
+    {
+        header[i] = "EST X";
+        header[i + nx] = "STD X";
+        header[i] += to_string(i);
+        header[i + nx] += to_string(i);
+    }
+
+    EigenCSV::write(table, header, filename);
+}
