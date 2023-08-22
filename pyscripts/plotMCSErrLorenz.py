@@ -8,6 +8,7 @@ import os
 # Define a function to extract the number from the file name
 def get_number(file_name):
     return int(file_name.split("gauss_")[1].split(".")[0])
+    # return int(file_name.split("pearson_")[1].split(".")[0])
 
 
 def process_err_each_filter(filter_type, folder_path):
@@ -26,7 +27,7 @@ def process_err_each_filter(filter_type, folder_path):
 
     # Read the truth CSV file into a pandas dataframe
     truth_df = pd.read_csv(folder_path + "trajectory_truth.csv")
-    truth_df = truth_df.iloc[:, 0:7]
+    truth_df = truth_df.iloc[1:, 0:6]
 
     nan_file_num = 0
     nan_file_names = []
@@ -43,7 +44,7 @@ def process_err_each_filter(filter_type, folder_path):
 
         # Read the trial CSV file into a pandas dataframe
         trial_df = pd.read_csv(file_path)
-        trial_df = trial_df.iloc[:, 0:6]
+        trial_df = trial_df.iloc[1:, 0:6]
 
         # Check which elements are NaN using isna()
         nan_mask = trial_df.isna()
@@ -99,11 +100,12 @@ def process_err_each_filter(filter_type, folder_path):
 
 
 if len(sys.argv) < 2:
-    folder_path = "out/out_lorenz/"
+    folder_path = "out/out_lorenz_gauss/"
+    # folder_path = "out/out_lorenz_pearson/"
 else:
     folder_path = sys.argv[1]
 
-filters = ["ukf", "cut4", "cut6"]
+filters = ["srhouse", "house", "ukf", "cut4", "cut6"]
 # filters = ["cut6"]
 # filters = ["ukf", "cut4", "cut6", "house"]
 # filters = ["ukf", "cut4", "cut6", "house", "srhouse"]

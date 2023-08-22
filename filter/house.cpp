@@ -212,11 +212,12 @@ void HOUSE::run(const VectorXd &tz, const MatrixXd &Z)
     {
         cout << "the " << i << "th epoch" << endl;
         predict(tz(i));
-        // only update if given a measurment
-        if (abs(Z(1, i)) <= M_PI * 2)
-        {
-            update(Z.col(i));
-        }
+        update(Z.col(i));
+        // // only update if given a measurment
+        // if (abs(Z(1, i)) <= M_PI * 2)
+        // {
+        //     update(Z.col(i));
+        // }
     }
 }
 

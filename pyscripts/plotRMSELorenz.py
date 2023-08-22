@@ -9,6 +9,7 @@ import os
 # Define a function to extract the number from the file name
 def get_number(file_name):
     return int(file_name.split("gauss_")[1].split(".")[0])
+    # return int(file_name.split("pearson_")[1].split(".")[0])
 
 
 def process_rmse_each_filter(filter_type, folder_path):
@@ -30,7 +31,7 @@ def process_rmse_each_filter(filter_type, folder_path):
     # Read the truth CSV file into a pandas dataframe
     truth_df = pd.read_csv(folder_path + "trajectory_truth.csv")
     # print(truth_df.head())
-    truth_df = truth_df.iloc[:, 0:7]
+    truth_df = truth_df.iloc[1:, 0:6]
 
     # Create an empty dataframe to store the data
     df = pd.DataFrame()
@@ -45,7 +46,7 @@ def process_rmse_each_filter(filter_type, folder_path):
 
         # Read the trial CSV file into a pandas dataframe
         trial_df = pd.read_csv(file_path)
-        trial_df = trial_df.iloc[:, 0:7]
+        trial_df = trial_df.iloc[1:, 0:6]
         # print(trial_df.head())
 
         # Check which elements are NaN using isna()
@@ -54,7 +55,7 @@ def process_rmse_each_filter(filter_type, folder_path):
         total_num_nan = nan_mask.sum().sum()
         # print(total_num_nan)
 
-        if total_num_nan > 10:
+        if total_num_nan > 1:
             # Count the files that contain NaN
             nan_file_names.append(file_path)
             # print(file_path)
@@ -117,10 +118,11 @@ def process_rmse_each_filter(filter_type, folder_path):
 # filters = ["house", "cut4", "cut6"]
 # filters = ["house", "ukf"]
 # filters = ["srhouse"]
-filters = ["ukf", "cut4", "cut6"]
+filters = ["srhouse", "house", "ukf", "cut4", "cut6"]
 
 if len(sys.argv) < 2:
-    folder_path = "out/out_lorenz/"
+    folder_path = "out/out_lorenz_gauss/"
+    # folder_path = "out/out_lorenz_pearson/"
 else:
     folder_path = sys.argv[1]
 start_index = folder_path.index("_") + 1
@@ -187,3 +189,5 @@ for i in range(len(medians)):
         va="center",
         fontsize=12,
     )
+plt.tight_layout()
+fig.savefig("plots/all_rmse_violin_" + keyword + ".pdf")

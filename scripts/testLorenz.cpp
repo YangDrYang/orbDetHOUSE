@@ -9,7 +9,8 @@
 
 string filter_file(bool gauss, const string &filter, int trial)
 {
-    string filename = "out/out_lorenz/";
+    string filename = "out/out_lorenz";
+    filename += (gauss ? "_gauss/" : "_pearson/");
     filename += filter;
     filename += "_est_";
     filename += (gauss ? "gauss_" : "pearson_");
@@ -98,6 +99,7 @@ VectorXd lorenz96Model(double t, const VectorXd &state, const VectorXd &fd)
 int main(int argc, char *argv[])
 {
     bool gauss = true;
+    // bool gauss = false;
     int numTrials = 100;
 
     const int dimState = 5;
@@ -110,12 +112,12 @@ int main(int argc, char *argv[])
     DynamicModel::stf accMdl = lorenz96Model;
     DynamicModel orbFun(accMdl, dimState, absErr, relErr);
 
-    double time = 0, dt = 0.01;
-    int nTotalSteps = 1000;
+    double time = 0, dt = 0.5;
+    int nTotalSteps = 100;
     cout << "total steps:\t" << nTotalSteps << endl;
     // linear spaced times
     VectorXd tSec;
-    tSec.setLinSpaced(nTotalSteps, 0, 10 - dt);
+    tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
     cout << "tSec\t" << tSec << endl;
     MatrixXd tableTrajTruth(nTotalSteps, dimState + 1);
     tableTrajTruth.col(0) = tSec;
@@ -137,7 +139,8 @@ int main(int argc, char *argv[])
     cout << "The total time consumption is:\t" << timer.tock() << endl;
     // header for the saved file
     vector<string> headerTraj({"tSec", "x1", "x2", "x3", "x4", "x5"});
-    string propFile = "out/out_lorenz/trajectory_truth.csv";
+    string propFile = "out/out_lorenz";
+    propFile += (gauss ? "_gauss/trajectory_truth.csv" : "_pearson/trajectory_truth.csv");
     EigenCSV::write(tableTrajTruth, headerTraj, propFile);
 
     const int dimMeas = 1;
@@ -153,9 +156,9 @@ int main(int argc, char *argv[])
     };
 
     double stdx0, stdw, stdn;
-    stdx0 = 0.01;
-    stdw = 5e-3;
-    stdn = 1e-3;
+    stdx0 = 0.5;
+    stdw = 1e-6;
+    stdn = 0.2;
 
     double skeww, skewn, kurtw, kurtn, skew0, kurt0;
 
@@ -231,8 +234,9 @@ int main(int argc, char *argv[])
     // HOUSE distributions for measurement noise
     Dist distn(Pnn);
     HOUSE house(orbFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, 0);
+    SRHOUSE srhouse(orbFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, -0.5);
 
-    MatrixXd run_times(numTrials, 4);
+    MatrixXd run_times(numTrials, 5);
     for (int j = 1; j <= numTrials; j++)
     {
         cout << "Trial " << j << endl;
@@ -240,34 +244,42 @@ int main(int argc, char *argv[])
         for (int k = 0; k < dimState; k++)
             propStateVec(k) = initialStateVec(k) + genx0();
         cout << "propStateVec" << propStateVec.transpose() << endl;
+        distXi.mean = propStateVec;
 
         house.reset(0, distXi);
+        srhouse.reset(0, distXi);
         ukf.reset(0, propStateVec, Pxx0);
         cut4.reset(0, propStateVec, Pxx0);
         cut6.reset(0, propStateVec, Pxx0);
 
+        cout << "   SRHOUSE" << endl;
+        timer.tick();
+        srhouse.run(tSec, Ztru);
+        run_times(j - 1, 0) = timer.tock();
+        srhouse.save(filter_file(gauss, "srhouse", j));
+
         cout << "   HOUSE" << endl;
         timer.tick();
         house.run(tSec, Ztru);
-        run_times(j - 1, 0) = timer.tock();
+        run_times(j - 1, 1) = timer.tock();
         house.save(filter_file(gauss, "house", j));
 
         cout << "   UKF" << endl;
         timer.tick();
         ukf.run(tSec, Ztru);
-        run_times(j - 1, 1) = timer.tock();
+        run_times(j - 1, 2) = timer.tock();
         ukf.save(filter_file(gauss, "ukf", j));
 
         cout << "   CUT4" << endl;
         timer.tick();
         cut4.run(tSec, Ztru);
-        run_times(j - 1, 2) = timer.tock();
+        run_times(j - 1, 3) = timer.tock();
         cut4.save(filter_file(gauss, "cut4", j));
 
         cout << "   CUT6" << endl;
         timer.tick();
         cut6.run(tSec, Ztru);
-        run_times(j - 1, 3) = timer.tock();
+        run_times(j - 1, 4) = timer.tock();
         cut6.save(filter_file(gauss, "cut6", j));
     }
 }

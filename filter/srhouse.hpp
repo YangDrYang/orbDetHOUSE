@@ -82,6 +82,7 @@ public:
 
     // Save results
     void save(const string &filename, string stateType);
+    void save(const string &filename);
 };
 
 #endif
