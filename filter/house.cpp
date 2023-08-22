@@ -170,7 +170,7 @@ void HOUSE::update(const VectorXd &z)
     // VectorXd res = z - Z.col(0);
     // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
-    // cout << "weight:\t" << sig.wgt.transpose() << endl;
+    cout << "weight:\t" << sig.wgt.transpose() << endl;
     xm = distx.back().mean;
     zm = Z * sig.wgt;
 

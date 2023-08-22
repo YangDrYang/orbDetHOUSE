@@ -7,12 +7,13 @@ import os
 
 
 # Define a function to extract the number from the file name
-def get_number(file_name):
-    return int(file_name.split("gauss_")[1].split(".")[0])
+def get_number(file_name, meas_type):
+    return int(file_name.split(f"{meas_type}_")[1].split(".")[0])
+    # return int(file_name.split("gauss_")[1].split(".")[0])
     # return int(file_name.split("pearson_")[1].split(".")[0])
 
 
-def process_rmse_each_filter(filter_type, folder_path):
+def process_rmse_each_filter(filter_type, meas_type, folder_path):
     # folder_path = "out_/"  # replace with the path to your folder
     # Get a sorted list of file names in the folder that start with filter_type
 
@@ -23,7 +24,7 @@ def process_rmse_each_filter(filter_type, folder_path):
             for filename in os.listdir(folder_path)
             if filename.startswith(filter_type) and filename.endswith(".csv")
         ],
-        key=get_number,
+        key=lambda filename: get_number(filename, meas_type),
     )
 
     # print(trial_file_names)
@@ -63,12 +64,20 @@ def process_rmse_each_filter(filter_type, folder_path):
             if (np.abs(trial_df["EST X1"] - truth_df["x1"]) > 1e7).any():
                 large_value_file_names.append(file_path)
             else:
-                # Add the errors to the empty dataframe
-                df["x1"] = df.get("x1", 0) + trial_df["EST X1"] - truth_df["x1"]
-                df["x2"] = df.get("x2", 0) + trial_df["EST X2"] - truth_df["x2"]
-                df["x3"] = df.get("x3", 0) + trial_df["EST X3"] - truth_df["x3"]
-                df["x4"] = df.get("x4", 0) + trial_df["EST X4"] - truth_df["x4"]
-                df["x5"] = df.get("x5", 0) + trial_df["EST X5"] - truth_df["x5"]
+                for i in range(1, truth_df.shape[1]):
+                    col_name_df = "x" + str(i)
+                    col_name_trial_df = "EST X" + str(i)
+                    df[col_name_df] = (
+                        df.get(col_name_df, 0)
+                        + trial_df[col_name_trial_df]
+                        - truth_df[col_name_df]
+                    )
+                # # Add the errors to the empty dataframe
+                # df["x1"] = df.get("x1", 0) + trial_df["EST X1"] - truth_df["x1"]
+                # df["x2"] = df.get("x2", 0) + trial_df["EST X2"] - truth_df["x2"]
+                # df["x3"] = df.get("x3", 0) + trial_df["EST X3"] - truth_df["x3"]
+                # df["x4"] = df.get("x4", 0) + trial_df["EST X4"] - truth_df["x4"]
+                # df["x5"] = df.get("x5", 0) + trial_df["EST X5"] - truth_df["x5"]
 
     # print all NaN files
     print("nan file names by " + filter_type + ":   ")
@@ -86,19 +95,22 @@ def process_rmse_each_filter(filter_type, folder_path):
     df["tSec"] = truth_df["tSec"]
     # df["time_lapse"] = truth_df["t"]
     # define the new order of the columns
-    new_order = [
-        "tSec",
-        "x1",
-        "x2",
-        "x3",
-        "x4",
-        "x5",
-    ]
+    # new_order = [
+    #     "tSec",
+    #     "x1",
+    #     "x2",
+    #     "x3",
+    #     "x4",
+    #     "x5",
+    # ]
+    new_order = ["tSec"] + [f"x{i}" for i in range(1, truth_df.shape[1])]
+    # print(new_order)
     df = df.reindex(columns=new_order)
 
     # calculate the rms of position and velocity for each epoch
     # select the position components to include in the calculation
-    cols_state_err = ["x1", "x2", "x3", "x4", "x5"]
+    # cols_state_err = ["x1", "x2", "x3", "x4", "x5"]
+    cols_state_err = [f"x{i}" for i in range(1, truth_df.shape[1] - 1)]
 
     # calculate the root mean square of the selected columns
     rms_state_err = np.sqrt(np.mean(np.square(df[cols_state_err]), axis=1))
@@ -121,10 +133,12 @@ def process_rmse_each_filter(filter_type, folder_path):
 filters = ["srhouse", "house", "ukf", "cut4", "cut6"]
 
 if len(sys.argv) < 2:
-    folder_path = "out/out_lorenz_gauss/"
-    # folder_path = "out/out_lorenz_pearson/"
+    meas_type = "pearson"
+
 else:
-    folder_path = sys.argv[1]
+    meas_type = sys.argv[1]
+    folder_path = "out/out_lorenz_" + meas_type + "/"
+
 start_index = folder_path.index("_") + 1
 end_index = folder_path.rindex("/")
 keyword = folder_path[start_index:end_index]
@@ -134,15 +148,16 @@ fig, ax = plt.subplots(figsize=(10, 5))
 
 
 for filter_type in filters:
-    process_rmse_each_filter(filter_type, folder_path)
+    process_rmse_each_filter(filter_type, meas_type, folder_path)
 
     # Read CSV file into a pandas dataframe
     df = pd.read_csv(folder_path + "trajectory_error_" + filter_type + ".csv")
 
-    print(df.head())
+    # print(df.head())
 
     # Plot the data on the axes
-    ax.semilogy(df["tSec"], df["state_err_rms"], label=filter_type)
+    # ax.semilogy(df["tSec"], df["state_err_rms"], label=filter_type)
+    ax.plot(df["tSec"], df["state_err_rms"], label=filter_type)
 
 # Add labels and title
 ax.set_xlabel("time elapsed (s)")
@@ -172,10 +187,10 @@ sns.violinplot(
 # Add x and y axis labels and a title
 ax.set_xlabel("filters")
 ax.set_ylabel("state rmse")
-ax.yaxis.set_major_formatter(
-    plt.FuncFormatter(lambda x, _: "$10^{{{}}}$".format(int(x)))
-)
-ax.set_yscale("log")
+# ax.yaxis.set_major_formatter(
+#     plt.FuncFormatter(lambda x, _: "$10^{{{}}}$".format(int(x)))
+# )
+# ax.set_yscale("log")
 ax.set_title("violin plot of state rmse")
 ax.set_xticklabels(filters, fontsize=12)
 

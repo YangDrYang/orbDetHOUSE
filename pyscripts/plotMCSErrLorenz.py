@@ -6,12 +6,13 @@ import os
 
 
 # Define a function to extract the number from the file name
-def get_number(file_name):
-    return int(file_name.split("gauss_")[1].split(".")[0])
+def get_number(file_name, meas_type):
+    return int(file_name.split(f"{meas_type}_")[1].split(".")[0])
+    # return int(file_name.split("gauss_")[1].split(".")[0])
     # return int(file_name.split("pearson_")[1].split(".")[0])
 
 
-def process_err_each_filter(filter_type, folder_path):
+def process_err_each_filter(filter_type, meas_type, folder_path):
     # Get a sorted list of file names in the folder that start with filter_type
     # Sort the file names based on the extracted number
     trial_file_names = sorted(
@@ -20,7 +21,8 @@ def process_err_each_filter(filter_type, folder_path):
             for filename in os.listdir(folder_path)
             if filename.startswith(filter_type) and filename.endswith(".csv")
         ],
-        key=get_number,
+        # key=get_number,
+        key=lambda filename: get_number(filename, meas_type),
     )
 
     # print(trial_file_names)
@@ -33,7 +35,7 @@ def process_err_each_filter(filter_type, folder_path):
     nan_file_names = []
 
     # Create the plot
-    fig, ax = plt.subplots(5, 1, figsize=(5, 4))
+    fig, ax = plt.subplots(truth_df.shape[1] - 1, 1, figsize=(5, 4))
     # Loop through each file
     for file_name in trial_file_names:
         # Create an empty dataframe to store the data
@@ -59,12 +61,20 @@ def process_err_each_filter(filter_type, folder_path):
             nan_file_names.append(file_path)
             print(file_path)
         else:
-            # Add the errors to the empty dataframe
-            df["x1"] = trial_df["EST X1"] - truth_df["x1"]
-            df["x2"] = trial_df["EST X2"] - truth_df["x2"]
-            df["x3"] = trial_df["EST X3"] - truth_df["x3"]
-            df["x4"] = trial_df["EST X4"] - truth_df["x4"]
-            df["x5"] = trial_df["EST X5"] - truth_df["x5"]
+            for i in range(1, truth_df.shape[1]):
+                col_name_df = "x" + str(i)
+                col_name_trial_df = "EST X" + str(i)
+                df[col_name_df] = (
+                    df.get(col_name_df, 0)
+                    + trial_df[col_name_trial_df]
+                    - truth_df[col_name_df]
+                )
+            # # Add the errors to the empty dataframe
+            # df["x1"] = trial_df["EST X1"] - truth_df["x1"]
+            # df["x2"] = trial_df["EST X2"] - truth_df["x2"]
+            # df["x3"] = trial_df["EST X3"] - truth_df["x3"]
+            # df["x4"] = trial_df["EST X4"] - truth_df["x4"]
+            # df["x5"] = trial_df["EST X5"] - truth_df["x5"]
 
             if (np.abs(df["x1"]) > 1e7).any():
                 continue
@@ -75,16 +85,22 @@ def process_err_each_filter(filter_type, folder_path):
                 df.to_csv(err_file_name, index=False)
 
                 label = segments[1]
-                ax[0].plot(df["tSec"], df["x1"], linewidth=1, label=label)
-                ax[0].set_ylabel("x1")
-                ax[1].plot(df["tSec"], df["x2"], linewidth=1, label=label)
-                ax[1].set_ylabel("x2")
-                ax[2].plot(df["tSec"], df["x3"], linewidth=1, label=label)
-                ax[2].set_ylabel("x3")
-                ax[3].plot(df["tSec"], df["x4"], linewidth=1, label=label)
-                ax[3].set_ylabel("x4")
-                ax[4].plot(df["tSec"], df["x5"], linewidth=1, label=label)
-                ax[4].set_ylabel("x5")
+                for i in range(1, truth_df.shape[1]):
+                    col_name_df = "x" + str(i)
+                    ax[i - 1].plot(
+                        df["tSec"], df[col_name_df], linewidth=1, label=label
+                    )
+                    ax[i - 1].set_ylabel(col_name_df)
+                # ax[0].plot(df["tSec"], df["x1"], linewidth=1, label=label)
+                # ax[0].set_ylabel("x1")
+                # ax[1].plot(df["tSec"], df["x2"], linewidth=1, label=label)
+                # ax[1].set_ylabel("x2")
+                # ax[2].plot(df["tSec"], df["x3"], linewidth=1, label=label)
+                # ax[2].set_ylabel("x3")
+                # ax[3].plot(df["tSec"], df["x4"], linewidth=1, label=label)
+                # ax[3].set_ylabel("x4")
+                # ax[4].plot(df["tSec"], df["x5"], linewidth=1, label=label)
+                # ax[4].set_ylabel("x5")
 
     # # print all NaN files
     # print(nan_file_names)
@@ -100,16 +116,17 @@ def process_err_each_filter(filter_type, folder_path):
 
 
 if len(sys.argv) < 2:
-    folder_path = "out/out_lorenz_gauss/"
-    # folder_path = "out/out_lorenz_pearson/"
+    meas_type = "pearson"
 else:
-    folder_path = sys.argv[1]
+    meas_type = sys.argv[1]
+    folder_path = "out/out_lorenz_" + meas_type + "/"
 
-filters = ["srhouse", "house", "ukf", "cut4", "cut6"]
+# filters = ["srhouse", "house", "ukf", "cut4", "cut6"]
 # filters = ["cut6"]
 # filters = ["ukf", "cut4", "cut6", "house"]
 # filters = ["ukf", "cut4", "cut6", "house", "srhouse"]
 # filters = ["house", "ukf"]
+filters = ["srhouse", "house", "ukf", "cut4", "cut6"]
 
 for filter_type in filters:
-    process_err_each_filter(filter_type, folder_path)
+    process_err_each_filter(filter_type, meas_type, folder_path)

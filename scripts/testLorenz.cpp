@@ -1,11 +1,26 @@
-#include "testOrbDet.hpp"
-#include "pearsonator.hpp"
+// library headers
+#include <cmath>
+#include <ctime>
+#include <functional>
+#include <iostream>
+#include <random>
+#include <vector>
+#include <numeric>
+#include <Eigen/Dense>
+#include <yaml-cpp/yaml.h>
 
-#define R_EARTH 6371E3
-#define DEG M_PI / 180
-#define ARC_MIN M_PI / (180 * 60)
-#define ARC_SEC M_PI / (180 * 60 * 60)
-#define MAXLEAPS 18
+// filter headers
+#include "pearsonator.hpp"
+#include "srhouse.hpp"
+#include "srukf.hpp"
+#include "house.hpp"
+#include "ukf.hpp"
+#include "ut.hpp"
+#include "dyn.hpp"
+#include "eigen_csv.hpp"
+#include "timer.hpp"
+
+#define DEFAULT_CONFIG_FILENAME "yamls/config_lorenz.yml"
 
 string filter_file(bool gauss, const string &filter, int trial)
 {
@@ -95,25 +110,136 @@ VectorXd lorenz96Model(double t, const VectorXd &state, const VectorXd &fd)
 
 //     return state + (1.0 / 6.0) * dt * (k1 + 2 * k2 + 2 * k3 + k4);
 // }
+struct FilterOpt
+{
+    bool srhouse;
+    bool house;
+    bool ukf;
+    bool cut4;
+    bool cut6;
+    double delta;
+    double weight;
+    int numTrials;
+};
+struct SimulationInfo
+{
+    double tStep;
+    int nTotalSteps;
+    string outDir;
+};
+struct InitialState
+{
+    int dimState;
+    double fValue;
+    double stdInitialNoise;
+    double skewInitialNoise;
+    double kurtInitialNoise;
+};
+struct ProcessNoise
+{
+    double stdProcessNoise;
+    double skewProcessNoise;
+    double kurtProcessNoise;
+};
+struct MeasurementNoise
+{
+    int dimMeasurement;
+    string typeMeasurement;
+    double stdMeasurementNoise;
+    double skewMeasurementNoise;
+    double kurtMeasurementNoise;
+};
+void readConfigFile(string fileName, FilterOpt &optFilter, SimulationInfo &snrInfo,
+                    InitialState &iniState, ProcessNoise &proNoise, MeasurementNoise &measNoise)
+{
+    // load file
+    YAML::Node config = YAML::LoadFile(fileName);
+
+    // read filter options (required)
+    YAML::Node filterOpts = config["filter_options"];
+    optFilter.srhouse = filterOpts["SRHOUSE"].as<bool>();
+    optFilter.house = filterOpts["HOUSE"].as<bool>();
+    optFilter.ukf = filterOpts["UKF"].as<bool>();
+    optFilter.cut4 = filterOpts["CUT4"].as<bool>();
+    optFilter.cut6 = filterOpts["CUT6"].as<bool>();
+    optFilter.numTrials = filterOpts["num_trials"].as<int>();
+    optFilter.delta = filterOpts["delta"].as<double>();
+    optFilter.weight = filterOpts["weight"].as<double>();
+
+    // read simulation parameters (required)
+    YAML::Node simParams = config["simulation_parameters"];
+    snrInfo.tStep = simParams["time_step"].as<double>();
+    snrInfo.nTotalSteps = simParams["total_step"].as<int>();
+    snrInfo.outDir = simParams["output_directory"].as<string>();
+
+    // read initial state (required)
+    YAML::Node initialState = config["initial_state"];
+    iniState.dimState = initialState["state_dim"].as<int>();
+    iniState.fValue = initialState["fvalue"].as<double>();
+    iniState.stdInitialNoise = initialState["initial_noise_std"].as<double>();
+    iniState.skewInitialNoise = initialState["initial_noise_skew"].as<double>();
+    iniState.kurtInitialNoise = initialState["initial_noise_kurt"].as<double>();
+
+    // read process noise (required)
+    YAML::Node processNoise = config["process_noise"];
+    proNoise.stdProcessNoise = processNoise["process_noise_std"].as<double>();
+    proNoise.skewProcessNoise = processNoise["process_noise_skew"].as<double>();
+    proNoise.kurtProcessNoise = processNoise["process_noise_kurt"].as<double>();
+
+    // read measurement noise (required)
+    YAML::Node measurementNoise = config["measurement_noise"];
+    measNoise.dimMeasurement = measurementNoise["measurement_dim"].as<int>();
+    measNoise.typeMeasurement = measurementNoise["measurement_type"].as<string>();
+    measNoise.stdMeasurementNoise = measurementNoise["measurement_std"].as<double>();
+    measNoise.skewMeasurementNoise = measurementNoise["measurement_skew"].as<double>();
+    measNoise.kurtMeasurementNoise = measurementNoise["measurement_kurt"].as<double>();
+}
 
 int main(int argc, char *argv[])
 {
-    bool gauss = true;
-    // bool gauss = false;
-    int numTrials = 100;
+    string configFilename;
+    // input config .yaml file
+    switch (argc)
+    {
+    case 1: // Read default file
+        configFilename = DEFAULT_CONFIG_FILENAME;
+        break;
+    case 2: // Read supplied file
+        configFilename = argv[1];
+        break;
+    default: // wrong number of args
+        cerr << "Accepts up to 1 argument (.yaml input file).\nIf no argument given, the default config file will be read (config.yaml)" << endl;
+        exit(1);
+        break;
+    }
+    cout << "Reading configuration from file: " << configFilename << endl;
 
-    const int dimState = 5;
+    struct FilterOpt optFilter;
+    struct SimulationInfo snrInfo;
+    struct InitialState iniState;
+    struct ProcessNoise proNoise;
+    struct MeasurementNoise measNoise;
+    readConfigFile(configFilename, optFilter, snrInfo, iniState, proNoise, measNoise);
+
+    bool gauss = false;
+    if (measNoise.typeMeasurement == "gauss")
+    {
+        gauss = true;
+    }
+
+    int numTrials = optFilter.numTrials;
+
+    const int dimState = iniState.dimState;
     VectorXd initialStateVec(dimState);
-    initialStateVec << 8, 8, 8, 8, 8;
-    MatrixXd initialCov(dimState, dimState);
+    initialStateVec.setConstant(iniState.fValue);
 
     double absErr = 1.0e-8;
     double relErr = 1.0e-8;
     DynamicModel::stf accMdl = lorenz96Model;
     DynamicModel orbFun(accMdl, dimState, absErr, relErr);
 
-    double time = 0, dt = 0.5;
-    int nTotalSteps = 100;
+    double time = 0, dt = snrInfo.tStep;
+    int nTotalSteps = snrInfo.nTotalSteps;
     cout << "total steps:\t" << nTotalSteps << endl;
     // linear spaced times
     VectorXd tSec;
@@ -138,12 +264,19 @@ int main(int argc, char *argv[])
     }
     cout << "The total time consumption is:\t" << timer.tock() << endl;
     // header for the saved file
-    vector<string> headerTraj({"tSec", "x1", "x2", "x3", "x4", "x5"});
-    string propFile = "out/out_lorenz";
+
+    vector<string> headerTraj(dimState + 1);
+    headerTraj[0] = "tSec";
+    for (int k = 1; k <= dimState; k++)
+    {
+        headerTraj[k] = "x";
+        headerTraj[k] += to_string(k);
+    }
+    string propFile = snrInfo.outDir;
     propFile += (gauss ? "_gauss/trajectory_truth.csv" : "_pearson/trajectory_truth.csv");
     EigenCSV::write(tableTrajTruth, headerTraj, propFile);
 
-    const int dimMeas = 1;
+    const int dimMeas = measNoise.dimMeasurement;
     UKF::meas_model h = [](double t, const VectorXd &x)
         -> VectorXd
     {
@@ -156,9 +289,9 @@ int main(int argc, char *argv[])
     };
 
     double stdx0, stdw, stdn;
-    stdx0 = 0.5;
-    stdw = 1e-6;
-    stdn = 0.2;
+    stdx0 = iniState.stdInitialNoise;
+    stdw = proNoise.stdProcessNoise;
+    stdn = measNoise.stdMeasurementNoise;
 
     double skeww, skewn, kurtw, kurtn, skew0, kurt0;
 
@@ -177,14 +310,14 @@ int main(int argc, char *argv[])
     else
     {
 
-        skeww = 1;
-        kurtw = 30;
+        skeww = proNoise.skewProcessNoise;
+        kurtw = proNoise.kurtProcessNoise;
 
-        skewn = -1;
-        kurtn = 30;
+        skewn = measNoise.skewMeasurementNoise;
+        kurtn = measNoise.kurtMeasurementNoise;
 
-        skew0 = 1;
-        kurt0 = 30;
+        skew0 = iniState.skewInitialNoise;
+        kurt0 = iniState.kurtInitialNoise;
     }
 
     Pearsonator::TypeIV genw_p(0, stdw, skeww, kurtw),
@@ -214,7 +347,7 @@ int main(int argc, char *argv[])
     MatrixXd Pnn(1, 1);
     Pnn(0, 0) = stdn * stdn;
 
-    MatrixXd Ztru(1, nTotalSteps);
+    MatrixXd Ztru(dimMeas, nTotalSteps);
     for (int k = 0; k < nTotalSteps; k++)
     {
         const VectorXd stateVec = tableTrajTruth.row(k).tail(dimState).transpose();
@@ -233,8 +366,9 @@ int main(int argc, char *argv[])
     Dist distw(Pww);
     // HOUSE distributions for measurement noise
     Dist distn(Pnn);
-    HOUSE house(orbFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, 0);
-    SRHOUSE srhouse(orbFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, -0.5);
+
+    HOUSE house(orbFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, optFilter.delta);
+    SRHOUSE srhouse(orbFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, optFilter.weight);
 
     MatrixXd run_times(numTrials, 5);
     for (int j = 1; j <= numTrials; j++)
@@ -246,40 +380,54 @@ int main(int argc, char *argv[])
         cout << "propStateVec" << propStateVec.transpose() << endl;
         distXi.mean = propStateVec;
 
-        house.reset(0, distXi);
-        srhouse.reset(0, distXi);
-        ukf.reset(0, propStateVec, Pxx0);
-        cut4.reset(0, propStateVec, Pxx0);
-        cut6.reset(0, propStateVec, Pxx0);
+        if (optFilter.srhouse)
+        {
+            cout << "   SRHOUSE" << endl;
+            srhouse.reset(0, distXi);
+            timer.tick();
+            srhouse.run(tSec, Ztru);
+            run_times(j - 1, 0) = timer.tock();
+            srhouse.save(filter_file(gauss, "srhouse", j));
+        }
 
-        cout << "   SRHOUSE" << endl;
-        timer.tick();
-        srhouse.run(tSec, Ztru);
-        run_times(j - 1, 0) = timer.tock();
-        srhouse.save(filter_file(gauss, "srhouse", j));
+        if (optFilter.house)
+        {
+            cout << "   HOUSE" << endl;
+            house.reset(0, distXi);
+            timer.tick();
+            house.run(tSec, Ztru);
+            run_times(j - 1, 1) = timer.tock();
+            house.save(filter_file(gauss, "house", j));
+        }
 
-        cout << "   HOUSE" << endl;
-        timer.tick();
-        house.run(tSec, Ztru);
-        run_times(j - 1, 1) = timer.tock();
-        house.save(filter_file(gauss, "house", j));
+        if (optFilter.ukf)
+        {
+            cout << "   UKF" << endl;
+            ukf.reset(0, propStateVec, Pxx0);
+            timer.tick();
+            ukf.run(tSec, Ztru);
+            run_times(j - 1, 2) = timer.tock();
+            ukf.save(filter_file(gauss, "ukf", j));
+        }
 
-        cout << "   UKF" << endl;
-        timer.tick();
-        ukf.run(tSec, Ztru);
-        run_times(j - 1, 2) = timer.tock();
-        ukf.save(filter_file(gauss, "ukf", j));
+        if (optFilter.cut4)
+        {
+            cout << "   CUT4" << endl;
+            cut4.reset(0, propStateVec, Pxx0);
+            timer.tick();
+            cut4.run(tSec, Ztru);
+            run_times(j - 1, 3) = timer.tock();
+            cut4.save(filter_file(gauss, "cut4", j));
+        }
 
-        cout << "   CUT4" << endl;
-        timer.tick();
-        cut4.run(tSec, Ztru);
-        run_times(j - 1, 3) = timer.tock();
-        cut4.save(filter_file(gauss, "cut4", j));
-
-        cout << "   CUT6" << endl;
-        timer.tick();
-        cut6.run(tSec, Ztru);
-        run_times(j - 1, 4) = timer.tock();
-        cut6.save(filter_file(gauss, "cut6", j));
+        if (optFilter.cut6)
+        {
+            cout << "   CUT6" << endl;
+            cut6.reset(0, propStateVec, Pxx0);
+            timer.tick();
+            cut6.run(tSec, Ztru);
+            run_times(j - 1, 4) = timer.tock();
+            cut6.save(filter_file(gauss, "cut6", j));
+        }
     }
 }
