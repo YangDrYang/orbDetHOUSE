@@ -76,6 +76,8 @@ VectorXd lorenz96Model(double t, const VectorXd &state, const VectorXd &fd)
     {
         k(j) = (state(j + 1) - state(j - 2)) * state(j - 1) - state(j);
     }
+    // cout << "fd:\t" << fd.transpose();
+    k += fd;
 
     return k.array() + F;
 }
@@ -229,65 +231,6 @@ int main(int argc, char *argv[])
 
     int numTrials = optFilter.numTrials;
 
-    const int dimState = iniState.dimState;
-    VectorXd initialStateVec(dimState);
-    initialStateVec.setConstant(iniState.fValue);
-
-    double absErr = 1.0e-8;
-    double relErr = 1.0e-8;
-    DynamicModel::stf accMdl = lorenz96Model;
-    DynamicModel orbFun(accMdl, dimState, absErr, relErr);
-
-    double time = 0, dt = snrInfo.tStep;
-    int nTotalSteps = snrInfo.nTotalSteps;
-    cout << "total steps:\t" << nTotalSteps << endl;
-    // linear spaced times
-    VectorXd tSec;
-    tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
-    cout << "tSec\t" << tSec << endl;
-    MatrixXd tableTrajTruth(nTotalSteps, dimState + 1);
-    tableTrajTruth.col(0) = tSec;
-    tableTrajTruth.row(0).tail(dimState) = initialStateVec;
-
-    VectorXd propStateVec = initialStateVec;
-    Timer timer;
-    timer.tick();
-    for (int k = 1; k < nTotalSteps; k++)
-    {
-        // propStateVec = rk4(propStateVec, dt, 8.0);
-        propStateVec = orbFun(time, time + dt, propStateVec, VectorXd::Zero(dimState));
-        time += dt;
-        tableTrajTruth.row(k).tail(dimState) = propStateVec;
-        cout << time << " " << propStateVec.transpose() << endl;
-
-        // cout << "The " << k + 1 << "th time step" << endl;
-    }
-    cout << "The total time consumption is:\t" << timer.tock() << endl;
-    // header for the saved file
-
-    vector<string> headerTraj(dimState + 1);
-    headerTraj[0] = "tSec";
-    for (int k = 1; k <= dimState; k++)
-    {
-        headerTraj[k] = "x";
-        headerTraj[k] += to_string(k);
-    }
-    string propFile = snrInfo.outDir;
-    propFile += (gauss ? "_gauss/trajectory_truth.csv" : "_pearson/trajectory_truth.csv");
-    EigenCSV::write(tableTrajTruth, headerTraj, propFile);
-
-    const int dimMeas = measNoise.dimMeasurement;
-    UKF::meas_model h = [](double t, const VectorXd &x)
-        -> VectorXd
-    {
-        return x.head(1);
-    };
-    HOUSE::meas_model hh = [](double t, const VectorXd &x, const VectorXd &n)
-        -> VectorXd
-    {
-        return x.head(1) + n;
-    };
-
     double stdx0, stdw, stdn;
     stdx0 = iniState.stdInitialNoise;
     stdw = proNoise.stdProcessNoise;
@@ -339,6 +282,69 @@ int main(int argc, char *argv[])
     noisemaker genx0 = [&]() -> double
     { return gauss ? genx0_g(mt) : genx0_p(mt); };
 
+    const int dimState = iniState.dimState;
+    VectorXd initialStateVec(dimState);
+    initialStateVec.setConstant(iniState.fValue);
+
+    double absErr = 1.0e-8;
+    double relErr = 1.0e-8;
+    DynamicModel::stf accMdl = lorenz96Model;
+    DynamicModel stateFun(accMdl, dimState, absErr, relErr);
+
+    double time = 0, dt = snrInfo.tStep;
+    int nTotalSteps = snrInfo.nTotalSteps;
+    cout << "total steps:\t" << nTotalSteps << endl;
+    // linear spaced times
+    VectorXd tSec;
+    tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
+    cout << "tSec\t" << tSec << endl;
+    MatrixXd tableTrajTruth(nTotalSteps, dimState + 1);
+    tableTrajTruth.col(0) = tSec;
+    tableTrajTruth.row(0).tail(dimState) = initialStateVec;
+
+    VectorXd propStateVec = initialStateVec;
+    Timer timer;
+    timer.tick();
+    for (int k = 1; k < nTotalSteps; k++)
+    {
+        VectorXd fd(dimState);
+        for (int j = 0; j < dimState; j++)
+            fd(j) = genw();
+        // propStateVec = rk4(propStateVec, dt, 8.0);
+        // propStateVec = stateFun(time, time + dt, propStateVec, VectorXd::Zero(dimState));
+        propStateVec = stateFun(time, time + dt, propStateVec, fd);
+        time += dt;
+        tableTrajTruth.row(k).tail(dimState) = propStateVec;
+        cout << time << " " << propStateVec.transpose() << endl;
+
+        // cout << "The " << k + 1 << "th time step" << endl;
+    }
+    cout << "The total time consumption is:\t" << timer.tock() << endl;
+    // header for the saved file
+
+    vector<string> headerTraj(dimState + 1);
+    headerTraj[0] = "tSec";
+    for (int k = 1; k <= dimState; k++)
+    {
+        headerTraj[k] = "x";
+        headerTraj[k] += to_string(k);
+    }
+    string propFile = snrInfo.outDir;
+    propFile += (gauss ? "_gauss/trajectory_truth.csv" : "_pearson/trajectory_truth.csv");
+    EigenCSV::write(tableTrajTruth, headerTraj, propFile);
+
+    const int dimMeas = measNoise.dimMeasurement;
+    UKF::meas_model h = [](double t, const VectorXd &x)
+        -> VectorXd
+    {
+        return x.head(1);
+    };
+    HOUSE::meas_model hh = [](double t, const VectorXd &x, const VectorXd &n)
+        -> VectorXd
+    {
+        return x.head(1) + n;
+    };
+
     VectorXd x0stdVec(dimState), wstdVec(dimState);
     x0stdVec.setConstant(stdx0);
     MatrixXd Pxx0 = x0stdVec.array().square().matrix().asDiagonal();
@@ -355,9 +361,9 @@ int main(int argc, char *argv[])
         Ztru(0, k) += genn();
     }
 
-    UKF ukf(orbFun, h, true, 0, 1e6, initialStateVec, Pxx0, Pww, Pnn, UKF::sig_type::JU, 1);
-    UKF cut4(orbFun, h, true, 0, 1e6, initialStateVec, Pxx0, Pww, Pnn, UKF::sig_type::CUT4, 1);
-    UKF cut6(orbFun, h, true, 0, 1e6, initialStateVec, Pxx0, Pww, Pnn, UKF::sig_type::CUT6, 1);
+    UKF ukf(stateFun, h, true, 0, 1e6, initialStateVec, Pxx0, Pww, Pnn, UKF::sig_type::JU, 1);
+    UKF cut4(stateFun, h, true, 0, 1e6, initialStateVec, Pxx0, Pww, Pnn, UKF::sig_type::CUT4, 1);
+    UKF cut6(stateFun, h, true, 0, 1e6, initialStateVec, Pxx0, Pww, Pnn, UKF::sig_type::CUT6, 1);
 
     // HOUSE distributions for state
     Dist distXi(Pxx0);
@@ -367,8 +373,8 @@ int main(int argc, char *argv[])
     // HOUSE distributions for measurement noise
     Dist distn(Pnn);
 
-    HOUSE house(orbFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, optFilter.delta);
-    SRHOUSE srhouse(orbFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, optFilter.weight);
+    HOUSE house(stateFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, optFilter.delta);
+    SRHOUSE srhouse(stateFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, optFilter.weight);
 
     MatrixXd run_times(numTrials, 5);
     for (int j = 1; j <= numTrials; j++)
@@ -377,7 +383,7 @@ int main(int argc, char *argv[])
 
         for (int k = 0; k < dimState; k++)
             propStateVec(k) = initialStateVec(k) + genx0();
-        cout << "propStateVec" << propStateVec.transpose() << endl;
+        // cout << "propStateVec" << propStateVec.transpose() << endl;
         distXi.mean = propStateVec;
 
         if (optFilter.srhouse)

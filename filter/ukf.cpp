@@ -186,7 +186,6 @@ UKF::UKF(
                 nsp(Sp.cols()),
                 nsu(Su.cols())
 {
-
     t.push_back(t0);
     xest.push_back(xm0);
     Pxx.push_back(Pxx0);

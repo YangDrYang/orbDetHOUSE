@@ -121,12 +121,13 @@ void SRHOUSE::predict(double tp)
         }
 
         Sigma sig(distxi, distw);
+        cout << "sig.n_pts\t" << sig.n_pts << endl;
         if (sig.wgt(0) < delta)
             sig = Sigma(distxi, distw, 0);
         // Sigma sig(distxi, distw, delta);
 
         MatrixXd Xp(nx, sig.n_pts);
-
+        cout << sig.n_pts << endl;
         for (int i = 0; i < sig.n_pts; i++)
             Xp.col(i) = f(ti, tp, sig.state.col(i), sig.noise.col(i));
 
@@ -136,10 +137,17 @@ void SRHOUSE::predict(double tp)
         distXp.mean = Xp * sig.wgt;
         MatrixXd matRes(nx, 4 * nx);
         MatrixXd matxestp = distXp.mean.replicate(1, nx);
+        cout << sqrt(sig.wgt(1)) * (Xp.block(0, 1, nx, nx) - matxestp) << endl;
+        cout << endl;
+        cout << sqrt(sig.wgt(nx + 1)) * (Xp.block(0, nx + 1, nx, nx) - matxestp) << endl;
+        cout << endl;
+        cout << sqrt(sig.wgt(2 * nx + 1)) * (Xp.block(0, 2 * nx + 1, nx, 2 * nx) - distXp.mean.replicate(1, 2 * nx)) << endl;
         matRes << sqrt(sig.wgt(1)) * (Xp.block(0, 1, nx, nx) - matxestp), sqrt(sig.wgt(nx + 1)) * (Xp.block(0, nx + 1, nx, nx) - matxestp), sqrt(sig.wgt(2 * nx + 1)) * (Xp.block(0, 2 * nx + 1, nx, 2 * nx) - distXp.mean.replicate(1, 2 * nx));
+        cout << "running to here " << endl;
         HouseholderQR<MatrixXd> qr(matRes.transpose());
         MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
         MatrixXd matS = matS2.block(0, 0, nx, nx).transpose();
+
         distXp.covL = cholupdate(matS, Xp.col(0) - distXp.mean, sig.wgt(0));
         distXp.cov = distXp.covL * distXp.covL.transpose();
         MatrixXd Xstd = distXp.covL.triangularView<Lower>().solve(Xp.colwise() - Xp * sig.wgt); // standardised states at the sigma points,  covariance, A7/B10

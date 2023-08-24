@@ -32,7 +32,7 @@ def process_rmse_each_filter(filter_type, meas_type, folder_path):
     # Read the truth CSV file into a pandas dataframe
     truth_df = pd.read_csv(folder_path + "trajectory_truth.csv")
     # print(truth_df.head())
-    truth_df = truth_df.iloc[1:, 0:6]
+    truth_df = truth_df.iloc[:, :-1]
 
     # Create an empty dataframe to store the data
     df = pd.DataFrame()
@@ -47,7 +47,7 @@ def process_rmse_each_filter(filter_type, meas_type, folder_path):
 
         # Read the trial CSV file into a pandas dataframe
         trial_df = pd.read_csv(file_path)
-        trial_df = trial_df.iloc[1:, 0:6]
+        trial_df = trial_df.iloc[:, :-1]
         # print(trial_df.head())
 
         # Check which elements are NaN using isna()
