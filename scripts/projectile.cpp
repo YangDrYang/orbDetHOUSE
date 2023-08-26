@@ -255,39 +255,39 @@ void run(bool gauss)
             Ztru(1, k) += genn();
         }
 
-        // cout << "   SRHOUSE" << endl;
+        cout << "   SRHOUSE" << endl;
+        timer.tick();
+        srhouse.run(t, Ztru);
+        run_times(j - 1, 0) = timer.tock();
+        srhouse.save(filter_file(gauss, "srhouse", j));
+
+        // cout << "   HOUSE" << endl;
         // timer.tick();
-        // srhouse.run(t, Ztru);
-        // run_times(j - 1, 0) = timer.tock();
-        // srhouse.save(filter_file(gauss, "srhouse", j));
+        // house.run(t, Ztru);
+        // run_times(j - 1, 1) = timer.tock();
+        // house.save(filter_file(gauss, "house", j));
 
-        cout << "   HOUSE" << endl;
-        timer.tick();
-        house.run(t, Ztru);
-        run_times(j - 1, 1) = timer.tock();
-        house.save(filter_file(gauss, "house", j));
+        // cout << "   UKF" << endl;
+        // timer.tick();
+        // ukf.run(t, Ztru);
+        // run_times(j - 1, 2) = timer.tock();
+        // ukf.save(filter_file(gauss, "ukf", j));
 
-        cout << "   UKF" << endl;
-        timer.tick();
-        ukf.run(t, Ztru);
-        run_times(j - 1, 2) = timer.tock();
-        ukf.save(filter_file(gauss, "ukf", j));
+        // cout << "   CUT-4" << endl;
+        // timer.tick();
+        // cut4.run(t, Ztru);
+        // run_times(j - 1, 3) = timer.tock();
+        // cut4.save(filter_file(gauss, "cut4", j));
 
-        cout << "   CUT-4" << endl;
-        timer.tick();
-        cut4.run(t, Ztru);
-        run_times(j - 1, 3) = timer.tock();
-        cut4.save(filter_file(gauss, "cut4", j));
-
-        cout << "   CUT-6" << endl;
-        timer.tick();
-        cut6.run(t, Ztru);
-        run_times(j - 1, 4) = timer.tock();
-        cut6.save(filter_file(gauss, "cut6", j));
+        // cout << "   CUT-6" << endl;
+        // timer.tick();
+        // cut6.run(t, Ztru);
+        // run_times(j - 1, 4) = timer.tock();
+        // cut6.save(filter_file(gauss, "cut6", j));
     }
 
     vector<string> filters;
-    // filters.push_back("srhouse");
+    filters.push_back("srhouse");
     filters.push_back("house");
     filters.push_back("ukf");
     filters.push_back("cut4");

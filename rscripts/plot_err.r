@@ -22,13 +22,13 @@ fil <- c(
             rep("HOUSE", Ng),
             rep("UKF", Ng),
             rep("CUT-4", Ng),
-            rep("CUT-6", Ng)
+            rep("SRHOUSE", Ng)
       ), 2),
       rep(c(
             rep("HOUSE", Np),
             rep("UKF", Np),
             rep("CUT-4", Np),
-            rep("CUT-6", Np)
+            rep("SRHOUSE", Np)
       ), 2)
 )
 
@@ -39,7 +39,7 @@ cmp <- c(
 
 data <- data.frame(err, dst, fil, cmp)
 
-filter <- c("HOUSE", "UKF", "CUT-4", "CUT-6")
+filter <- c("HOUSE", "UKF", "CUT-4", "SRHOUSE")
 data$fil <- factor(data$fil, levels = filter)
 
 colors <- c("#cc3311", "#0077bb", "#ee7733", "#009988", "#ee3377")
@@ -64,4 +64,4 @@ ggplot(data, aes(x = fil, y = err, fill = fil)) +
             labels = trans_format("log10", math_format(10^.x))
       )
 
-ggsave("proj_err.eps", width = 6, height = 6, units = "in")
+ggsave("plots/proj_err.eps", width = 6, height = 6, units = "in")

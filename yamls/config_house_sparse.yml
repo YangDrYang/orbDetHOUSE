@@ -1,20 +1,20 @@
 # required
 filter_options:
-  square_root: true
+  square_root: false
   HOUSE: true
   UKF: false
   CUT4: false
   CUT6: false
   init_noise: true
-  num_trials: 100
+  num_trials: 2
 
 # requried
 simulation_parameters:
   # time step in seconds, MJD in days
-  time_step: 10
+  time_step: 60
   # time duration of each pass in seconds
   time_pass: 120
-  max_time_step: 10  
+  max_time_step: 300  
   MJD_start: 55200.0 # 2010-JAN-04
   MJD_end: 55200.2 #5.757212410879634e+4
   # this directory must exist
@@ -47,12 +47,12 @@ initial_orbtial_parameters:
     # - [-9.237, 0, 0, 0, 6.798e-3, 3.145e-3]
     # - [-5.333, 0, 0, 0, 3.145e-3, 3.166e-3]
   process_noise_covariance:
-    - [4, 0, 0, 0, 0, 0]
-    - [0, 4, 0, 0, 0, 0]
-    - [0, 0, 4, 0, 0, 0]
-    - [0, 0, 0, 0.0001, 0, 0]
-    - [0, 0, 0, 0, 0.0001, 0]
-    - [0, 0, 0, 0, 0, 0.0001]  
+    - [25, 0, 0, 0, 0, 0]
+    - [0, 25, 0, 0, 0, 0]
+    - [0, 0, 25, 0, 0, 0]
+    - [0, 0, 0, 0.0004, 0, 0]
+    - [0, 0, 0, 0, 0.0004, 0]
+    - [0, 0, 0, 0, 0, 0.0004]  
     # - [1.0e-9, 0, 0, 0, 0, 0]
     # - [0, 1.0e-9, 0, 0, 0, 0]
     # - [0, 0, 1.0e-9, 0, 0, 0]

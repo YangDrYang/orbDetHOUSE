@@ -6,7 +6,7 @@ library(scales)
 rt_gauss <- as.matrix(read.csv("out/out_projectile/run_times_gauss.csv"))[, 1:4]
 rt_pearson <- as.matrix(read.csv("out/out_projectile/run_times_pearson.csv"))[, 1:4]
 
-fil <- c("HOUSE", "UKF", "CUT-4", "CUT-6")
+fil <- c("SRHOUSE", "UKF", "CUT-4", "CUT-6")
 
 filter <- rep(fil, 2)
 Distributions <- c(
@@ -42,4 +42,4 @@ ggplot(data, aes(x = filter, y = rt_mean, fill = Distributions)) +
             labels = trans_format("log10", math_format(10^.x))
       )
 
-ggsave("proj_runtime.eps", width = 3.25, height = 3.5, units = "in")
+ggsave("plots/proj_runtime.eps", width = 3.25, height = 3.5, units = "in")

@@ -32,22 +32,6 @@ Sigma::Sigma(const Dist &distX, const Dist &distW)
     kx = distX.kurt;
     kw = distW.kurt;
 
-    // mmin = (nx + nw) / (1 - delta);
-
-    // for (int i = 0; i < nx; i++)
-    // {
-    //     m = kx(i) - sx(i) * sx(i);
-    //     if (m < mmin)
-    //         kx(i) += mmin - m;
-    // }
-
-    // for (int i = 0; i < nw; i++)
-    // {
-    //     m = kw(i) - sw(i) * sw(i);
-    //     if (m < mmin)
-    //         kw(i) += mmin - m;
-    // }
-
     cx = (4 * kx.array() - 3 * sx.array().square()).sqrt();
     cw = (4 * kw.array() - 3 * sw.array().square()).sqrt();
 
@@ -94,6 +78,7 @@ void SRHOUSE::predict(double tp)
             if (sig.wgt(0) < delta)
                 sig = Sigma(distxi, distw, 0);
             // Sigma sig(distxi, distw, delta);
+            cout << "weight:\t" << sig.wgt.transpose() << endl;
 
             MatrixXd Xp(nx, sig.n_pts);
 
@@ -104,62 +89,70 @@ void SRHOUSE::predict(double tp)
             Dist distXp;
             distXp.n = nx;
             distXp.mean = Xp * sig.wgt;
-            MatrixXd matRes(nx, 4 * nx);
+            MatrixXd matRes(nx, 2 * (nx + nw));
             MatrixXd matxestp = distXp.mean.replicate(1, nx);
-            matRes << sqrt(sig.wgt(1)) * (Xp.block(0, 1, nx, nx) - matxestp), sqrt(sig.wgt(nx + 1)) * (Xp.block(0, nx + 1, nx, nx) - matxestp), sqrt(sig.wgt(2 * nx + 1)) * (Xp.block(0, 2 * nx + 1, nx, 2 * nx) - distXp.mean.replicate(1, 2 * nx));
+            MatrixXd matxestp2 = distXp.mean.replicate(1, 2 * nw);
+            VectorXd sqrtWeight1 = sig.wgt.segment(1, nx).array().sqrt();
+            VectorXd sqrtWeight2 = sig.wgt.segment(nx + 1, nx).array().sqrt();
+            VectorXd sqrtWeight3 = sig.wgt.segment(2 * nx + 1, 2 * nw).array().sqrt();
+            matRes << (Xp.block(0, 1, nx, nx) - matxestp) * sqrtWeight1.asDiagonal(),
+                (Xp.block(0, nx + 1, nx, nx) - matxestp) * sqrtWeight2.asDiagonal(),
+                (Xp.block(0, 2 * nx + 1, nx, 2 * nw) - matxestp2) * sqrtWeight3.asDiagonal();
             HouseholderQR<MatrixXd> qr(matRes.transpose());
             MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
             MatrixXd matS = matS2.block(0, 0, nx, nx).transpose();
             distXp.covL = cholupdate(matS, Xp.col(0) - distXp.mean, sig.wgt(0));
             distXp.cov = distXp.covL * distXp.covL.transpose();
-            MatrixXd Xstd = distXp.covL.triangularView<Lower>().solve(Xp.colwise() - Xp * sig.wgt); // standardised states at the sigma points,  covariance, A7/B10
-            distXp.skew = Xstd.array().pow(3).matrix() * sig.wgt;                                   // skewness of the standardised state, Eq. A8/B11
-            distXp.kurt = Xstd.array().pow(4).matrix() * sig.wgt;                                   // kurtosis of the standardised state, Eq. A9/B12
+            MatrixXd Xstd = distXp.covL.triangularView<Lower>().solve(Xp.colwise() - distXp.mean); // standardised states at the sigma points,  covariance, A7/B10
+            distXp.skew = Xstd.array().pow(3).matrix() * sig.wgt;                                  // skewness of the standardised state, Eq. A8/B11
+            distXp.kurt = Xstd.array().pow(4).matrix() * sig.wgt;                                  // kurtosis of the standardised state, Eq. A9/B12
 
             distxi = distXp;
             ti += dtMax;
         }
 
         Sigma sig(distxi, distw);
-        cout << "sig.n_pts\t" << sig.n_pts << endl;
         if (sig.wgt(0) < delta)
             sig = Sigma(distxi, distw, 0);
         // Sigma sig(distxi, distw, delta);
+        cout << "weight:\t" << sig.wgt.transpose() << endl;
 
         MatrixXd Xp(nx, sig.n_pts);
-        cout << sig.n_pts << endl;
         for (int i = 0; i < sig.n_pts; i++)
             Xp.col(i) = f(ti, tp, sig.state.col(i), sig.noise.col(i));
 
-        // Dist distXp(Xp, sig.wgt);
         Dist distXp;
         distXp.n = nx;
         distXp.mean = Xp * sig.wgt;
-        MatrixXd matRes(nx, 4 * nx);
+        MatrixXd matRes(nx, 2 * (nx + nw));
         MatrixXd matxestp = distXp.mean.replicate(1, nx);
-        cout << sqrt(sig.wgt(1)) * (Xp.block(0, 1, nx, nx) - matxestp) << endl;
-        cout << endl;
-        cout << sqrt(sig.wgt(nx + 1)) * (Xp.block(0, nx + 1, nx, nx) - matxestp) << endl;
-        cout << endl;
-        cout << sqrt(sig.wgt(2 * nx + 1)) * (Xp.block(0, 2 * nx + 1, nx, 2 * nx) - distXp.mean.replicate(1, 2 * nx)) << endl;
-        matRes << sqrt(sig.wgt(1)) * (Xp.block(0, 1, nx, nx) - matxestp), sqrt(sig.wgt(nx + 1)) * (Xp.block(0, nx + 1, nx, nx) - matxestp), sqrt(sig.wgt(2 * nx + 1)) * (Xp.block(0, 2 * nx + 1, nx, 2 * nx) - distXp.mean.replicate(1, 2 * nx));
-        cout << "running to here " << endl;
+        MatrixXd matxestp2 = distXp.mean.replicate(1, 2 * nw);
+        VectorXd sqrtWeight1 = sig.wgt.segment(1, nx).array().sqrt();
+        VectorXd sqrtWeight2 = sig.wgt.segment(nx + 1, nx).array().sqrt();
+        VectorXd sqrtWeight3 = sig.wgt.segment(2 * nx + 1, 2 * nw).array().sqrt();
+        matRes << (Xp.block(0, 1, nx, nx) - matxestp) * sqrtWeight1.asDiagonal(),
+            (Xp.block(0, nx + 1, nx, nx) - matxestp) * sqrtWeight2.asDiagonal(),
+            (Xp.block(0, 2 * nx + 1, nx, 2 * nw) - matxestp2) * sqrtWeight3.asDiagonal();
+        // cout << "running to here " << endl;
         HouseholderQR<MatrixXd> qr(matRes.transpose());
         MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
         MatrixXd matS = matS2.block(0, 0, nx, nx).transpose();
-
         distXp.covL = cholupdate(matS, Xp.col(0) - distXp.mean, sig.wgt(0));
         distXp.cov = distXp.covL * distXp.covL.transpose();
-        MatrixXd Xstd = distXp.covL.triangularView<Lower>().solve(Xp.colwise() - Xp * sig.wgt); // standardised states at the sigma points,  covariance, A7/B10
-        distXp.skew = Xstd.array().pow(3).matrix() * sig.wgt;                                   // skewness of the standardised state, Eq. A8/B11
-        distXp.kurt = Xstd.array().pow(4).matrix() * sig.wgt;                                   // kurtosis of the standardised state, Eq. A9/B12
+        MatrixXd Xstd = distXp.covL.triangularView<Lower>().solve(Xp.colwise() - distXp.mean); // standardised states at the sigma points,  covariance, A7/B10
+        distXp.skew = Xstd.array().pow(3).matrix() * sig.wgt;                                  // skewness of the standardised state, Eq. A8/B11
+        distXp.kurt = Xstd.array().pow(4).matrix() * sig.wgt;                                  // kurtosis of the standardised state, Eq. A9/B12
 
-        // cout << "mean in SRHOUSE prediction:\t" << endl
-        //      << distXp.mean << endl;
-        // cout << "covariance in SRHOUSE prediction:\t" << endl
-        //      << distXp.cov << endl;
-        // cout << "covariance lower triangle in SRHOUSE prediction:\t" << endl
-        //      << distXp.covL << endl;
+        cout << "mean in SRHOUSE prediction:\t" << endl
+             << distXp.mean << endl;
+        cout << "covariance in SRHOUSE prediction:\t" << endl
+             << distXp.cov << endl;
+        cout << "covariance lower triangle in SRHOUSE prediction:\t" << endl
+             << distXp.covL << endl;
+        cout << "skewness in SRHOUSE prediction:\t" << endl
+             << distXp.skew << endl;
+        cout << "kurtosis in SRHOUSE prediction:\t" << endl
+             << distXp.kurt << endl;
 
         distx.push_back(distXp);
         t.push_back(tp);
@@ -183,15 +176,20 @@ void SRHOUSE::update(const VectorXd &z)
     for (int i = 0; i < sig.n_pts; i++)
         Z.col(i) = h(tz, sig.state.col(i), sig.noise.col(i)); // Eq. B3
 
-    // VectorXd res = z - Z.col(0);
-    // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
+    VectorXd res = z - Z.col(0);
+    cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
     cout << "weight:\t" << sig.wgt.transpose() << endl;
     xm = distx.back().mean;
     zm = Z * sig.wgt;
 
     MatrixXd matRes(nz, 2 * nx + 2 * nz);
-    matRes << sqrt(sig.wgt(1)) * (Z.block(0, 1, nz, nx) - zm.replicate(1, nx)), sqrt(sig.wgt(nx + 1)) * (Z.block(0, nx + 1, nz, nx) - zm.replicate(1, nx)), sqrt(sig.wgt(2 * nx + 1)) * (Z.block(0, 2 * nx + 1, nz, 2 * nz) - zm.replicate(1, 2 * nz));
+    VectorXd sqrtWeight1 = sig.wgt.segment(1, nx).array().sqrt();
+    VectorXd sqrtWeight2 = sig.wgt.segment(nx + 1, nx).array().sqrt();
+    VectorXd sqrtWeight3 = sig.wgt.segment(2 * nx + 1, 2 * nz).array().sqrt();
+    matRes << (Z.block(0, 1, nz, nx) - zm.replicate(1, nx)) * sqrtWeight1.asDiagonal(),
+        (Z.block(0, nx + 1, nz, nx) - zm.replicate(1, nx)) * sqrtWeight2.asDiagonal(),
+        (Z.block(0, 2 * nx + 1, nz, 2 * nz) - zm.replicate(1, 2 * nz)) * sqrtWeight3.asDiagonal();
     HouseholderQR<MatrixXd> qr(matRes.transpose());
 
     MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
@@ -205,8 +203,8 @@ void SRHOUSE::update(const VectorXd &z)
     // Kalman Gain
     MatrixXd matK = matSzz.transpose().householderQr().solve(matSzz.householderQr().solve(Pzx));
     K = matK.transpose();
-    // cout << "Kalman gain: \n"
-    //      << K << endl;
+    cout << "Kalman gain: \n"
+         << K << endl;
 
     Dist distXu;
     distXu.n = nx;
@@ -215,20 +213,20 @@ void SRHOUSE::update(const VectorXd &z)
     distXu.covL = cholupdate(distx.back().covL, matU, -1.0);
     distXu.cov = distXu.covL * distXu.covL.transpose();
     Xu = sig.state - K * (Z.colwise() - zm);
-    MatrixXd Xstd = distx.back().covL.triangularView<Lower>().solve(Xu.colwise() - Xu * sig.wgt); // standardised states at the sigma points,  covariance, A7/B10
-    distXu.skew = Xstd.array().pow(3).matrix() * sig.wgt;                                         // skewness of the standardised state, Eq. A8/B11
-    distXu.kurt = Xstd.array().pow(4).matrix() * sig.wgt;                                         // kurtosis of the standardised state, Eq. A9/B12
+    MatrixXd Xstd = distXu.covL.triangularView<Lower>().solve(Xu.colwise() - Xu * sig.wgt); // standardised states at the sigma points,  covariance, A7/B10
+    distXu.skew = Xstd.array().pow(3).matrix() * sig.wgt;                                   // skewness of the standardised state, Eq. A8/B11
+    distXu.kurt = Xstd.array().pow(4).matrix() * sig.wgt;                                   // kurtosis of the standardised state, Eq. A9/B12
 
-    // cout << "updated mean: \n"
-    //      << distXu.mean << endl;
-    // cout << "updated covariance: \n"
-    //      << distXu.cov << endl;
-    // cout << "updated covariance lower triangle: \n"
-    //      << distXu.covL << endl;
-    // cout << "updated skewness: \n"
-    //      << distXu.skew << endl;
-    // cout << "updated kurtosis: \n"
-    //      << distXu.kurt << endl;
+    cout << "updated mean: \n"
+         << distXu.mean << endl;
+    cout << "updated covariance: \n"
+         << distXu.cov << endl;
+    cout << "updated covariance lower triangle: \n"
+         << distXu.covL << endl;
+    cout << "updated skewness: \n"
+         << distXu.skew << endl;
+    cout << "updated kurtosis: \n"
+         << distXu.kurt << endl;
     // // doesn't use Eq. 8 for covariance. instead, Pu = Pp - K*Pzz*K^T is used.
     // Xu = sig.state - K * (Z.colwise() - zm);
 

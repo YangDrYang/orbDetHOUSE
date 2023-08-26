@@ -35,7 +35,7 @@ process_rmse <- function(dist) {
         house_file <- paste("out/out_projectile/house_est_", dist, "_", j, ".csv", sep = "")
         ukf_file <- paste("out/out_projectile/ukf_est_", dist, "_", j, ".csv", sep = "")
         cut4_file <- paste("out/out_projectile/cut4_est_", dist, "_", j, ".csv", sep = "")
-        cut6_file <- paste("out/out_projectile/cut6_est_", dist, "_", j, ".csv", sep = "")
+        cut6_file <- paste("out/out_projectile/srhouse_est_", dist, "_", j, ".csv", sep = "")
 
         tru <- state_interp(tru_file)
 
@@ -71,7 +71,7 @@ process_rmse <- function(dist) {
         sqrt(mean(cut6_v_se))
     )
 
-    filter <- c("HOUSE", "UKF", "CUT-4", "CUT-6")
+    filter <- c("HOUSE", "UKF", "CUT-4", "SRHOUSE")
 
     rmse <- data.frame(filterno = 1:4, filter, rmse_pos, rmse_vel)
 
@@ -164,7 +164,7 @@ process_box <- function(dist) {
         house_file <- paste("out/out_projectile/house_est_", dist, "_", k, ".csv", sep = "")
         ukf_file <- paste("out/out_projectile/ukf_est_", dist, "_", k, ".csv", sep = "")
         cut4_file <- paste("out/out_projectile/cut4_est_", dist, "_", k, ".csv", sep = "")
-        cut6_file <- paste("out/out_projectile/cut6_est_", dist, "_", k, ".csv", sep = "")
+        cut6_file <- paste("out/out_projectile/srhouse_est_", dist, "_", k, ".csv", sep = "")
 
         tru <- as.matrix(read.csv(tru_file))[, 2:7]
 
@@ -188,7 +188,7 @@ process_box <- function(dist) {
         cut6_v_err <- c(sqrt(rowSums((cut6_est[, 4:6] - tru[, 4:6])^2)), cut6_v_err)
     }
 
-    names <- c("HOUSE", "UKF", "CUT-4", "CUT-6")
+    names <- c("HOUSE", "UKF", "CUT-4", "SRHOUSE")
 
     r_err <- data.frame(HOUSE = house_r_err, UKF = ukf_r_err, CUT4 = cut4_r_err, CUT6 = cut6_r_err)
     v_err <- data.frame(HOUSE = house_v_err, UKF = ukf_v_err, CUT4 = cut4_v_err, CUT6 = cut6_v_err)

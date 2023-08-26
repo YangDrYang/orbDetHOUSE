@@ -22,7 +22,7 @@ Filter <- rep(c(
     rep("HOUSE", 2 * steps),
     rep("UKF", 2 * steps),
     rep("CUT-4", 2 * steps),
-    rep("CUT-6", 2 * steps)
+    rep("SRHOUSE", 2 * steps)
 ), 2)
 
 rmse_gauss <- as.matrix(read.csv("out/out_projectile/rmse_t_gauss.csv"))
@@ -35,7 +35,7 @@ RMSE <- c(
     c(rmse_pearson[, 2:9])
 )
 
-filter <- c("HOUSE", "UKF", "CUT-4", "CUT-6")
+filter <- c("HOUSE", "UKF", "CUT-4", "SRHOUSE")
 
 data <- data.frame(t, RMSE, Filter, comp, dist)
 
@@ -63,4 +63,4 @@ ggplot(data, aes(x = t, y = RMSE)) +
         labels = trans_format("log10", math_format(10^.x))
     )
 
-ggsave("proj_rmse.eps", width = 6, height = 4.5, units = "in")
+ggsave("plots/proj_rmse.eps", width = 6, height = 4.5, units = "in")
