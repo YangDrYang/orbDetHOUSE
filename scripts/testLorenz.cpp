@@ -368,10 +368,16 @@ int main(int argc, char *argv[])
     // HOUSE distributions for state
     Dist distXi(Pxx0);
     distXi.mean = initialStateVec;
+    distXi.skew.setConstant(skew0);
+    distXi.kurt.setConstant(kurt0);
     // HOUSE distributions for state noise
     Dist distw(Pww);
+    distw.skew.setConstant(skeww);
+    distw.kurt.setConstant(kurtw);
     // HOUSE distributions for measurement noise
     Dist distn(Pnn);
+    distn.skew.setConstant(skewn);
+    distn.kurt.setConstant(kurtn);
 
     HOUSE house(stateFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, optFilter.delta);
     SRHOUSE srhouse(stateFun, hh, dimMeas, 0, 1e6, distXi, distw, distn, optFilter.weight);

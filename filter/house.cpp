@@ -120,6 +120,10 @@ void HOUSE::predict(double tp)
         Dist distxi = distx.back();
         while (tp > ti + dtMax)
         {
+            // amplify the process noise covariance
+            // double scaleFactor = 25;
+            // Dist distwAmplified = distw;
+            // distwAmplified.covL.diagonal() = distw.covL.diagonal() * scaleFactor;
             Sigma sig(distxi, distw, delta);
 
             MatrixXd Xp(nx, sig.n_pts);
@@ -216,12 +220,13 @@ void HOUSE::run(const VectorXd &tz, const MatrixXd &Z)
     {
         cout << "the " << i << "th epoch" << endl;
         predict(tz(i));
-        update(Z.col(i));
-        // // only update if given a measurment
-        // if (abs(Z(1, i)) <= M_PI * 2)
-        // {
-        //     update(Z.col(i));
-        // }
+        // update(Z.col(i));
+
+        // od example: only update if given a measurment
+        if (abs(Z(1, i)) <= M_PI * 2)
+        {
+            update(Z.col(i));
+        }
     }
 }
 

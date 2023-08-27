@@ -344,8 +344,7 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
 
     // read orbital parameters (required)
     YAML::Node orbitParams = config["initial_orbtial_parameters"];
-    int dimState = orbitParams["dim_state"].as<int>();
-    initialState.dimState = dimState;
+    initialState.dimState = orbitParams["dim_state"].as<int>();
     vector<double> tempVec;
     initialState.initialStateType = orbitParams["initial_state_type"].as<string>();
     // read params as standard vector, convert to eigen vector
@@ -380,10 +379,10 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     tempVec = measParams["ground_station"].as<vector<double>>();
     measMdl.groundStation = stdVec2EigenVec(tempVec);
     measMdl.dimMeas = measParams["dim_meas"].as<int>();
-    measMdl.errorStd.azimuthErr = measParams["elevation_error"].as<double>();
-    measMdl.errorStd.elevationErr = measParams["azimuth_error"].as<double>();
-    measMdl.errorStd.rangeErr = measParams["range_error"].as<double>();
-    measMdl.errorStd.rangeRateErr = measParams["range_rate_error"].as<double>();
+    measMdl.errorStatistics.azimuthErr = measParams["elevation_error"].as<double>();
+    measMdl.errorStatistics.elevationErr = measParams["azimuth_error"].as<double>();
+    measMdl.errorStatistics.rangeErr = measParams["range_error"].as<double>();
+    measMdl.errorStatistics.rangeRateErr = measParams["range_rate_error"].as<double>();
 
     // read propagator settings (optional)
     YAML::Node propTruthSettings = config["propagator_truth_settings"];
@@ -608,10 +607,10 @@ int main(int argc, char *argv[])
     };
 
     Matrix4d measNoiseCov;
-    measNoiseCov << pow(measMdl.errorStd.azimuthErr * ARC_SEC, 2), 0, 0, 0,
-        0, pow(measMdl.errorStd.azimuthErr * ARC_SEC, 2), 0, 0,
-        0, 0, pow(measMdl.errorStd.rangeErr, 2), 0,
-        0, 0, 0, pow(measMdl.errorStd.rangeRateErr, 2);
+    measNoiseCov << pow(measMdl.errorStatistics.azimuthErr * ARC_SEC, 2), 0, 0, 0,
+        0, pow(measMdl.errorStatistics.azimuthErr * ARC_SEC, 2), 0, 0,
+        0, 0, pow(measMdl.errorStatistics.rangeErr, 2), 0,
+        0, 0, 0, pow(measMdl.errorStatistics.rangeRateErr, 2);
 
     MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
 
@@ -711,7 +710,7 @@ int main(int argc, char *argv[])
     UKF ukf(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
     UKF cut4(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
     UKF cut6(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
-    UKF cut8(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
+    // UKF cut8(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
 
     // HOUSE distributions for state
     Dist distXi(initialCov);
@@ -788,10 +787,10 @@ int main(int argc, char *argv[])
             if (measTruth(0, k) != NO_MEASUREMENT)
             {
                 // generate corrupted measurements
-                // measCorrupted(0, k) += measMdl.errorStd.azimuthErr * ARC_SEC * dist(gen);
-                // measCorrupted(1, k) += measMdl.errorStd.elevationErr * ARC_SEC * dist(gen);
-                // measCorrupted(2, k) += measMdl.errorStd.rangeErr * dist(gen);
-                // measCorrupted(3, k) += measMdl.errorStd.rangeRateErr * dist(gen);
+                // measCorrupted(0, k) += measMdl.errorStatistics.azimuthErr * ARC_SEC * dist(gen);
+                // measCorrupted(1, k) += measMdl.errorStatistics.elevationErr * ARC_SEC * dist(gen);
+                // measCorrupted(2, k) += measMdl.errorStatistics.rangeErr * dist(gen);
+                // measCorrupted(3, k) += measMdl.errorStatistics.rangeRateErr * dist(gen);
                 // // measTruth.col(k) += matMeasNoise.col(k);
                 measCorrupted(0, k) += matMeasNoise(0, k);
                 measCorrupted(1, k) += matMeasNoise(1, k);

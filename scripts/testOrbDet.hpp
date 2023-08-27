@@ -79,7 +79,7 @@ struct Errors
 {
     double rightAscensionErr, declinationErr;
     double elevationErr, azimuthErr, rangeErr, rangeRateErr;
-    VectorXd skewnessVec, kurtosisVec;
+    VectorXd stdVec, skewVec, kurtVec;
 };
 
 struct MeasModel
@@ -87,7 +87,7 @@ struct MeasModel
     string measFile;
     VectorXd groundStation;
     int dimMeas;
-    Errors errorStd;
+    Errors errorStatistics;
 };
 
 // // prototypes

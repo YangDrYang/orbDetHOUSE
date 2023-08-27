@@ -1,8 +1,8 @@
 # required
 filter_options:
   square_root: true
-  HOUSE: true
-  UKF: false
+  HOUSE: false
+  UKF: true
   CUT4: false
   CUT6: false
   num_trials: 1
@@ -16,7 +16,7 @@ scenario_parameters:
   MJD_end:  59351.54470621643 # 2021-May-17
   # MJD_start: 59349.51137986922 # 2021-May-15
   # MJD_end:  59349.51250939351
-  max_time_step: 10
+  max_time_step: 180
   # max_time_step: 1800
   # this directory must exist
   output_directory: out/out_ccdata
@@ -38,21 +38,21 @@ initial_orbtial_parameters:
     - [0, 0, 0, 0, 0.25, 0]
     - [0, 0, 0, 0, 0, 0.04]    
   initial_skewness: -1.6
-  initial_kurtosis: 10    
-  # process_noise_covariance: # ric coordinate
-  #   - [25, 0, 0, 0, 0, 0]
-  #   - [0, 25, 0, 0, 0, 0]
-  #   - [0, 0, 25, 0, 0, 0]
-  #   - [0, 0, 0, 0.0002, 0, 0]
-  #   - [0, 0, 0, 0, 0.0002, 0]
-  #   - [0, 0, 0, 0, 0, 0.0002]
+  initial_kurtosis: 15    
   process_noise_covariance: # ric coordinate
-    - [10, 0, 0, 0, 0, 0]
-    - [0, 10, 0, 0, 0, 0]
-    - [0, 0, 10, 0, 0, 0]
-    - [0, 0, 0, 0.000002, 0, 0]
-    - [0, 0, 0, 0, 0.000002, 0]
-    - [0, 0, 0, 0, 0, 0.000002]
+    - [0.25, 0, 0, 0, 0, 0]
+    - [0, 0.25, 0, 0, 0, 0]
+    - [0, 0, 0.25, 0, 0, 0]
+    - [0, 0, 0, 0.0001, 0, 0]
+    - [0, 0, 0, 0, 0.0001, 0]
+    - [0, 0, 0, 0, 0, 0.0001]
+  # process_noise_covariance: # ric coordinate
+  #   - [10, 0, 0, 0, 0, 0]
+  #   - [0, 10, 0, 0, 0, 0]
+  #   - [0, 0, 10, 0, 0, 0]
+  #   - [0, 0, 0, 0.000002, 0, 0]
+  #   - [0, 0, 0, 0, 0.000002, 0]
+  #   - [0, 0, 0, 0, 0, 0.000002]
 
 # requried
 measurement_parameters:
@@ -62,9 +62,13 @@ measurement_parameters:
   ground_station: [-2730164.38085497, 3714370.03545681, 4393632.92952871, 0, 0, 0] #Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
   dim_meas: 2
   # measurement error with units [arcsec, arcsec]
-  right_ascension_error: 3
-  declination_error: 3
-
+  # right_ascension_error: 5
+  # declination_error: 5
+  measurement_std: [5, 5]
+  measurement_skew: [0, 0]
+  measurement_kurt: [3, 3]
+  # measurement_skew: [-0.67, -0.67]
+  # measurement_kurt: [0.30, 4.33]
 
 # optional, if not defined they will be set to default values
 propagator_filter_settings:
@@ -83,7 +87,7 @@ propagator_filter_settings:
   dragCoef: 2.0
   dragArea: 4.091655
   satMass: 961.831
-# # propagator_filter_settings:
+# propagator_filter_settings:
 #   earth_gravity_model_order: 20
 #   earth_gravity_model_degree: 20
 #   third_body_attraction: false

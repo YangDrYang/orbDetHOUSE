@@ -275,8 +275,7 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
 
     // read orbital parameters (required)
     YAML::Node orbitParams = config["initial_orbtial_parameters"];
-    int dimState = orbitParams["dim_state"].as<int>();
-    initialState.dimState = dimState;
+    initialState.dimState = orbitParams["dim_state"].as<int>();
     vector<double> tempVec;
     initialState.initialStateType = orbitParams["initial_state_type"].as<string>();
     // read params as standard vector, convert to eigen vector
@@ -312,10 +311,10 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     tempVec = measParams["ground_station"].as<vector<double>>();
     measMdl.groundStation = stdVec2EigenVec(tempVec);
     measMdl.dimMeas = measParams["dim_meas"].as<int>();
-    measMdl.errorStd.azimuthErr = measParams["elevation_error"].as<double>();
-    measMdl.errorStd.elevationErr = measParams["azimuth_error"].as<double>();
-    measMdl.errorStd.rangeErr = measParams["range_error"].as<double>();
-    measMdl.errorStd.rangeRateErr = measParams["range_rate_error"].as<double>();
+    measMdl.errorStatistics.azimuthErr = measParams["elevation_error"].as<double>();
+    measMdl.errorStatistics.elevationErr = measParams["azimuth_error"].as<double>();
+    measMdl.errorStatistics.rangeErr = measParams["range_error"].as<double>();
+    measMdl.errorStatistics.rangeRateErr = measParams["range_rate_error"].as<double>();
 
     // read propagator settings (optional)
     YAML::Node propTruthSettings = config["propagator_truth_settings"];
@@ -463,9 +462,10 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType)
     // set up the IERS instance
     getIERS(epoch.startMJD);
 
-    string jplFile = "./auxdata/linux_p1550p2650.440";
-    const char *ephFile = jplFile.c_str();
-    pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
+    // string jplFile = "./auxdata/linux_p1550p2650.440";
+    // const char *ephFile = jplFile.c_str();
+    // pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
+    pJPLEph = jpl_init_ephemeris("./auxdata/linux_p1550p2650.440", nullptr, nullptr);
 
     VectorXd rvECI = VectorXd::Zero(6);
     string ecefTag = "ECEF";
@@ -518,10 +518,6 @@ int main(int argc, char *argv[])
     // initialise
     initGlobalVariables(initialStateVec, initialStateType);
 
-    // setup orbit propagator
-    orbitProp.setPropOption(forceModelsTruthOpt);
-    orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
-
     // UKF state & measurement models
     DynamicModel::stf g = accelerationModel;
     DynamicModel f(g, dimState, 1E-6, 1E-6);
@@ -538,10 +534,10 @@ int main(int argc, char *argv[])
     };
 
     Matrix4d measNoiseCov;
-    measNoiseCov << pow(measMdl.errorStd.azimuthErr * ARC_SEC, 2), 0, 0, 0,
-        0, pow(measMdl.errorStd.azimuthErr * ARC_SEC, 2), 0, 0,
-        0, 0, pow(measMdl.errorStd.rangeErr, 2), 0,
-        0, 0, 0, pow(measMdl.errorStd.rangeRateErr, 2);
+    measNoiseCov << pow(measMdl.errorStatistics.azimuthErr * ARC_SEC, 2), 0, 0, 0,
+        0, pow(measMdl.errorStatistics.azimuthErr * ARC_SEC, 2), 0, 0,
+        0, 0, pow(measMdl.errorStatistics.rangeErr, 2), 0,
+        0, 0, 0, pow(measMdl.errorStatistics.rangeRateErr, 2);
 
     MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
 
@@ -550,6 +546,7 @@ int main(int argc, char *argv[])
 
     // simulate ground-truth trajectory and generate non-corrupted measurement vectors
     orbitProp.setPropOption(forceModelsTruthOpt);
+    orbitProp.printPropOption();
     orbitProp.initPropagator(initialStateVec, epoch.startMJD, leapSec, &erpt, egm, pJPLEph);
     VectorXd propStateVec = initialStateVec;
     double time = 0, dt = epoch.timeStep;
@@ -596,7 +593,7 @@ int main(int argc, char *argv[])
     UKF ukf(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
     UKF cut4(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
     UKF cut6(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
-    UKF cut8(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
+    // UKF cut8(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
 
     // HOUSE distributions for state
     Dist distXi(initialCov);
@@ -643,6 +640,7 @@ int main(int argc, char *argv[])
         cut6.reset(0, initialState_, initialCov);
 
         orbitProp.setPropOption(forceModelsFilterOpt);
+        orbitProp.printPropOption();
         orbitProp.initPropagator(initialState_, epoch.startMJD, leapSec, &erpt, egm, pJPLEph); // reset propagator
 
         // copy measurement truth to measurement corrupted

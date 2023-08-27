@@ -3,14 +3,16 @@ import matplotlib.pyplot as plt
 import processing
 import numpy as np
 import matplotlib.dates as mdates
+import matplotlib.ticker as mtick
 import datetime as dt
 import scipy.stats as stats
+import os
 
-filters = ["ukf", "cut4", "cut6", "house"]
+filters = ["srhouse", "house", "srukf", "ukf", "cut4", "cut6"]
 # filters = ["ukf"]
-# filters = ["house"]
+# filters = ["srhouse", "house"]
 # Directory path
-out_folder_path = "out/out_ccdata/"
+data_folder_path = "out/out_ccdata/"
 plot_folder_path = "plots/"
 state_type = "mee"
 # state_type = "eci"
@@ -23,14 +25,21 @@ od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + ".csv"
 # # *************** post-residuals
 
 # Create a new figure and axes for plot
-fig, axes = plt.subplots(ncols=len(filters), nrows=2, figsize=(12, 5))
+num_cols = 2  # Number of filters per row
+num_rows = (len(filters) + num_cols - 1) // num_cols  # Calculate the number of rows
+fig, axes = plt.subplots(
+    ncols=num_cols, nrows=num_rows, figsize=(12, 2 * num_rows), sharex=True
+)
 # Set the font size
 plt.rcParams.update({"font.size": 12})
 
 for i, filter_type in enumerate(filters):
+    row = i // num_cols
+    col = i % num_cols
+
     # post measurement residuals
     od_file = (
-        out_folder_path
+        data_folder_path
         + filter_type
         + "_id_"
         + str(norad_id)
@@ -39,7 +48,7 @@ for i, filter_type in enumerate(filters):
         + ".csv"
     )
     post_res_file = (
-        out_folder_path
+        data_folder_path
         + filter_type
         + "_post_res_id_"
         + str(norad_id)
@@ -65,38 +74,70 @@ for i, filter_type in enumerate(filters):
     dates = pd.to_datetime(post_res_df["MJD"] + 2400000.5, unit="D", origin="julian")
 
     # Plot RA vs MJD
-    axes[0, i].scatter(dates, np.radians(post_res_df["RA"]), color="blue")
-    axes[0, i].set_ylabel("ra residuals (radians)")
-    axes[0, i].set_ylim(-1.0e-4, 1.0e-4)
-    axes[0, i].set_title(filter_type)
+    ax1 = axes[row, col]
+    ax2 = ax1.twinx()
 
-    # Plot Dec vs MJD
-    axes[1, i].scatter(dates, np.radians(post_res_df["Dec"]), color="red")
-    axes[1, i].set_xlabel("hour (utc)")
-    axes[1, i].set_ylabel("dec residuals (radians)")
-    axes[1, i].set_ylim(-1.5e-4, 5.0e-5)
+    ax1.scatter(
+        dates,
+        np.degrees(post_res_df["RA"]) * 3600,
+        color="blue",
+        s=5,
+        label="RA Residuals",
+    )
+    ax1.set_ylabel("RA Residuals \n(arcsec)", color="blue")
+    ax1.tick_params(axis="y", labelcolor="blue")
+    # ax1.set_ylim(-5e-6, 7.5e-6)
+    ax1.set_ylim(-30, 40)
+    # ax1.yaxis.set_major_formatter(
+    #     mtick.FormatStrFormatter("%.2e")
+    # )  # Scientific notation
+    # Add filter name as title
+    ax1.set_title(filter_type.upper())
+
+    # add 20 mins shift to distinguish ra and dec
+    dates = pd.to_datetime(
+        post_res_df["MJD"] + 2400000.5 + 20 / 1440, unit="D", origin="julian"
+    )
+    ax2.scatter(
+        dates,
+        np.degrees(post_res_df["Dec"]) * 3600,
+        color="red",
+        s=5,
+        label="Dec Residuals",
+    )
+    ax2.set_ylabel("Dec Residuals \n(arcsec)", color="red")
+    ax2.tick_params(axis="y", labelcolor="red")
+    # ax2.set_ylim(-1e-5, 1.0e-5)
+    ax2.set_ylim(-25, 40)
+    # ax2.yaxis.set_major_formatter(
+    #     mtick.FormatStrFormatter("%.2e")
+    # )  # Scientific notation
 
     # Format x-axis as hours
     hours = mdates.HourLocator(interval=6)
     hour_format = mdates.DateFormatter("%H:%M")
-    axes[1, i].xaxis.set_major_locator(hours)
-    axes[1, i].xaxis.set_major_formatter(hour_format)
+    ax2.xaxis.set_major_locator(hours)
+    ax2.xaxis.set_major_formatter(hour_format)
 
     # Show only the date for the first epoch of each day
     dates_first_epoch = np.unique([date.date() for date in dates])
     for date in dates_first_epoch:
-        axes[0, i].axvline(date, color="gray", linestyle="--", alpha=0.5)
-        axes[1, i].axvline(date, color="gray", linestyle="--", alpha=0.5)
+        ax1.axvline(date, color="gray", linestyle="--", alpha=0.5)
+        ax2.axvline(date, color="gray", linestyle="--", alpha=0.5)
 
     # Show only 1 hour before and 1 hour after the data on x-axis
     start_time = min(dates) - dt.timedelta(hours=1)
     end_time = max(dates) + dt.timedelta(hours=1)
-    axes[1, i].set_xlim(start_time, end_time)
+    ax2.set_xlim(start_time, end_time)
+
+    # # Add legend
+    # lines, labels = ax1.get_legend_handles_labels()
+    # lines2, labels2 = ax2.get_legend_handles_labels()
+    # ax2.legend(lines + lines2, labels + labels2, loc="upper left")
 
 # Rotate x-axis tick labels and adjust label spacing
 fig.autofmt_xdate(rotation=45)
 plt.tight_layout()
-# plt.show()
 
 post_res_plot_all_file = (
     plot_folder_path + "all_post_res_id_" + str(norad_id) + "_" + state_type + ".pdf"
@@ -131,7 +172,7 @@ print("Time Windows:")
 for i, (start_time, end_time) in enumerate(time_windows):
     print(f"Time Window {i + 1}: Start = {start_time:.2f}, End = {end_time:.2f}")
 
-
+filters = ["house", "srukf", "ukf", "cut4", "cut6", "srhouse"]
 # *************** absolute error plot for position components
 
 # Create an empty DataFrame to store RMS values
@@ -146,15 +187,22 @@ fig, ax = plt.subplots(nrows=3, ncols=3, figsize=(15, 10))
 plt.rcParams.update({"font.size": 12})
 
 # Create a color mapping dictionary
-color_map = {"house": "orange", "ukf": "red", "cut4": "blue", "cut6": "green"}
+color_map = {
+    "srhouse": "green",
+    "house": "black",
+    "srukf": "pink",
+    "ukf": "red",
+    "cut4": "blue",
+    "cut6": "orange",
+}
 
 for i, filter_type in enumerate(filters):
     processing.process_rmse_each_filter_ccdata(
-        filter_type, out_folder_path, norad_id, od_ref_data_file, state_type
+        filter_type, data_folder_path, norad_id, od_ref_data_file, state_type
     )
     # Read the data into a pandas dataframe
     err_df = pd.read_csv(
-        out_folder_path
+        data_folder_path
         + filter_type
         + "_err_id_"
         + str(norad_id)
@@ -202,16 +250,24 @@ for i, filter_type in enumerate(filters):
         )
 
         sub_ax = ax[0, j]
-        sub_ax.scatter(
-            stamp[start_idx],
-            np.abs(err_df["pos_err_x"][start_idx]),
-            color=color,
-            label=filter_type,
-        )
+        if j == 0:
+            sub_ax.scatter(
+                stamp[start_idx],
+                np.abs(err_df["pos_err_x"][start_idx]),
+                color=color,
+                label=filter_type.upper(),
+            )
+        else:
+            sub_ax.scatter(
+                stamp[start_idx],
+                np.abs(err_df["pos_err_x"][start_idx]),
+                color=color,
+            )
         sub_ax.set_xlabel("time (minutes)")
         sub_ax.set_ylabel("x absolute error (m)")
         sub_ax.set_yscale("log")
-        sub_ax.legend()
+        if j == 0:
+            sub_ax.legend()
 
     # Plot absolute y errors in desired sub-time windows
     for j, (start_time, end_time) in enumerate(time_windows):
@@ -221,12 +277,12 @@ for i, filter_type in enumerate(filters):
             stamp[start_idx],
             np.abs(err_df["pos_err_y"][start_idx]),
             color=color,
-            label=filter_type,
+            # label=filter_type.upper(),
         )
         sub_ax.set_xlabel("time (minutes)")
         sub_ax.set_ylabel("y absolute error (m)")
         sub_ax.set_yscale("log")
-        sub_ax.legend()
+        # sub_ax.legend()
 
     # Plot absolute z errors in desired sub-time windows
     for j, (start_time, end_time) in enumerate(time_windows):
@@ -236,12 +292,12 @@ for i, filter_type in enumerate(filters):
             stamp[start_idx],
             np.abs(err_df["pos_err_z"][start_idx]),
             color=color,
-            label=filter_type,
+            # label=filter_type.upper(),
         )
         sub_ax.set_xlabel("time (minutes)")
         sub_ax.set_ylabel("z absolute error (m)")
         sub_ax.set_yscale("log")
-        sub_ax.legend()
+        # sub_ax.legend()
 
 # Set x-axis limits and x-ticks for each subplot to show all three time windows
 for i in range(3):
@@ -285,7 +341,7 @@ plt.rcParams.update({"font.size": 12})
 for i, filter_type in enumerate(filters):
     # Read the data into a pandas dataframe
     err_df = pd.read_csv(
-        out_folder_path
+        data_folder_path
         + filter_type
         + "_err_id_"
         + str(norad_id)
@@ -333,16 +389,25 @@ for i, filter_type in enumerate(filters):
         )
 
         sub_ax = ax[0, j]
-        sub_ax.scatter(
-            stamp[start_idx],
-            np.abs(err_df["vel_err_x"][start_idx]),
-            color=color,
-            label=filter_type,
-        )
+        if j == 0:
+            sub_ax.scatter(
+                stamp[start_idx],
+                np.abs(err_df["vel_err_x"][start_idx]),
+                color=color,
+                label=filter_type.upper(),
+            )
+        else:
+            sub_ax.scatter(
+                stamp[start_idx],
+                np.abs(err_df["vel_err_x"][start_idx]),
+                color=color,
+                # label=filter_type.upper(),
+            )
         sub_ax.set_xlabel("time (minutes)")
         sub_ax.set_ylabel("vx absolute error (m)")
         sub_ax.set_yscale("log")
-        sub_ax.legend()
+        if j == 0:
+            sub_ax.legend()
 
     # Plot absolute y errors in desired sub-time windows
     for j, (start_time, end_time) in enumerate(time_windows):
@@ -352,12 +417,12 @@ for i, filter_type in enumerate(filters):
             stamp[start_idx],
             np.abs(err_df["vel_err_y"][start_idx]),
             color=color,
-            label=filter_type,
+            # label=filter_type.upper(),
         )
         sub_ax.set_xlabel("time (minutes)")
         sub_ax.set_ylabel("vy absolute error (m)")
         sub_ax.set_yscale("log")
-        sub_ax.legend()
+        # sub_ax.legend()
 
     # Plot absolute z errors in desired sub-time windows
     for j, (start_time, end_time) in enumerate(time_windows):
@@ -367,12 +432,12 @@ for i, filter_type in enumerate(filters):
             stamp[start_idx],
             np.abs(err_df["vel_err_z"][start_idx]),
             color=color,
-            label=filter_type,
+            # label=filter_type.upper(),
         )
         sub_ax.set_xlabel("time (minutes)")
         sub_ax.set_ylabel("vz absolute error (m)")
         sub_ax.set_yscale("log")
-        sub_ax.legend()
+        # sub_ax.legend()
 
 # Set x-axis limits and x-ticks for each subplot to show all three time windows
 for i in range(3):
@@ -390,149 +455,152 @@ fig.savefig("plots/all_vel_abserr_id_" + str(norad_id) + "_" + state_type + ".pd
 # Print the DataFrame with RMS values
 print(df_vel_rmse)
 
-# *************** rmse bar chart for position components
+# # *************** rmse bar chart for position components
 
-# Define the filter types and time windows
-time_windows = [
-    "0.0-2.1686866565141827",
-    "1462.6672116550617-1464.8276216641534",
-    "2926.092338307062-2927.989939986728",
-]
+# # Define the filter types and time windows
+# time_windows = [
+#     "0.0-2.1686866565141827",
+#     "1462.6672116550617-1464.8276216641534",
+#     "2926.092338307062-2927.989939986728",
+# ]
 
-# Set the figure size and create subplots
-fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(11, 6))
+# # Set the figure size and create subplots
+# fig, axs = plt.subplots(nrows=len(filters) // 2, ncols=2, figsize=(11, 6))
 
-# Set the font size
-plt.rcParams.update({"font.size": 12})
+# # Set the font size
+# plt.rcParams.update({"font.size": 12})
 
-# Calculate the maximum RMSE value across all filter types and time windows
-max_pos_rmse = df_pos_rmse[["x_rmse", "y_rmse", "z_rmse"]].max().max() * 1.05
+# # Calculate the maximum RMSE value across all filter types and time windows
+# max_pos_rmse = df_pos_rmse[["x_rmse", "y_rmse", "z_rmse"]].max().max() * 1.05
 
-# Loop over the filter types
-for i, filter_type in enumerate(filters):
-    # Calculate the subplot position
-    row = i // 2
-    col = i % 2
+# # Loop over the filter types
+# for i, filter_type in enumerate(filters):
+#     # Calculate the subplot position
+#     row = i // 2
+#     col = i % 2
 
-    # Select the current subplot
-    ax = axs[row, col]
+#     # Select the current subplot
+#     ax = axs[row, col]
 
-    # Filter the data for the current filter type
-    filter_data = df_pos_rmse[df_pos_rmse["filter_type"] == filter_type]
+#     # Filter the data for the current filter type
+#     filter_data = df_pos_rmse[df_pos_rmse["filter_type"] == filter_type]
 
-    # Get the x-axis positions for the bars
-    x_pos = np.arange(len(time_windows))
-    # print("x_pos:   ", x_pos)
+#     # Get the x-axis positions for the bars
+#     x_pos = np.arange(len(time_windows))
+#     # print("x_pos:   ", x_pos)
 
-    # Get the x, y, z RMSE values for the current filter type
-    x_rmse = filter_data["x_rmse"]
-    y_rmse = filter_data["y_rmse"]
-    z_rmse = filter_data["z_rmse"]
-    # print("x_rmse:   ", x_rmse)
+#     # Get the x, y, z RMSE values for the current filter type
+#     x_rmse = filter_data["x_rmse"]
+#     y_rmse = filter_data["y_rmse"]
+#     z_rmse = filter_data["z_rmse"]
+#     # print("x_rmse:   ", x_rmse)
 
-    # Plot the x RMSE values as bars
-    ax.bar(x_pos, x_rmse, width=0.2, label="x")
-    # Plot the y RMSE values as bars with a slight offset
-    ax.bar(x_pos + 0.3, y_rmse, width=0.2, label="y")
-    # Plot the z RMSE values as bars with a larger offset
-    ax.bar(x_pos + 0.6, z_rmse, width=0.2, label="z")
+#     # Plot the x RMSE values as bars
+#     ax.bar(x_pos, x_rmse, width=0.2, label="x")
+#     # Plot the y RMSE values as bars with a slight offset
+#     ax.bar(x_pos + 0.3, y_rmse, width=0.2, label="y")
+#     # Plot the z RMSE values as bars with a larger offset
+#     ax.bar(x_pos + 0.6, z_rmse, width=0.2, label="z")
 
-    # Set the x-axis ticks and labels
-    ax.set_xticks(x_pos + 0.3)
-    # Split the time window into start and end values and format them
-    time_window_labels = [
-        f"{float(tw.split('-')[0]):.2f}-{float(tw.split('-')[1]):.2f}"
-        for tw in time_windows
-    ]
-    ax.set_xticklabels(time_window_labels)
-    ax.set_xlabel("time window (minutes)")
-    ax.set_ylabel("rmse (metres)")
-    ax.set_title(filter_type)
+#     # Set the x-axis ticks and labels
+#     ax.set_xticks(x_pos + 0.3)
+#     # Split the time window into start and end values and format them
+#     time_window_labels = [
+#         f"{float(tw.split('-')[0]):.2f}-{float(tw.split('-')[1]):.2f}"
+#         for tw in time_windows
+#     ]
+#     ax.set_xticklabels(time_window_labels)
+#     ax.set_xlabel("time window (minutes)")
+#     ax.set_ylabel("rmse (metres)")
+#     if i == 0:
+#         ax.set_title(filter_type.upper())
 
-    # Set the y-axis scale to logarithmic
-    ax.set_yscale("log")
+#     # Set the y-axis scale to logarithmic
+#     ax.set_yscale("log")
 
-    # Set the y-axis limits
-    ax.set_ylim([1, max_pos_rmse])
+#     # Set the y-axis limits
+#     ax.set_ylim([1, max_pos_rmse])
 
-    # Add a legend to the subplot
-    ax.legend(loc="upper left")
+#     # Add a legend to the subplot
+#     ax.legend(loc="upper left")
 
-# Adjust the spacing between subplots
-plt.tight_layout()
+# # Adjust the spacing between subplots
+# plt.tight_layout()
 
-# Show the plot
-# plt.show()
-fig.savefig("plots/all_pos_rmse_id_" + str(norad_id) + "_" + state_type + ".pdf")
+# # Show the plot
+# # plt.show()
+# fig.savefig("plots/all_pos_rmse_id_" + str(norad_id) + "_" + state_type + ".pdf")
 
 
-# *************** rmse bar chart for velocity components
-# Set the figure size and create subplots
-fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 6))
+# # *************** rmse bar chart for velocity components
+# # Set the figure size and create subplots
+# fig, axs = plt.subplots(nrows=len(filters) // 2, ncols=2, figsize=(12, 6))
 
-# Set the font size
-plt.rcParams.update({"font.size": 12})
+# # Set the font size
+# plt.rcParams.update({"font.size": 12})
 
-# Calculate the maximum RMSE value across all filter types and time windows
-max_vel_rmse = df_vel_rmse[["vx_rmse", "vy_rmse", "vz_rmse"]].max().max() * 1.05
+# # Calculate the maximum RMSE value across all filter types and time windows
+# max_vel_rmse = df_vel_rmse[["vx_rmse", "vy_rmse", "vz_rmse"]].max().max() * 1.05
 
-# Loop over the filter types
-for i, filter_type in enumerate(filters):
-    # Calculate the subplot position
-    row = i // 2
-    col = i % 2
+# # Loop over the filter types
+# for i, filter_type in enumerate(filters):
+#     # Calculate the subplot position
+#     row = i // 2
+#     col = i % 2
 
-    # Select the current subplot
-    ax = axs[row, col]
+#     # Select the current subplot
+#     ax = axs[row, col]
 
-    # Filter the data for the current filter type
-    filter_data = df_vel_rmse[df_vel_rmse["filter_type"] == filter_type]
+#     # Filter the data for the current filter type
+#     filter_data = df_vel_rmse[df_vel_rmse["filter_type"] == filter_type]
 
-    # Get the x-axis positions for the bars
-    x_vel = np.arange(len(time_windows))
+#     # Get the x-axis positions for the bars
+#     x_vel = np.arange(len(time_windows))
 
-    # Get the x, y, z RMSE values for the current filter type
-    vx_rmse = filter_data["vx_rmse"]
-    vy_rmse = filter_data["vy_rmse"]
-    vz_rmse = filter_data["vz_rmse"]
+#     # Get the x, y, z RMSE values for the current filter type
+#     vx_rmse = filter_data["vx_rmse"]
+#     vy_rmse = filter_data["vy_rmse"]
+#     vz_rmse = filter_data["vz_rmse"]
 
-    # Plot the x RMSE values as bars
-    ax.bar(x_vel, vx_rmse, width=0.2, label="vx")
-    # Plot the y RMSE values as bars with a slight offset
-    ax.bar(x_vel + 0.3, vy_rmse, width=0.2, label="vy")
-    # Plot the z RMSE values as bars with a larger offset
-    ax.bar(x_vel + 0.6, vz_rmse, width=0.2, label="vz")
+#     # Plot the x RMSE values as bars
+#     ax.bar(x_vel, vx_rmse, width=0.2, label="vx")
+#     # Plot the y RMSE values as bars with a slight offset
+#     ax.bar(x_vel + 0.3, vy_rmse, width=0.2, label="vy")
+#     # Plot the z RMSE values as bars with a larger offset
+#     ax.bar(x_vel + 0.6, vz_rmse, width=0.2, label="vz")
 
-    # Set the x-axis ticks and labels
-    ax.set_xticks(x_vel + 0.3)
-    # Split the time window into start and end values and format them
-    time_window_labels = [
-        f"{float(tw.split('-')[0]):.2f}-{float(tw.split('-')[1]):.2f}"
-        for tw in time_windows
-    ]
-    ax.set_xticklabels(time_window_labels)
-    ax.set_xlabel("time window (minutes)")
-    ax.set_ylabel("rmse (m/s)")
-    ax.set_title(filter_type)
+#     # Set the x-axis ticks and labels
+#     ax.set_xticks(x_vel + 0.3)
+#     # Split the time window into start and end values and format them
+#     time_window_labels = [
+#         f"{float(tw.split('-')[0]):.2f}-{float(tw.split('-')[1]):.2f}"
+#         for tw in time_windows
+#     ]
+#     ax.set_xticklabels(time_window_labels)
+#     ax.set_xlabel("time window (minutes)")
+#     ax.set_ylabel("rmse (m/s)")
+#     if i == 0:
+#         ax.set_title(filter_type.upper())
 
-    # Set the y-axis scale to logarithmic
-    ax.set_yscale("log")
+#     # Set the y-axis scale to logarithmic
+#     ax.set_yscale("log")
 
-    # Set the y-axis limits
-    ax.set_ylim([0.01, max_vel_rmse])
+#     # Set the y-axis limits
+#     ax.set_ylim([0.01, max_vel_rmse])
 
-    # Add a legend to the subplot
-    ax.legend(loc="upper left")
+#     # Add a legend to the subplot
+#     ax.legend(loc="upper left")
 
-# Adjust the spacing between subplots
-plt.tight_layout()
+# # Adjust the spacing between subplots
+# plt.tight_layout()
 
-# Show the plot
-# plt.show()
-fig.savefig("plots/all_vel_rmse_id_" + str(norad_id) + "_" + state_type + ".pdf")
+# # Show the plot
+# # plt.show()
+# fig.savefig("plots/all_vel_rmse_id_" + str(norad_id) + "_" + state_type + ".pdf")
 
 # # *************** normalised error square
 # # flag to determine to process the NES or use existing files for plots
+# filters = ["srhouse", "house", "srukf", "ukf", "cut4", "cut6"]
 # flag_proc = 1
 
 # # Set the alpha value
@@ -550,12 +618,12 @@ fig.savefig("plots/all_vel_rmse_id_" + str(norad_id) + "_" + state_type + ".pdf"
 # for filter_type in filters:
 #     if flag_proc:
 #         processing.process_nes_each_filter_ccdata(
-#             filter_type, out_folder_path, norad_id, od_ref_data_file, state_type
+#             filter_type, data_folder_path, norad_id, od_ref_data_file, state_type
 #         )
 
 #     # Read CSV file into a pandas dataframe
 #     df = pd.read_csv(
-#         out_folder_path
+#         data_folder_path
 #         + "nes_"
 #         + filter_type
 #         + "_id_"
@@ -590,3 +658,39 @@ fig.savefig("plots/all_vel_rmse_id_" + str(norad_id) + "_" + state_type + ".pdf"
 # fig.savefig(
 #     plot_folder_path + "all_nes_id_" + str(norad_id) + "_" + state_type + ".pdf"
 # )
+
+# *************** plot run time for all filters
+
+# List of filters
+filters = ["srhouse", "house", "srukf", "ukf", "cut4", "cut6"]
+
+# Create an empty DataFrame to store the run times
+df_run_times = pd.DataFrame()
+
+# Loop over each filter
+for filter_type in filters:
+    # Construct the file name for the current filter
+    file_name = file_name = f"run_times_{filter_type}_id_{norad_id}_{state_type}.csv"
+
+    # Read the CSV file into a DataFrame
+    file_path = os.path.join(data_folder_path, file_name)
+    filter_df = pd.read_csv(file_path)
+
+    # Extract the run times column and add it to the main DataFrame
+    df_run_times[filter_type.upper()] = filter_df[filter_type]
+
+print(df_run_times)
+# Create a plot
+plt.rcParams.update({"font.size": 12})
+fig, ax = plt.subplots(figsize=(8, 4))
+df_run_times.plot(kind="barh", ax=ax)
+
+ax.set_ylabel("Filter")  # Set ylabel to represent filters
+ax.set_yticklabels([])  # Remove y-axis tick labels
+ax.set_xlabel("Run Time (second)")  # Set xlabel to represent run time
+ax.set_title("Run Time for Different Filters")
+
+plt.tight_layout()
+plt.savefig(
+    plot_folder_path + "run_times_id_" + str(norad_id) + "_" + state_type + ".pdf"
+)

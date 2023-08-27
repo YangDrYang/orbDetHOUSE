@@ -352,8 +352,14 @@ void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo
     tempVec = measParams["ground_station"].as<vector<double>>();
     measMdl.groundStation = stdVec2EigenVec(tempVec);
     measMdl.dimMeas = measParams["dim_meas"].as<int>();
-    measMdl.errorStd.rightAscensionErr = measParams["right_ascension_error"].as<double>();
-    measMdl.errorStd.declinationErr = measParams["declination_error"].as<double>();
+    // measMdl.errorStatistics.rightAscensionErr = measParams["right_ascension_error"].as<double>();
+    // measMdl.errorStatistics.declinationErr = measParams["declination_error"].as<double>();
+    vector<double> tempVec2 = measParams["measurement_std"].as<vector<double>>();
+    measMdl.errorStatistics.stdVec = Map<VectorXd>(tempVec2.data(), tempVec2.size());
+    tempVec2 = measParams["measurement_skew"].as<vector<double>>();
+    measMdl.errorStatistics.skewVec = Map<VectorXd>(tempVec2.data(), tempVec2.size());
+    tempVec2 = measParams["measurement_kurt"].as<vector<double>>();
+    measMdl.errorStatistics.kurtVec = Map<VectorXd>(tempVec2.data(), tempVec2.size());
 
     // read propagator settings for filters (optional)
     YAML::Node propFilterSettings = config["propagator_filter_settings"];
@@ -610,8 +616,8 @@ int main(int argc, char *argv[])
 
     // measurement noise covariance
     Matrix2d measNoiseCov;
-    measNoiseCov << pow(measMdl.errorStd.rightAscensionErr * ARC_SEC, 2), 0,
-        0, pow(measMdl.errorStd.declinationErr * ARC_SEC, 2);
+    measNoiseCov << pow(measMdl.errorStatistics.stdVec(0) * ARC_SEC, 2), 0,
+        0, pow(measMdl.errorStatistics.stdVec(1) * ARC_SEC, 2);
 
     // read angular measurements from the exiting file
     string filename = measMdl.measFile;
@@ -652,6 +658,8 @@ int main(int argc, char *argv[])
     Dist distw(procNoiseCov);
     // HOUSE distributions for measurement noise
     Dist distn(measNoiseCov);
+    distn.skew = measMdl.errorStatistics.skewVec;
+    distn.kurt = measMdl.errorStatistics.kurtVec;
 
     string outputFile;
     MatrixXd runTimesMC(1, 4);
@@ -664,7 +672,7 @@ int main(int argc, char *argv[])
             cout << "\tSRHOUSE" << '\n';
 
             timer.tick();
-            SRHOUSE srhouse(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, -1.0);
+            SRHOUSE srhouse(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, -0.1);
             srhouse.run(tSec, angMeas);
             runTimesMC(0) = timer.tock();
 
@@ -723,6 +731,11 @@ int main(int argc, char *argv[])
 
             outputFile = snrInfo.outDir + "/srukf_id_" + noradID + "_" + initialStateType + ".csv";
             srukf.save(outputFile, initialStateType);
+
+            // Save Filter run times
+            vector<string> filterStrings({"srukf"});
+            string timeFile = snrInfo.outDir + "/run_times_srukf_id_" + noradID + "_" + initialStateType + ".csv";
+            EigenCSV::write(runTimesMC.col(1), filterStrings, timeFile);
         }
         else
         {
@@ -736,11 +749,12 @@ int main(int argc, char *argv[])
 
             outputFile = snrInfo.outDir + "/ukf_id_" + noradID + "_" + initialStateType + ".csv";
             ukf.save(outputFile, initialStateType);
+
+            // Save Filter run times
+            vector<string> filterStrings({"ukf"});
+            string timeFile = snrInfo.outDir + "/run_times_ukf_id_" + noradID + "_" + initialStateType + ".csv";
+            EigenCSV::write(runTimesMC.col(1), filterStrings, timeFile);
         }
-        // Save Filter run times
-        vector<string> filterStrings({"ukf"});
-        string timeFile = snrInfo.outDir + "/run_times_ukf_id_" + noradID + "_" + initialStateType + ".csv";
-        EigenCSV::write(runTimesMC.col(1), filterStrings, timeFile);
     }
 
     // CUT-4 Filter

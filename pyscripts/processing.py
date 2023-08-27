@@ -393,11 +393,13 @@ def process_nes_each_filter_ccdata(
             - truth_df.iloc[index, 1:].values.reshape(6, 1)
         )
 
-        # print("od error:   \n", state_err)
+        print("od error:   \n", state_err)
 
         # print(state_err.T @ np.linalg.inv(cov) @ state_err)
         # Calculate the squared NES
         nes_squared = float(state_err.T @ np.linalg.inv(cov) @ state_err)
+        print(np.linalg.inv(cov))
+        print(nes_squared)
         # Assign the squared NES to the DataFrame
         nes_df.loc[index, "NES"] = nes_squared
 
@@ -662,3 +664,83 @@ def process_post_res_each_filter_ccdata(
     # plt.tight_layout()
     # # Save the figure
     # plt.savefig(post_res_plot_file)
+
+
+# Pre-residuals for cc data
+def process_pre_res_each_filter_ccdata(
+    od_file, stn_file, meas_file, pre_res_file, pre_res_plot_file
+):
+    # Calculate the post residuals
+
+    # print(trial_file_names)
+
+    # Read the real measurement CSV file into a pandas dataframe
+    meas_df = pd.read_csv(meas_file)
+
+    # print(meas_df)
+
+    # Read the od result CSV file into a pandas dataframe
+    od_df = pd.read_csv(od_file)
+    od_df = od_df.iloc[:, 0:7]
+
+    # print(od_df)
+
+    # Read the station ECI coordinate CSV file into a pandas dataframe
+    stn_df = pd.read_csv(stn_file)
+
+    pre_res_df = pd.DataFrame()
+
+    for index, meas_row in meas_df.iterrows():
+        # print("meas_row:    ", meas_row)
+        # Access the common identifier
+        identifier = meas_row["MJD"]
+        # print("identifier1: ", identifier)
+
+        stn_row = find_closest_row(stn_df, "MJD", identifier)
+        # print("stn_row: ", stn_row)
+
+        pre_res_row = pd.DataFrame({"MJD": [identifier]})
+        # print(pre_res_row)
+
+        # Retrieve the corresponding row in od_df using the common identifier
+        od_row = find_closest_row(od_df, "MJD", identifier)
+
+        # Access the values from od_row and meas_row for calculations
+        x_sat = od_row["Interpolated_X"]
+        y_sat = od_row["Interpolated_Y"]
+        z_sat = od_row["Interpolated_Z"]
+
+        # print("x_sat:")
+        # print(x_sat)
+
+        x_stn = stn_row["X_ECI"]
+        y_stn = stn_row["Y_ECI"]
+        z_stn = stn_row["Z_ECI"]
+
+        # print("x_stn:")
+        # print(x_stn)
+
+        # Calculate the range vector between satellite and station
+        p = np.vstack([x_sat, y_sat, z_sat]) - np.vstack([x_stn, y_stn, z_stn])
+        # print("range vector between satellite and station:    ", p)
+
+        # Calculate residuals of the right ascension angle
+        epsilon = 1e-2  # Adjust the epsilon value as needed
+        angle_diff = np.arctan2(p[1], p[0]) - meas_row["RA"] / 180 * np.pi
+        if angle_diff >= 2 * np.pi - epsilon:
+            angle_diff -= 2 * np.pi
+        pre_res_row["RA"] = angle_diff
+        # pre_res_row["RA"] = (np.arctan2(p[1], p[0]) - meas_row["RA"] / 180 * np.pi) % (
+        #     2 * np.pi
+        # )
+        # Calculate residuals of the declination angle
+        pre_res_row["Dec"] = (
+            np.arcsin(p[2] / np.linalg.norm(p)) - meas_row["Dec"] / 180 * np.pi
+        )
+
+        pre_res_df = pd.concat([pre_res_df, pre_res_row], ignore_index=True)
+
+    print("pre_res_df: ", pre_res_df)
+    # # Generate plots for two angles
+
+    pre_res_df.to_csv(pre_res_file, index=False)

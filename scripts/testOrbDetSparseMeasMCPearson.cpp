@@ -397,14 +397,14 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
     tempVec = measParams["ground_station"].as<vector<double>>();
     measMdl.groundStation = stdVec2EigenVec(tempVec);
     measMdl.dimMeas = measParams["dim_meas"].as<int>();
-    measMdl.errorStd.azimuthErr = measParams["elevation_error"].as<double>();
-    measMdl.errorStd.elevationErr = measParams["azimuth_error"].as<double>();
-    measMdl.errorStd.rangeErr = measParams["range_error"].as<double>();
-    measMdl.errorStd.rangeRateErr = measParams["range_rate_error"].as<double>();
+    measMdl.errorStatistics.azimuthErr = measParams["elevation_error"].as<double>();
+    measMdl.errorStatistics.elevationErr = measParams["azimuth_error"].as<double>();
+    measMdl.errorStatistics.rangeErr = measParams["range_error"].as<double>();
+    measMdl.errorStatistics.rangeRateErr = measParams["range_rate_error"].as<double>();
     tempVec = measParams["meas_skewness"].as<vector<double>>();
-    measMdl.errorStd.skewnessVec = stdVec2EigenVec(tempVec);
+    measMdl.errorStatistics.skew = stdVec2EigenVec(tempVec);
     tempVec = measParams["meas_kurtosis"].as<vector<double>>();
-    measMdl.errorStd.kurtosisVec = stdVec2EigenVec(tempVec);
+    measMdl.errorStatistics.kurtVec = stdVec2EigenVec(tempVec);
 
     // read propagator settings (optional)
     YAML::Node propTruthSettings = config["propagator_truth_settings"];
@@ -629,15 +629,15 @@ int main(int argc, char *argv[])
     };
 
     int dimMeas = measMdl.dimMeas;
-    VectorXd measSkewnessVec = measMdl.errorStd.skewnessVec;
-    VectorXd measKurtosisVec = measMdl.errorStd.kurtosisVec;
+    VectorXd measSkewnessVec = measMdl.errorStatistics.skew;
+    VectorXd measKurtosisVec = measMdl.errorStatistics.kurtVec;
     // VectorXd measSkewnessVec = VectorXd::Zero(dimMeas);
     // VectorXd measKurtosisVec = VectorXd::Zero(dimMeas);
     Matrix4d measNoiseCov;
-    measNoiseCov << pow(measMdl.errorStd.azimuthErr * ARC_SEC, 2), 0, 0, 0,
-        0, pow(measMdl.errorStd.azimuthErr * ARC_SEC, 2), 0, 0,
-        0, 0, pow(measMdl.errorStd.rangeErr, 2), 0,
-        0, 0, 0, pow(measMdl.errorStd.rangeRateErr, 2);
+    measNoiseCov << pow(measMdl.errorStatistics.azimuthErr * ARC_SEC, 2), 0, 0, 0,
+        0, pow(measMdl.errorStatistics.azimuthErr * ARC_SEC, 2), 0, 0,
+        0, 0, pow(measMdl.errorStatistics.rangeErr, 2), 0,
+        0, 0, 0, pow(measMdl.errorStatistics.rangeRateErr, 2);
 
     MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
 
@@ -821,10 +821,10 @@ int main(int argc, char *argv[])
             if (measTruth(0, k) != NO_MEASUREMENT)
             {
                 // generate corrupted measurements
-                // measCorrupted(0, k) += measMdl.errorStd.azimuthErr * ARC_SEC * dist(gen);
-                // measCorrupted(1, k) += measMdl.errorStd.elevationErr * ARC_SEC * dist(gen);
-                // measCorrupted(2, k) += measMdl.errorStd.rangeErr * dist(gen);
-                // measCorrupted(3, k) += measMdl.errorStd.rangeRateErr * dist(gen);
+                // measCorrupted(0, k) += measMdl.errorStatistics.azimuthErr * ARC_SEC * dist(gen);
+                // measCorrupted(1, k) += measMdl.errorStatistics.elevationErr * ARC_SEC * dist(gen);
+                // measCorrupted(2, k) += measMdl.errorStatistics.rangeErr * dist(gen);
+                // measCorrupted(3, k) += measMdl.errorStatistics.rangeRateErr * dist(gen);
                 // // measTruth.col(k) += matMeasNoise.col(k);
                 measCorrupted(0, k) += matMeasNoise(0, k);
                 measCorrupted(1, k) += matMeasNoise(1, k);

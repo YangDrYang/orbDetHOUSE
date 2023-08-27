@@ -38,6 +38,6 @@ struct Filters
 // void initGlobalVariables(VectorXd& initialState, string stateType);
 VectorXd stdVec2EigenVec(const std::vector<double> &stdVec);
 void readConfigFile(string fileName, ForceModels &options, struct EpochInfo &epoch, VectorXd &initialState,
-                    VectorXd &groundStation, struct Filters &filters, int &numTrials, struct Errors &errorStd,
+                    VectorXd &groundStation, struct Filters &filters, int &numTrials, struct Errors &errorStatistics,
                     string &iniatialStateType);
 // MatrixXd generateTrueResults(DynamicModel& f, struct EpochInfo epoch, VectorXd initialState);

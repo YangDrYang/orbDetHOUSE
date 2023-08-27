@@ -191,7 +191,6 @@ void SRHOUSE::update(const VectorXd &z)
         (Z.block(0, nx + 1, nz, nx) - zm.replicate(1, nx)) * sqrtWeight2.asDiagonal(),
         (Z.block(0, 2 * nx + 1, nz, 2 * nz) - zm.replicate(1, 2 * nz)) * sqrtWeight3.asDiagonal();
     HouseholderQR<MatrixXd> qr(matRes.transpose());
-
     MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
     MatrixXd matS = matS2.block(0, 0, nz, nz).transpose();
     MatrixXd matSzz = cholupdate(matS, Z.col(0) - zm, sig.wgt(0));
@@ -252,12 +251,13 @@ void SRHOUSE::run(const VectorXd &tz, const MatrixXd &Z)
     {
         cout << "the " << i << "th epoch" << endl;
         predict(tz(i));
-        update(Z.col(i));
-        // // only update if given a measurment
-        // if (abs(Z(1, i)) <= M_PI * 2)
-        // {
-        //     update(Z.col(i));
-        // }
+        // update(Z.col(i));
+
+        // od example: only update if given a measurment
+        if (abs(Z(1, i)) <= M_PI * 2)
+        {
+            update(Z.col(i));
+        }
     }
 }
 

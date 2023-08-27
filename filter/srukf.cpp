@@ -75,15 +75,13 @@ void SRUKF::predict(double tp)
                 matXp.col(i) = f(ti, ti + dtMax, matXi.col(i), matW.col(i));
             xestp = matXp * wp;
 
-            MatrixXd matRes(nx, 2 * nx);
+            MatrixXd matRes(nx, 2 * nx + nx);
             MatrixXd matxestp = xestp.replicate(1, nx);
-            matRes << matXp.leftCols(nx) - matxestp, matXp.rightCols(nx) - matxestp;
-            matRes *= sqrt(wp(0));
-            MatrixXd matC(nx, 3 * nx);
-            matC << matRes, Sww;
-            // cout << "matC value:\t" << matC << endl;
-            // cout << "matC size:\t" << matC.rows() << "\t" << matC.cols() << endl;
-            HouseholderQR<MatrixXd> qr(matC.transpose());
+            VectorXd sqrtWeight1 = wp.segment(0, nx).array().sqrt();
+            VectorXd sqrtWeight2 = wp.segment(nx + 1, nx).array().sqrt();
+            matRes << (matXp.leftCols(nx) - matxestp) * sqrtWeight1.asDiagonal(),
+                (matXp.rightCols(nx) - matxestp) * sqrtWeight2.asDiagonal(), Sww;
+            HouseholderQR<MatrixXd> qr(matRes.transpose());
             // Get the upper triangular matrix from the factorization
             MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
             MatrixXd matS = matS2.block(0, 0, nx, nx).transpose();
@@ -115,17 +113,13 @@ void SRUKF::predict(double tp)
         cout << "mean in SRUKF prediction:\n"
              << xestp << endl;
 
-        MatrixXd matRes(nx, 2 * nx);
+        MatrixXd matRes(nx, 2 * nx + nx);
         MatrixXd matxestp = xestp.replicate(1, nx);
-        matRes << matXp.leftCols(nx) - matxestp, matXp.rightCols(nx) - matxestp;
-        matRes *= sqrt(wp(0));
-        MatrixXd matC(nx, 3 * nx);
-        // cout << "Sww size:\t" << Sww.rows() << "\t" << Sww.cols() << endl;
-        // cout << "matRes size:\t" << matRes.rows() << "\t" << matRes.cols() << endl;
-        matC << matRes, Sww;
-        // cout << "matC value:\t" << matC << endl;
-        // cout << "matC size:\t" << matC.rows() << "\t" << matC.cols() << endl;
-        HouseholderQR<MatrixXd> qr(matC.transpose());
+        VectorXd sqrtWeight1 = wp.segment(0, nx).array().sqrt();
+        VectorXd sqrtWeight2 = wp.segment(nx + 1, nx).array().sqrt();
+        matRes << (matXp.leftCols(nx) - matxestp) * sqrtWeight1.asDiagonal(),
+            (matXp.rightCols(nx) - matxestp) * sqrtWeight2.asDiagonal(), Sww;
+        HouseholderQR<MatrixXd> qr(matRes.transpose());
         // Get the upper triangular matrix from the factorization
         MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
         MatrixXd matS = matS2.block(0, 0, nx, nx).transpose();
@@ -177,15 +171,12 @@ void SRUKF::update(const VectorXd &z)
     zm = matZ * wu;
 
     MatrixXd matzm = zm.replicate(1, nx); // Repeat zm horizontally to match the number of columns of Z
-    MatrixXd matRes(nz, 2 * nx);
-    matRes << matZ.leftCols(nx) - matzm, matZ.rightCols(nx) - matzm;
-    MatrixXd matC(nz, 2 * nx + nz);
-    // // cout << "Snn size:\t" << Snn.rows() << "\t" << Snn.cols() << endl;
-    matC << sqrt(wu(0)) * matRes, Snn;
-    // cout << "matC size:\t" << matC.rows() << "\t" << matC.cols() << endl;
-    // cout << "matC:\n"
-    //      << matC << endl;
-    HouseholderQR<MatrixXd> qr(matC.transpose());
+    MatrixXd matRes(nz, 2 * nx + nz);
+    VectorXd sqrtWeight1 = wu.segment(0, nx).array().sqrt();
+    VectorXd sqrtWeight2 = wu.segment(nx + 1, nx).array().sqrt();
+    matRes << (matZ.leftCols(nx) - matzm) * sqrtWeight1.asDiagonal(),
+        (matZ.rightCols(nx) - matzm) * sqrtWeight2.asDiagonal(), Snn;
+    HouseholderQR<MatrixXd> qr(matRes.transpose());
     // Get the upper triangular matrix from the factorization
     MatrixXd matS2 = qr.matrixQR().triangularView<Upper>();
     // Get the lower triangular matrix

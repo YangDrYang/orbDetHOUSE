@@ -14,7 +14,7 @@ ForceModels forceModelsOpt = {};
 struct EpochInfo epoch;
 
 void readConfigFile(string fileName, ForceModels &options, struct EpochInfo &epoch, VectorXd &initialState,
-                    VectorXd &groundStation, struct Filters &filters, int &numTrials, struct Errors &errorStd,
+                    VectorXd &groundStation, struct Filters &filters, int &numTrials, struct Errors &errorStatistics,
                     string &iniatialStateType)
 {
     // load file
@@ -36,10 +36,10 @@ void readConfigFile(string fileName, ForceModels &options, struct EpochInfo &epo
     epoch.startMJD = orbitParams["MJD_start"].as<double>();
     epoch.endMJD = orbitParams["MJD_end"].as<double>();
     epoch.timeStep = orbitParams["time_step"].as<double>();
-    errorStd.azimuthErr = orbitParams["elevation_error"].as<double>();
-    errorStd.elevationErr = orbitParams["azimuth_error"].as<double>();
-    errorStd.rangeErr = orbitParams["range_error"].as<double>();
-    errorStd.rangeRateErr = orbitParams["range_rate_error"].as<double>();
+    errorStatistics.azimuthErr = orbitParams["elevation_error"].as<double>();
+    errorStatistics.elevationErr = orbitParams["azimuth_error"].as<double>();
+    errorStatistics.rangeErr = orbitParams["range_error"].as<double>();
+    errorStatistics.rangeRateErr = orbitParams["range_rate_error"].as<double>();
     iniatialStateType = orbitParams["initial_state_type"].as<string>();
 
     // read params as standard vector, convert to eigen vector
@@ -117,12 +117,12 @@ int main(int argc, char *argv[])
     }
     cout << "Reading configuration from file: " << configFilename << endl;
 
-    struct Errors errorStd;
+    struct Errors errorStatistics;
     struct Filters filters;
     int numTrials;
     string initialStateType;
     // read parameter/settings from config file
-    readConfigFile(configFilename, forceModelsOpt, epoch, initialState, groundStation, filters, numTrials, errorStd, initialStateType);
+    readConfigFile(configFilename, forceModelsOpt, epoch, initialState, groundStation, filters, numTrials, errorStatistics, initialStateType);
 
     cout << "earth_gravity: " << forceModelsOpt.earth_gravity << endl;
     cout << "solid_earth_tide: " << forceModelsOpt.solid_earth_tide << endl;
