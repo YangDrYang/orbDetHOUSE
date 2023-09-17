@@ -1,8 +1,8 @@
 # required
 filter_options:
-  square_root: false
-  HOUSE: true
-  UKF: false
+  square_root: true
+  HOUSE: false
+  UKF: true
   CUT4: false
   CUT6: false
   init_noise: true

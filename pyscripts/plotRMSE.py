@@ -10,7 +10,7 @@ import sys
 # filters = ["ukf", "cut4", "cut6", "house"]
 # filters = ["house", "ukf", "cut4"]
 # filters = ["house", "cut4", "cut6"]
-filters = ["house", "ukf"]
+filters = ["house", "srhouse", "ukf", "srukf"]
 # filters = ["srhouse"]
 
 if len(sys.argv) < 2:

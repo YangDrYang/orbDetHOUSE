@@ -344,7 +344,8 @@ void readConfigFile(string fileName, ForceModels &optTruth, ForceModels &optFilt
 
     // read orbital parameters (required)
     YAML::Node orbitParams = config["initial_orbtial_parameters"];
-    initialState.dimState = orbitParams["dim_state"].as<int>();
+    int dimState = orbitParams["dim_state"].as<int>();
+    initialState.dimState = dimState;
     vector<double> tempVec;
     initialState.initialStateType = orbitParams["initial_state_type"].as<string>();
     // read params as standard vector, convert to eigen vector
@@ -708,6 +709,7 @@ int main(int argc, char *argv[])
 
     // Initialize UKF & CUT filters
     UKF ukf(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
+    UKF srukf(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::JU, 1);
     UKF cut4(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT4, 1);
     UKF cut6(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT6, 1);
     // UKF cut8(f, h, true, 0, epoch.maxTimeStep, initialStateVec, initialCov, procNoiseCov, measNoiseCov, UKF::sig_type::CUT8, 1);
@@ -761,6 +763,7 @@ int main(int argc, char *argv[])
         house.reset(0, distXi);
         srhouse.reset(0, distXi);
         ukf.reset(0, initialState_, initialCov);
+        srukf.reset(0, initialState_, initialCov);
         cut4.reset(0, initialState_, initialCov);
         cut6.reset(0, initialState_, initialCov);
 
@@ -855,17 +858,32 @@ int main(int argc, char *argv[])
         // UKF Filter
         if (filters.ukf)
         {
-            cout << "\tUKF" << '\n';
-            // cout << "startMJD\t" << epoch.startMJD << endl;
-            // cout << "leapSec\t" << leapSec << endl;
-            timer.tick();
-            ukf.run(tSec, measCorrupted);
-            runTimesMC(j - 1, 1) = timer.tock();
+            if (filters.squareRoot)
+            {
+                cout << "\tSRUKF" << '\n';
+                timer.tick();
+                srukf.run(tSec, measCorrupted);
+                runTimesMC(j - 1, 1) = timer.tock();
 
-            outputFile = snrInfo.outDir + "/ukf_";
-            outputFile += to_string(j);
-            outputFile += ".csv";
-            ukf.save(outputFile, "eci");
+                outputFile = snrInfo.outDir + "/srukf_";
+                outputFile += to_string(j);
+                outputFile += ".csv";
+                srukf.save(outputFile, "eci");
+            }
+            else
+            {
+                cout << "\tUKF" << '\n';
+                // cout << "startMJD\t" << epoch.startMJD << endl;
+                // cout << "leapSec\t" << leapSec << endl;
+                timer.tick();
+                ukf.run(tSec, measCorrupted);
+                runTimesMC(j - 1, 1) = timer.tock();
+
+                outputFile = snrInfo.outDir + "/ukf_";
+                outputFile += to_string(j);
+                outputFile += ".csv";
+                ukf.save(outputFile, "eci");
+            }
         }
 
         // CUT-4 Filter

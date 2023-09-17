@@ -202,7 +202,7 @@ void HOUSE::update(const VectorXd &z)
     Dist distXu(Xu, sig.wgt);
     // cout << "skewness 2:\t" << distXu.skew << endl
     //      << "kurtosis 2:\t" << distXu.kurt << endl;
-    // distXu.mean = xm + K * (z - zm); // Eq. B7
+    distXu.mean = xm + K * (z - zm); // Eq. B7
     // cout << "updated mean: \n"
     //      << distXu.mean << endl;
     // cout << "updated covariance: \n"
