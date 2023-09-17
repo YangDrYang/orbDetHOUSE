@@ -9,8 +9,6 @@ from scipy.stats import skew, kurtosis
 # Directory path
 out_folder_path = "out/out_ccdata/"
 plot_folder_path = "plots/"
-state_type = "mee"
-# state_type = "eci"
 
 norad_id = 46984
 meas_file = "ccdata/meas_data_id_" + str(norad_id) + ".csv"

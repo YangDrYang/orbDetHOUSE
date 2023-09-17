@@ -138,23 +138,23 @@ void HOUSE::predict(double tp)
         }
 
         Sigma sig(distxi, distw, delta);
-        cout << "weight:\t" << sig.wgt.transpose() << endl;
+        // cout << "weight:\t" << sig.wgt.transpose() << endl;
 
         MatrixXd Xp(nx, sig.n_pts);
         for (int i = 0; i < sig.n_pts; i++)
             Xp.col(i) = f(ti, tp, sig.state.col(i), sig.noise.col(i));
 
         Dist distXp(Xp, sig.wgt);
-        cout << "mean in HOUSE prediction:\t" << endl
-             << distXp.mean << endl;
-        cout << "covariance in HOUSE prediction:\t" << endl
-             << distXp.cov << endl;
-        cout << "covariance lower triangle in HOUSE prediction:\t" << endl
-             << distXp.covL << endl;
-        cout << "skewness in HOUSE prediction:\t" << endl
-             << distXp.skew << endl;
-        cout << "kurtosis in HOUSE prediction:\t" << endl
-             << distXp.kurt << endl;
+        // cout << "mean in HOUSE prediction:\t" << endl
+        //      << distXp.mean << endl;
+        // cout << "covariance in HOUSE prediction:\t" << endl
+        //      << distXp.cov << endl;
+        // cout << "covariance lower triangle in HOUSE prediction:\t" << endl
+        //      << distXp.covL << endl;
+        // cout << "skewness in HOUSE prediction:\t" << endl
+        //      << distXp.skew << endl;
+        // cout << "kurtosis in HOUSE prediction:\t" << endl
+        //      << distXp.kurt << endl;
 
         distx.push_back(distXp);
         t.push_back(tp);
@@ -176,9 +176,9 @@ void HOUSE::update(const VectorXd &z)
         Z.col(i) = h(tz, sig.state.col(i), sig.noise.col(i)); // Eq. B3
 
     VectorXd res = z - Z.col(0);
-    cout << "residuals: " << res(0) << "\t" << res(1) << endl;
+    // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
-    cout << "weight:\t" << sig.wgt.transpose() << endl;
+    // cout << "weight:\t" << sig.wgt.transpose() << endl;
     xm = distx.back().mean;
     zm = Z * sig.wgt;
 
@@ -186,8 +186,8 @@ void HOUSE::update(const VectorXd &z)
     Pzx = Z * sig.wgt.asDiagonal() * sig.state.transpose() - zm * xm.transpose(); // Eq. B6
 
     K = Pzz.llt().solve(Pzx).transpose();
-    cout << "Kalman gain: \n"
-         << K << endl;
+    // cout << "Kalman gain: \n"
+    //      << K << endl;
 
     // doesn't use Eq. 8 for covariance. instead, Pu = Pp - K*Pzz*K^T is used.
     Xu = sig.state - K * (Z.colwise() - zm);
@@ -200,15 +200,15 @@ void HOUSE::update(const VectorXd &z)
     //      << "kurtosis 1:\t" << Xstd.array().pow(4).matrix() * sig.wgt << endl;
 
     Dist distXu(Xu, sig.wgt);
-    cout << "skewness 2:\t" << distXu.skew << endl
-         << "kurtosis 2:\t" << distXu.kurt << endl;
-    distXu.mean = xm + K * (z - zm); // Eq. B7
-    cout << "updated mean: \n"
-         << distXu.mean << endl;
-    cout << "updated covariance: \n"
-         << distXu.cov << endl;
-    cout << "updated covariance lower triangle: \n"
-         << distXu.covL << endl;
+    // cout << "skewness 2:\t" << distXu.skew << endl
+    //      << "kurtosis 2:\t" << distXu.kurt << endl;
+    // distXu.mean = xm + K * (z - zm); // Eq. B7
+    // cout << "updated mean: \n"
+    //      << distXu.mean << endl;
+    // cout << "updated covariance: \n"
+    //      << distXu.cov << endl;
+    // cout << "updated covariance lower triangle: \n"
+    //      << distXu.covL << endl;
 
     distx.back() = distXu;
 }

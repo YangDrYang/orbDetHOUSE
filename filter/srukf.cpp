@@ -52,11 +52,11 @@ void SRUKF::predict(double tp)
 
     xesti = xest.back();
     matSxxi = Sxx.back();
-    cout << "xesti value: \n"
-         << xesti << endl;
-    cout << "matSxxi size:\t" << matSxxi.rows() << "\t" << matSxxi.cols() << endl;
-    cout << "matSxxi value:\n"
-         << matSxxi << endl;
+    // cout << "xesti value: \n"
+    //      << xesti << endl;
+    // cout << "matSxxi size:\t" << matSxxi.rows() << "\t" << matSxxi.cols() << endl;
+    // cout << "matSxxi value:\n"
+    //      << matSxxi << endl;
 
     double ti = t.back();
 
@@ -110,8 +110,8 @@ void SRUKF::predict(double tp)
             matXp.col(i) = f(ti, tp, matXi.col(i), matW.col(i));
 
         xestp = matXp * wp;
-        cout << "mean in SRUKF prediction:\n"
-             << xestp << endl;
+        // cout << "mean in SRUKF prediction:\n"
+        //      << xestp << endl;
 
         MatrixXd matRes(nx, 2 * nx + nx);
         MatrixXd matxestp = xestp.replicate(1, nx);
@@ -129,10 +129,10 @@ void SRUKF::predict(double tp)
         // lltOfS.rankUpdate(matXp.col(nx) - xestp, wp(nx));
         // MatrixXd matSxxp = matS;
         // cout << "matSxxp size:\t" << matSxxp.rows() << "\t" << matSxxp.cols() << endl;
-        cout << "matSxxp value:\n"
-             << matSxxp << endl;
-        cout << "predicted covariance:\n"
-             << matSxxp * matSxxp.transpose() << endl;
+        // cout << "matSxxp value:\n"
+        //      << matSxxp << endl;
+        // cout << "predicted covariance:\n"
+        //      << matSxxp * matSxxp.transpose() << endl;
 
         t.push_back(tp);
         xest.push_back(xestp);
@@ -151,11 +151,11 @@ void SRUKF::update(const VectorXd &z)
     xestp = xest.back();
     matSxxp = Sxx.back();
 
-    cout << "dimensions of meas: \t" << nz << endl;
-    cout << "predicted xest: \n"
-         << xestp << endl;
-    cout << "predicted Pxx: \n"
-         << matSxxp * matSxxp.transpose() << endl;
+    // cout << "dimensions of meas: \t" << nz << endl;
+    // cout << "predicted xest: \n"
+    //      << xestp << endl;
+    // cout << "predicted Pxx: \n"
+    //      << matSxxp * matSxxp.transpose() << endl;
 
     double tz = t.back();
 
@@ -193,34 +193,34 @@ void SRUKF::update(const VectorXd &z)
     // lltOfS.rankUpdate(matZ.col(nx) - zm, wu(nx));
     // matSzz = matS;
     // cout << matZ.col(nx) - zm << "\t" << wu(nx) << endl;
-    cout << "matSzz:\n"
-         << matSzz << endl;
-    cout << "measurement covariance Pzz: \n"
-         << matSzz * matSzz.transpose() << endl;
+    // cout << "matSzz:\n"
+    //      << matSzz << endl;
+    // cout << "measurement covariance Pzz: \n"
+    //      << matSzz * matSzz.transpose() << endl;
 
     matPzx = matZ * wu.asDiagonal() * matX.transpose() - zm * xestp.transpose();
 
-    cout << "cross covariance Pzx: \n"
-         << matPzx << endl;
+    // cout << "cross covariance Pzx: \n"
+    //      << matPzx << endl;
     // Kalman Gain
     MatrixXd matK1 = matSzz.householderQr().solve(matPzx);
     MatrixXd matK2 = matSzz.transpose().householderQr().solve(matK1);
     matK = matK2.transpose();
-    cout << "Kalman gain:\n"
-         << matK << endl;
+    // cout << "Kalman gain:\n"
+    //      << matK << endl;
 
     // Update the state
     xestu = xestp + matK * (z - zm);
-    cout << "updated xest: \n"
-         << xestu << endl;
+    // cout << "updated xest: \n"
+    //      << xestu << endl;
 
     // Create a temporary matrix to hold the result of K * Szz
     MatrixXd matU = matK * matSzz;
-    cout << "matU:\n"
-         << matU << endl;
-    // Update the covariance
-    cout << "Sxxp:\n"
-         << matSxxp << endl;
+    // cout << "matU:\n"
+    //      << matU << endl;
+    // // Update the covariance
+    // cout << "Sxxp:\n"
+    //      << matSxxp << endl;
     // LLT<MatrixXd, Lower> lltOfSxxp(matSxxp);
     // for (int j = 0; j < matU.cols(); j++)
     // {
@@ -230,15 +230,15 @@ void SRUKF::update(const VectorXd &z)
     // }
     // matSxxu = matSxxp;
     matSxxu = cholupdate(matSxxp, matU, -1.0);
-    cout << "Sxxu:\n"
-         << matSxxu << endl;
-    cout << "updated Pxx: \n"
-         << matSxxu * matSxxu.transpose() << endl;
+    // cout << "Sxxu:\n"
+    //      << matSxxu << endl;
+    // cout << "updated Pxx: \n"
+    //      << matSxxu * matSxxu.transpose() << endl;
 
     xest.back() = xestu;
     Sxx.back() = matSxxu;
     Pxx.back() = matSxxu * matSxxu.transpose();
-    cout << Sxx[0] << endl;
+    // cout << Sxx[0] << endl;
 }
 
 // Run filter for sequence of measurements
@@ -309,7 +309,14 @@ VectorXd SRUKF::sigmaWt(UKF::sig_type stype, int n, double k)
 // Reset filter
 void SRUKF::reset(double t0, const VectorXd &xm0, const MatrixXd &Pxx0)
 {
-    UKF::reset(t0, xm0, Pxx0);
+    // UKF::reset(t0, xm0, Pxx0);
+    t.clear();
+    xest.clear();
+    Pxx.clear();
+
+    t.push_back(t0);
+    xest.push_back(xm0);
+    Pxx.push_back(Pxx0);
     Sxx.push_back(Pxx0.llt().matrixL());
 }
 
