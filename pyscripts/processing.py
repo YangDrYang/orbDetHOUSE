@@ -667,7 +667,7 @@ def process_post_res_each_filter_ccdata(
 
 
 # Pre-residuals for cc data
-def process_pre_res_each_filter_ccdata(
+def process_pre_res_ccdata(
     od_file, stn_file, meas_file, pre_res_file, pre_res_plot_file
 ):
     # Calculate the post residuals
@@ -676,17 +676,24 @@ def process_pre_res_each_filter_ccdata(
 
     # Read the real measurement CSV file into a pandas dataframe
     meas_df = pd.read_csv(meas_file)
-
-    # print(meas_df)
+    if "Unnamed" in meas_df.columns[-1]:
+        # Drop the last column from the DataFrame
+        meas_df = meas_df.iloc[:, :-1]
+    print(meas_df)
 
     # Read the od result CSV file into a pandas dataframe
     od_df = pd.read_csv(od_file)
-    od_df = od_df.iloc[:, 0:7]
-
-    # print(od_df)
+    if "Unnamed" in od_df.columns[-1]:
+        # Drop the last column from the DataFrame
+        stn_df = od_df.iloc[:, :-1]
+    print(od_df)
 
     # Read the station ECI coordinate CSV file into a pandas dataframe
     stn_df = pd.read_csv(stn_file)
+    if "Unnamed" in stn_df.columns[-1]:
+        # Drop the last column from the DataFrame
+        stn_df = stn_df.iloc[:, :-1]
+    print(stn_df)
 
     pre_res_df = pd.DataFrame()
 

@@ -13,7 +13,8 @@ plot_folder_path = "plots/"
 norad_id = 46984
 meas_file = "ccdata/meas_data_id_" + str(norad_id) + ".csv"
 stn_file = "ccdata/stn_eci_coordinates.csv"
-od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + ".csv"
+# od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + ".csv"
+od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + "_from_cpf.csv"
 
 # # *************** pre-residuals
 
@@ -22,12 +23,15 @@ od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + ".csv"
 pre_res_file = "ccdata/ccdata_pre_res_id_" + str(norad_id) + ".csv"
 pre_res_plot_file = plot_folder_path + "ccdata_pre_res_id_" + str(norad_id) + ".pdf"
 
-processing.process_pre_res_each_filter_ccdata(
+processing.process_pre_res_ccdata(
     od_ref_data_file, stn_file, meas_file, pre_res_file, []
 )
 
 pre_res_df = pd.read_csv(pre_res_file)
-dates = pd.to_datetime(pre_res_df["MJD"] + 2400000.5, unit="D", origin="julian")
+print(pre_res_df)
+dates = pd.to_datetime(
+    pre_res_df.loc[150:, "MJD"] + 2400000.5, unit="D", origin="julian"
+)
 
 ra_residuals = pre_res_df["RA"]  # Assuming this is your RA residuals column
 
@@ -51,7 +55,7 @@ ax2 = ax1.twinx()
 
 ax1.scatter(
     dates,
-    np.degrees(pre_res_df["RA"]) * 3600,
+    np.degrees(pre_res_df.loc[150:, "RA"]) * 3600,
     color="blue",
     s=5,
     label="RA Residuals",
@@ -63,11 +67,11 @@ ax1.tick_params(axis="y", labelcolor="blue")
 
 # add 20 mins shift to distinguish ra and dec
 dates = pd.to_datetime(
-    pre_res_df["MJD"] + 2400000.5 + 20 / 1440, unit="D", origin="julian"
+    pre_res_df.loc[150:, "MJD"] + 2400000.5 + 20 / 1440, unit="D", origin="julian"
 )
 ax2.scatter(
     dates,
-    np.degrees(pre_res_df["Dec"]) * 3600,
+    np.degrees(pre_res_df.loc[150:, "Dec"]) * 3600,
     color="red",
     s=5,
     label="Dec Residuals",
