@@ -694,8 +694,8 @@ int main(int argc, char *argv[])
                 timer.tick();
                 // Initialize HOUSE with different delta
                 double delta = 0.1 / filters.numTrials * (j - 1);
-                HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
-                // HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0.01);
+                // HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
+                HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0.05);
                 house.run(tSec, angMeas);
                 runTimesMC(0) = timer.tock();
 
