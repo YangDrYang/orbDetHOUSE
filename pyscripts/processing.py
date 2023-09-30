@@ -198,7 +198,9 @@ def process_rmse_each_filter_ccdata(
     )
 
 
-def process_rmse_HOUSE_ccdata(trial_no, out_folder_path, norad_id, od_ref_data_file):
+def process_rmse_HOUSE_ccdata(
+    filter_type, trial_no, out_folder_path, norad_id, od_ref_data_file
+):
     # folder_path = "out_/"  # replace with the path to your folder
     # Get a sorted list of file names in the folder that start with filter_type
 
@@ -208,9 +210,16 @@ def process_rmse_HOUSE_ccdata(trial_no, out_folder_path, norad_id, od_ref_data_f
     truth_df = truth_df.iloc[:, 0:7]
     # Read the estimaiton CSV file into a pandas dataframe
 
-    est_file_name = "house_id_" + str(norad_id) + "_" + str(trial_no) + ".csv"
-    # Create an empty dataframe to store the data
-    est_df = pd.read_csv(out_folder_path + est_file_name)
+    est_file_name = (
+        filter_type + "_id_" + str(norad_id) + "_mee_" + str(trial_no) + ".csv"
+    )
+    try:
+        file_name = out_folder_path + est_file_name
+        # Create an empty dataframe to store the data
+        est_df = pd.read_csv(file_name)
+    except FileNotFoundError:
+        print(f"File '{file_name}' not found. Skipping to the next file.")
+        return
 
     df = pd.DataFrame()
     # Add the errors to the empty dataframe
@@ -254,7 +263,8 @@ def process_rmse_HOUSE_ccdata(trial_no, out_folder_path, norad_id, od_ref_data_f
     # save the errors
     df.to_csv(
         out_folder_path
-        + "house_err_id_"
+        + filter_type
+        + "_err_id_"
         + str(norad_id)
         + "_"
         + str(trial_no)

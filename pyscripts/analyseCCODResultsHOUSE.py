@@ -5,8 +5,10 @@ import numpy as np
 import matplotlib.dates as mdates
 import datetime as dt
 import scipy.stats as stats
+import seaborn as sns
 
-filters = ["house"]
+filters = ["house", "srhouse"]
+filter_type = "house"
 # Directory path
 out_folder_path = "out/out_ccdata/"
 plot_folder_path = "plots/"
@@ -47,7 +49,6 @@ for i, (start_time, end_time) in enumerate(time_windows):
 
 # *************** absolute error plot for position components
 
-trial_total_num = 100
 # Create an empty DataFrame to store RMS values
 df_pos_rmse = pd.DataFrame(
     columns=["trial_num", "time_window", "x_rmse", "y_rmse", "z_rmse", "3d_rmse"]
@@ -60,20 +61,25 @@ fig, ax = plt.subplots(nrows=len(time_windows), ncols=1, figsize=(8, 6))
 for j, (start_time, end_time) in enumerate(time_windows):
     start_idx = (stamp >= start_time) & (stamp <= end_time)
     sub_ax = ax[j]  # Adjust subplot indexing
+    trial_total_num = 100
     for i in range(trial_total_num):
         trial_no = i + 1
         processing.process_rmse_HOUSE_ccdata(
-            trial_no, out_folder_path, norad_id, od_ref_data_file
+            filter_type, trial_no, out_folder_path, norad_id, od_ref_data_file
         )
-        # Read the data into a pandas dataframe
-        err_df = pd.read_csv(
-            out_folder_path
-            + "house_err_id_"
-            + str(norad_id)
-            + "_"
-            + str(trial_no)
-            + ".csv"
-        )
+        try:
+            # Read the data into a pandas dataframe
+            err_df = pd.read_csv(
+                out_folder_path
+                + "house_err_id_"
+                + str(norad_id)
+                + "_"
+                + str(trial_no)
+                + ".csv"
+            )
+        except FileNotFoundError:
+            trial_total_num = trial_total_num - 1
+            continue
 
         # Extract the absolute errors within the current time window
         x_errors = np.abs(err_df["pos_err_x"][start_idx])
@@ -86,6 +92,12 @@ for j, (start_time, end_time) in enumerate(time_windows):
         z_rmse = np.sqrt(np.mean(z_errors**2))
         rmse = np.sqrt(np.mean(x_errors**2 + y_errors**2 + z_errors**2))
 
+        # Format start_time and end_time with two decimal places
+        formatted_start_time = f"{start_time:.2f}"
+        formatted_end_time = f"{end_time:.2f}"
+        # Create the "time_window" column with formatted times
+        time_window = f"{formatted_start_time}-{formatted_end_time}"
+
         # Store the RMS values in the DataFrame
         df_pos_rmse = pd.concat(
             [
@@ -93,7 +105,8 @@ for j, (start_time, end_time) in enumerate(time_windows):
                 pd.DataFrame(
                     {
                         "trial_num": [trial_no],
-                        "time_window": [f"{start_time}-{end_time}"],
+                        # "time_window": [f"{start_time}-{end_time}"],
+                        "time_window": [time_window],
                         "x_rmse": [x_rmse],
                         "y_rmse": [y_rmse],
                         "z_rmse": [z_rmse],
@@ -147,7 +160,7 @@ for j, (start_time, end_time) in enumerate(time_windows):
     # Plot the 3D RMSE for all trials in a line plot
     sub_ax.plot(
         range(trial_total_num),
-        df_pos_rmse[df_pos_rmse["time_window"] == f"{start_time}-{end_time}"][
+        df_pos_rmse[df_pos_rmse["time_window"] == f"{start_time:.2f}-{end_time:.2f}"][
             "3d_rmse"
         ],
         linestyle="-",
@@ -155,33 +168,91 @@ for j, (start_time, end_time) in enumerate(time_windows):
         marker="o",
         markersize=4,
     )
-
+    # Set the y-axis scale to logarithmic
+    sub_ax.set_yscale("log")
     sub_ax.set_xlabel("trial number")
     sub_ax.set_ylabel("3d rmse")
     sub_ax.set_title(f"time window: {start_time:.3f} min - {end_time:.3f} min ")
 
-# # Set x-axis limits and x-ticks for each subplot to show all three time windows
-# for j, (start_time, end_time) in enumerate(time_windows):
-#     sub_ax_x = ax[0, j]
-#     sub_ax_y = ax[1, j]
-#     sub_ax_z = ax[2, j]
-#     sub_ax_x.set_xlim(start_time, end_time)
-#     sub_ax_x.set_xticks([start_time, end_time])
-#     sub_ax_y.set_xlim(start_time, end_time)
-#     sub_ax_y.set_xticks([start_time, end_time])
-#     sub_ax_z.set_xlim(start_time, end_time)
-#     sub_ax_z.set_xticks([start_time, end_time])
 
 # Set font size for tick labels
 for sub_ax in ax.flat:
     sub_ax.tick_params(axis="both", which="both", labelsize=12)
 
 plt.tight_layout()
-fig.savefig("plots/house_3d_rmse_vs_theta_id_" + str(norad_id) + ".pdf")
+file_name = (
+    "plots/" + filter_type + "_3d_rmse_vs_theta_id_" + str(norad_id) + "_plot.pdf"
+)
+fig.savefig(file_name)
 
 # Print the DataFrame with RMS values
 print(df_pos_rmse)
+file_name = (
+    out_folder_path + filter_type + "_err_id_" + str(norad_id) + "_all_thetas.csv"
+)
 df_pos_rmse.to_csv(
-    out_folder_path + "house_err_id_" + str(norad_id) + "_all_thetas.csv",
+    file_name,
     index=False,
 )
+
+# Extract trial_nums
+trial_nums = df_pos_rmse["trial_num"].unique().tolist()
+
+# Extract time_windows
+time_windows = df_pos_rmse["time_window"].unique().tolist()
+
+# Initialize an empty dictionary to store rmse_values
+rmse_values = {}
+
+# Iterate over each row of the DataFrame
+for _, row in df_pos_rmse.iterrows():
+    time_window = row["time_window"]
+    rmse_value = row["3d_rmse"]
+
+    # Check if time_window exists as a key in rmse_values dictionary
+    if time_window in rmse_values:
+        rmse_values[time_window].append(rmse_value)
+    else:
+        rmse_values[time_window] = [rmse_value]
+
+# Set up the figure and axis
+fig, ax = plt.subplots()
+
+# Set the width of each bar
+bar_width = 0.2
+
+# Set the x positions of the bars
+x_pos = np.arange(len(trial_nums))
+
+# Plot each group of bars
+for i, time_window in enumerate(time_windows):
+    if time_window in rmse_values:
+        ax.bar(
+            x_pos + (i * bar_width),
+            rmse_values[time_window],
+            bar_width,
+            label=f"{time_window} min",
+        )
+
+# Set the x-axis ticks and labels
+ax.set_xticks(x_pos + (len(time_windows) / 2) * bar_width)
+ax.set_xticklabels(trial_nums)
+ax.set_xlabel("Trial Number")
+
+# Set the y-axis label
+ax.set_ylabel("3D RMSE (m)")
+
+# Set the y-axis scale to logarithmic
+ax.set_yscale("log")
+
+# Set the chart title
+ax.set_title("3D RMSE of $\delta$-HOUSE (m)")
+
+# Add a legend
+ax.legend()
+
+# Save the figure as an image file
+file_name = (
+    "plots/" + filter_type + "_3d_rmse_vs_theta_id_" + str(norad_id) + "_bar.pdf"
+)
+plt.savefig(file_name)  # Change the filename and extension as needed

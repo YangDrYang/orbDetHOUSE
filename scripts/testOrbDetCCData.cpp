@@ -671,48 +671,86 @@ int main(int argc, char *argv[])
         {
             cout << "\tSRHOUSE" << '\n';
 
-            timer.tick();
-            SRHOUSE srhouse(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, -0.1);
-            srhouse.run(tSec, angMeas);
-            runTimesMC(0) = timer.tock();
+            VectorXd nSuccess = VectorXd::Zero(filters.numTrials);
+            for (int j = 1; j <= filters.numTrials; j++)
+            {
+                cout << "SRHOUSE Trial " << j << endl;
 
-            outputFile = snrInfo.outDir + "/srhouse_id_" + noradID + "_" + initialStateType + ".csv";
-            srhouse.save(outputFile, initialStateType);
+                timer.tick();
+                double weight = -0.1 + 0.2 / filters.numTrials * (j - 1);
+                cout << "weight value:\t" << weight << endl;
 
-            // Save Filter run times
-            vector<string> filterStrings({"srhouse"});
-            string timeFile = snrInfo.outDir + "/run_times_srhouse_id_" + noradID + "_" + initialStateType + ".csv";
-            EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+                try
+                {
+                    SRHOUSE srhouse(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, weight);
+                    srhouse.run(tSec, angMeas);
+                    runTimesMC(0) = timer.tock();
+
+                    if (filters.numTrials == 1)
+                        outputFile = snrInfo.outDir + "/srhouse_id_" + noradID + "_" + initialStateType + ".csv";
+                    else
+                        outputFile = snrInfo.outDir + "/srhouse_id_" + noradID + "_" + initialStateType + "_" + to_string(j) + ".csv";
+                    srhouse.save(outputFile, initialStateType);
+
+                    // Save Filter run times
+                    if (j == 1)
+                    {
+                        vector<string> filterStrings({"srhouse"});
+                        string timeFile = snrInfo.outDir + "/run_times_srhouse_id_" + noradID + "_" + initialStateType + ".csv";
+                        EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+                    }
+                    nSuccess(j - 1) = 1;
+                }
+                catch (const exception &e)
+                {
+                    // Exception handling code
+                    cout << "An exception occurred: " << e.what() << endl;
+                }
+            }
+            cout << "Number of successful trials: \t" << nSuccess.transpose() << endl;
         }
         else
         {
             cout << "\tHOUSE" << '\n';
 
+            VectorXd nSuccess = VectorXd::Zero(filters.numTrials);
             for (int j = 1; j <= filters.numTrials; j++)
             {
                 cout << "HOUSE Trial " << j << endl;
                 timer.tick();
                 // Initialize HOUSE with different delta
-                double delta = 0.1 / filters.numTrials * (j - 1);
-                // HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
-                HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0.05);
-                house.run(tSec, angMeas);
-                runTimesMC(0) = timer.tock();
-
-                if (filters.numTrials == 1)
-                    outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + ".csv";
-                else
-                    outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + "_" + to_string(j) + ".csv";
-                house.save(outputFile, initialStateType);
-
-                // Save Filter run times
-                if (j == 1)
+                double delta = 0.2 / filters.numTrials * (j - 1);
+                try
                 {
-                    vector<string> filterStrings({"house"});
-                    string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + "_" + initialStateType + ".csv";
-                    EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+                    HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, delta);
+
+                    // HOUSE house(orbFun, hh, dimMeas, 0, dtMax, distXi, distw, distn, 0.2);
+                    house.run(tSec, angMeas);
+                    runTimesMC(0) = timer.tock();
+
+                    if (filters.numTrials == 1)
+                        outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + ".csv";
+                    else
+                        outputFile = snrInfo.outDir + "/house_id_" + noradID + "_" + initialStateType + "_" + to_string(j) + ".csv";
+                    house.save(outputFile, initialStateType);
+
+                    // Save Filter run times
+                    if (j == 1)
+                    {
+                        vector<string> filterStrings({"house"});
+                        string timeFile = snrInfo.outDir + "/run_times_house_id_" + noradID + "_" + initialStateType + ".csv";
+                        EigenCSV::write(runTimesMC.col(0), filterStrings, timeFile);
+                    }
+
+                    nSuccess(j - 1) = 1;
+                }
+                catch (const exception &e)
+                {
+                    // Exception handling code
+                    cout << "An exception occurred: " << e.what() << endl;
                 }
             }
+            cout << "Number of successful trials: \t" << nSuccess.transpose() << endl;
         }
     }
 

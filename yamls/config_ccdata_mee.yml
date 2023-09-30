@@ -1,11 +1,11 @@
 # required
 filter_options:
-  square_root: false
+  square_root: true
   HOUSE: true
   UKF: false
   CUT4: false
   CUT6: false
-  num_trials: 1
+  num_trials: 100
 
 # requried
 scenario_parameters:
@@ -68,9 +68,9 @@ measurement_parameters:
   # measurement_std: [5, 5]
   # measurement_skew: [0, 0]
   # measurement_kurt: [3, 3]
-  measurement_std: [23.482, 10.820]
-  measurement_skew: [-4.169, -1.142]
-  measurement_kurt: [45.616, 35.077]
+  measurement_std: [20.141, 10.319]
+  measurement_skew: [-6.528, -1.196]
+  measurement_kurt: [84.349, 36.684]
 
 # optional, if not defined they will be set to default values
 propagator_filter_settings:

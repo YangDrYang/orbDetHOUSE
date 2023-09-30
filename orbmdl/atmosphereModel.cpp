@@ -1,5 +1,7 @@
 #include "atmosphereModel.hpp"
+#include <iostream>
 using namespace Eigen;
+using namespace std;
 
 #define R_EARTH 6378.137e3 // from https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 
@@ -28,7 +30,14 @@ Vector3d calculateDragForce(const Vector3d &rSat,
     X.tail(3) = vSat;
 
     // calculate density from model
-    double rho = calculateDensity(t, X, iers);
+    double rho;
+
+    rho = calculateDensity(t, X, iers);
+    if (isnan(rho))
+    {
+        throw runtime_error("Atmospheric density error!");
+    }
+
     Vector3d V = X.tail(3);
 
     // calculate drag force from density
@@ -115,10 +124,31 @@ vector<double> cartesianGeodetic(VectorXd Xeci, double t, IERS iersInstance)
     latitude *= 180 / M_PI;
     longitude *= 180 / M_PI;
 
-    // check that value are reasonable
-    assert(latitude <= 90 && latitude >= -90);
-    assert(longitude <= 180 && longitude >= -180);
-    // assert(altitude >= 0);
+    // // check that value are reasonable
+    // assert(latitude <= 90 && latitude >= -90);
+    // assert(longitude <= 180 && longitude >= -180);
+    // // assert(altitude >= 0);
+    try
+    {
+        if (latitude > 90 || latitude < -90)
+        {
+            throw runtime_error("Latitude out of range!");
+        }
+
+        if (longitude > 180 || longitude < -180)
+        {
+            throw runtime_error("Longitude out of range!");
+        }
+
+        if (altitude < 250e3)
+        {
+            throw runtime_error("Height is too low!");
+        }
+    }
+    catch (const exception &e)
+    {
+        cout << "An exception occurred: " << e.what() << std::endl;
+    }
 
     // structure return value
     vector<double> returnVal{latitude, longitude, altitude};
