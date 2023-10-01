@@ -91,8 +91,14 @@ for i, filter_type in enumerate(filters):
     # ax1.yaxis.set_major_formatter(
     #     mtick.FormatStrFormatter("%.2e")
     # )  # Scientific notation
+    if filter_type == "srhouse":
+        title = "$w$-HOUSE"
+    elif filter_type == "house":
+        title = "$\\delta$-HOUSE"
+    else:
+        title = filter_type.upper()
     # Add filter name as title
-    ax1.set_title(filter_type.upper())
+    ax1.set_title(title)
 
     # add 20 mins shift to distinguish ra and dec
     dates = pd.to_datetime(
@@ -101,12 +107,12 @@ for i, filter_type in enumerate(filters):
     ax2.scatter(
         dates,
         np.degrees(post_res_df["Dec"]) * 3600,
-        color="red",
+        color="green",
         s=5,
         label="Dec Residuals",
     )
-    ax2.set_ylabel("Dec Residuals \n(arcsec)", color="red")
-    ax2.tick_params(axis="y", labelcolor="red")
+    ax2.set_ylabel("Dec Residuals \n(arcsec)", color="green")
+    ax2.tick_params(axis="y", labelcolor="green")
     # ax2.set_ylim(-1e-5, 1.0e-5)
     ax2.set_ylim(-25, 40)
     # ax2.yaxis.set_major_formatter(
@@ -249,13 +255,19 @@ for i, filter_type in enumerate(filters):
             ignore_index=True,
         )
 
+        if filter_type == "srhouse":
+            label = "$w$-HOUSE"
+        elif filter_type == "house":
+            label = "$\\delta$-HOUSE"
+        else:
+            label = filter_type.upper()
         sub_ax = ax[0, j]
         if j == 0:
             sub_ax.scatter(
                 stamp[start_idx],
                 np.abs(err_df["pos_err_x"][start_idx]),
                 color=color,
-                label=filter_type.upper(),
+                label=label,
             )
         else:
             sub_ax.scatter(
@@ -388,13 +400,19 @@ for i, filter_type in enumerate(filters):
             ignore_index=True,
         )
 
+        if filter_type == "srhouse":
+            label = "$w$-HOUSE"
+        elif filter_type == "house":
+            label = "$\\delta$-HOUSE"
+        else:
+            label = filter_type.upper()
         sub_ax = ax[0, j]
         if j == 0:
             sub_ax.scatter(
                 stamp[start_idx],
                 np.abs(err_df["vel_err_x"][start_idx]),
                 color=color,
-                label=filter_type.upper(),
+                label=label,
             )
         else:
             sub_ax.scatter(
@@ -676,8 +694,14 @@ for filter_type in filters:
     file_path = os.path.join(data_folder_path, file_name)
     filter_df = pd.read_csv(file_path)
 
+    if filter_type == "srhouse":
+        label = "$w$-HOUSE"
+    elif filter_type == "house":
+        label = "$\\delta$-HOUSE"
+    else:
+        label = filter_type.upper()
     # Extract the run times column and add it to the main DataFrame
-    df_run_times[filter_type.upper()] = filter_df[filter_type]
+    df_run_times[label] = filter_df[filter_type]
 
 print(df_run_times)
 # Create a plot

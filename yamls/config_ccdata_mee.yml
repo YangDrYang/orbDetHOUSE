@@ -1,11 +1,11 @@
 # required
 filter_options:
   square_root: true
-  HOUSE: true
-  UKF: false
+  HOUSE: false
+  UKF: true
   CUT4: false
   CUT6: false
-  num_trials: 100
+  num_trials: 1
 
 # requried
 scenario_parameters:

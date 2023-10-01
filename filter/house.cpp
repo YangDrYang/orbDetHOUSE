@@ -138,7 +138,7 @@ void HOUSE::predict(double tp)
         }
 
         Sigma sig(distxi, distw, delta);
-        // cout << "weight:\t" << sig.wgt.transpose() << endl;
+        // cout << "weights in prediction:\t" << sig.wgt.transpose() << endl;
 
         MatrixXd Xp(nx, sig.n_pts);
         for (int i = 0; i < sig.n_pts; i++)
@@ -175,10 +175,10 @@ void HOUSE::update(const VectorXd &z)
     for (int i = 0; i < sig.n_pts; i++)
         Z.col(i) = h(tz, sig.state.col(i), sig.noise.col(i)); // Eq. B3
 
-    VectorXd res = z - Z.col(0);
+    // VectorXd res = z - Z.col(0);
     // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
-    // cout << "weight:\t" << sig.wgt.transpose() << endl;
+    // cout << "weights in update:\t" << sig.wgt.transpose() << endl;
     xm = distx.back().mean;
     zm = Z * sig.wgt;
 

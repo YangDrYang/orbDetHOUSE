@@ -71,7 +71,8 @@ for j, (start_time, end_time) in enumerate(time_windows):
             # Read the data into a pandas dataframe
             err_df = pd.read_csv(
                 out_folder_path
-                + "house_err_id_"
+                + filter_type
+                + "_err_id_"
                 + str(norad_id)
                 + "_"
                 + str(trial_no)
@@ -181,14 +182,14 @@ for sub_ax in ax.flat:
 
 plt.tight_layout()
 file_name = (
-    "plots/" + filter_type + "_3d_rmse_vs_theta_id_" + str(norad_id) + "_plot.pdf"
+    "plots/" + filter_type + "_3d_rmse_vs_delta_id_" + str(norad_id) + "_plot.pdf"
 )
 fig.savefig(file_name)
 
 # Print the DataFrame with RMS values
 print(df_pos_rmse)
 file_name = (
-    out_folder_path + filter_type + "_err_id_" + str(norad_id) + "_all_thetas.csv"
+    out_folder_path + filter_type + "_err_id_" + str(norad_id) + "_all_deltas.csv"
 )
 df_pos_rmse.to_csv(
     file_name,
@@ -253,6 +254,6 @@ ax.legend()
 
 # Save the figure as an image file
 file_name = (
-    "plots/" + filter_type + "_3d_rmse_vs_theta_id_" + str(norad_id) + "_bar.pdf"
+    "plots/" + filter_type + "_3d_rmse_vs_delta_id_" + str(norad_id) + "_bar.pdf"
 )
 plt.savefig(file_name)  # Change the filename and extension as needed

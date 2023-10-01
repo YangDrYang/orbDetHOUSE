@@ -678,7 +678,6 @@ int main(int argc, char *argv[])
 
                 timer.tick();
                 double weight = -0.1 + 0.2 / filters.numTrials * (j - 1);
-                cout << "weight value:\t" << weight << endl;
 
                 try
                 {
