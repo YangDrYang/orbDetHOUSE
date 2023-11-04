@@ -267,8 +267,7 @@ int main(int argc, char *argv[])
 
     // Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
     VectorXd stnECEF(6);
-    // stnECEF << -2730164.38085497, 3714370.03545681, 4393632.92952871, 0, 0, 0;
-    stnECEF << -2730758, 3713235, 4394246, 0, 0, 0;
+    stnECEF << -2730164.38085497, 3714370.03545681, 4393632.92952871, 0, 0, 0;
     // cout << stnECEF << endl;
 
     // Create a matrix to store MJD and sntECI values

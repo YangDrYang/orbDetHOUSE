@@ -14,8 +14,8 @@ plot_folder_path = "plots/"
 norad_id = 46984
 meas_file = "ccdata/meas_data_id_" + str(norad_id) + ".csv"
 stn_file = "ccdata/stn_eci_coordinates.csv"
-od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + ".csv"
-# od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + "_from_cpf.csv"
+# od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + ".csv"
+od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + "_from_cpf.csv"
 
 # # *************** pre-residuals
 
@@ -39,14 +39,18 @@ processing.process_pre_res_ccdata(
 
 pre_res_df = pd.read_csv(pre_res_file)
 print(pre_res_df)
-dates = pd.to_datetime(pre_res_df.loc[:, "MJD"] + 2400000.5, unit="D", origin="julian")
+dates = pd.to_datetime(
+    pre_res_df.loc[150:, "MJD"] + 2400000.5, unit="D", origin="julian"
+)
 
-ra_residuals = pre_res_df["RA"] / np.pi * 180 * 3600  # RA residuals column
-dec_residuals = pre_res_df["Dec"] / np.pi * 180 * 3600  # Dec residuals column
+ra_residuals = pre_res_df["RA"]  # Assuming this is your RA residuals column
 
-print(ra_residuals)
-print(dec_residuals)
+ra_skew = skew(pre_res_df["RA"])
+ra_kurt = kurtosis(pre_res_df["RA"])
+dec_skew = skew(pre_res_df["Dec"])
+dec_kurt = kurtosis(pre_res_df["Dec"])
 
+<<<<<<< HEAD
 # Set up the figure and subplots with a 1x2 grid
 fig, axs = plt.subplots(1, 2, figsize=(6, 3))
 
@@ -95,17 +99,16 @@ dec_kurt = kurtosis(dec_residuals)
 print("right ascension mean (in arcseconds):    ", ra_mean)
 print("right ascension std (in arcseconds):    ", ra_std)
 print("right ascension rms (in arcseconds):    ", ra_rms)
+=======
+>>>>>>> parent of 8b55a691 (corrected cc stn coor and updated pre-residuals)
 print("right ascension skewness:    ", ra_skew)
 print("right ascension kurtosis:    ", ra_kurt)
-print("declination mean (in arcseconds):    ", dec_mean)
-print("declination std (in arcseconds):    ", dec_std)
-print("declination rms (in arcseconds):    ", dec_rms)
 print("declination skewness:    ", dec_skew)
 print("declination kurtosis:    ", dec_kurt)
 
 
 # Create a new figure and axes for plot
-fig, ax1 = plt.subplots(figsize=(6, 3))
+fig, ax1 = plt.subplots(figsize=(6, 8))
 # Set the font size
 plt.rcParams.update({"font.size": 12})
 # Plot RA vs MJD
@@ -113,7 +116,7 @@ ax2 = ax1.twinx()
 
 ax1.scatter(
     dates,
-    ra_residuals,
+    np.degrees(pre_res_df.loc[150:, "RA"]) * 3600,
     color="blue",
     s=5,
     label="RA Residuals",
@@ -125,12 +128,17 @@ ax1.tick_params(axis="y", labelcolor="blue")
 
 # add 20 mins shift to distinguish ra and dec
 dates = pd.to_datetime(
-    pre_res_df.loc[:, "MJD"] + 2400000.5 + 20 / 1440, unit="D", origin="julian"
+    pre_res_df.loc[150:, "MJD"] + 2400000.5 + 20 / 1440, unit="D", origin="julian"
 )
 ax2.scatter(
     dates,
+<<<<<<< HEAD
     dec_residuals,
     color="green",
+=======
+    np.degrees(pre_res_df.loc[150:, "Dec"]) * 3600,
+    color="red",
+>>>>>>> parent of 8b55a691 (corrected cc stn coor and updated pre-residuals)
     s=5,
     label="Dec Residuals",
 )

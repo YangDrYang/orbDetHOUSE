@@ -29,7 +29,7 @@ print(od_eci_df)
 DataPoint = namedtuple("DataPoint", ["x", "y"])
 
 # Order number
-nOrd = 14
+nOrd = 10
 
 
 # Function to interpolate using Lagrange's formula
