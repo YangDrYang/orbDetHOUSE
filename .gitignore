@@ -39,12 +39,12 @@
 
 odvenv/
 .vscode/
-ccdata/
+# ccdata/
 
 .DS_Store
 bin/.DS_Store
 out/.DS_Store
 
-*.PAS
-*.EOF
+# *.PAS
+# *.EOF
 
