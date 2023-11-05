@@ -22,6 +22,34 @@ meas_file = "ccdata/meas_data_id_" + str(norad_id) + ".csv"
 stn_file = "ccdata/stn_eci_coordinates.csv"
 od_ref_data_file = "refdata/od_ref_id_" + str(norad_id) + ".csv"
 
+
+# *************** seperate sub windows
+meas_df = pd.read_csv(meas_file)
+stamp = (meas_df["MJD"] - meas_df["MJD"][0]) * 1440
+
+stamp_diff = np.diff(stamp)
+threshold = 10.0
+window_starts = np.where(stamp_diff > threshold)[0] + 1
+
+# Add the start and end indices for the first and last time windows
+window_starts = np.insert(window_starts, 0, 0)
+window_starts = np.append(window_starts, len(stamp))
+
+time_windows = []
+
+for i in range(len(window_starts) - 1):
+    start_idx = window_starts[i]
+    end_idx = window_starts[i + 1] - 1
+
+    start_time = stamp[start_idx]
+    end_time = stamp[end_idx]
+
+    time_windows.append((start_time, end_time))
+
+print("Time Windows:")
+for i, (start_time, end_time) in enumerate(time_windows):
+    print(f"Time Window {i + 1}: Start = {start_time:.2f}, End = {end_time:.2f}")
+    
 # # *************** post-residuals
 
 # Create a new figure and axes for plot
@@ -140,6 +168,40 @@ for i, filter_type in enumerate(filters):
     # lines, labels = ax1.get_legend_handles_labels()
     # lines2, labels2 = ax2.get_legend_handles_labels()
     # ax2.legend(lines + lines2, labels + labels2, loc="upper left")
+    
+    # Convert RA and Dec from degrees to arcseconds
+    ra_arcsec = np.degrees(post_res_df["RA"]) * 3600
+    dec_arcsec = np.degrees(post_res_df["Dec"]) * 3600
+
+    # Add these to your DataFrame
+    post_res_df["RA_arcsec"] = ra_arcsec
+    post_res_df["Dec_arcsec"] = dec_arcsec
+
+    # Convert MJD to minutes from start
+    post_res_df["MJD_minutes"] = (post_res_df["MJD"] - post_res_df["MJD"][0]) * 1440
+
+    # Loop over time windows
+    for i, (start_time, end_time) in enumerate(time_windows):
+        # Filter DataFrame for current time window
+        window_df = post_res_df[(post_res_df["MJD_minutes"] >= start_time) & (post_res_df["MJD_minutes"] <= end_time)]
+
+        # Calculate the square of residuals
+        ra_squared = np.square(window_df["RA_arcsec"])
+        dec_squared = np.square(window_df["Dec_arcsec"])
+
+        # Calculate the mean of squared residuals
+        ra_mean_squared = np.mean(ra_squared)
+        dec_mean_squared = np.mean(dec_squared)
+
+        # Calculate the RMS of residuals
+        ra_rms = np.sqrt(ra_mean_squared)
+        dec_rms = np.sqrt(dec_mean_squared)
+
+        # Print the RMS of residuals
+        print(f"Time Window {i + 1}: Start = {start_time:.2f}, End = {end_time:.2f}")
+        print(f"RMS of RA residuals for {filter_type}: {ra_rms}")
+        print(f"RMS of Dec residuals for {filter_type}: {dec_rms}")
+
 
 # Rotate x-axis tick labels and adjust label spacing
 fig.autofmt_xdate(rotation=45)
@@ -151,32 +213,6 @@ post_res_plot_all_file = (
 # Save the figure
 plt.savefig(post_res_plot_all_file)
 
-# *************** seperate sub windows
-meas_df = pd.read_csv(meas_file)
-stamp = (meas_df["MJD"] - meas_df["MJD"][0]) * 1440
-
-stamp_diff = np.diff(stamp)
-threshold = 10.0
-window_starts = np.where(stamp_diff > threshold)[0] + 1
-
-# Add the start and end indices for the first and last time windows
-window_starts = np.insert(window_starts, 0, 0)
-window_starts = np.append(window_starts, len(stamp))
-
-time_windows = []
-
-for i in range(len(window_starts) - 1):
-    start_idx = window_starts[i]
-    end_idx = window_starts[i + 1] - 1
-
-    start_time = stamp[start_idx]
-    end_time = stamp[end_idx]
-
-    time_windows.append((start_time, end_time))
-
-print("Time Windows:")
-for i, (start_time, end_time) in enumerate(time_windows):
-    print(f"Time Window {i + 1}: Start = {start_time:.2f}, End = {end_time:.2f}")
 
 filters = ["house", "srukf", "ukf", "cut4", "cut6", "srhouse"]
 # *************** absolute error plot for position components
