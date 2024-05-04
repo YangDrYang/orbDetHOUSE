@@ -486,6 +486,9 @@ void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, Matrix
 
         const double mu = GM_Earth;
 
+        cout << "COE:" << eci2coe(initialStateVec, mu) << "\n";
+        cout << "MEE:" << eci2mee(initialStateVec, mu) << "\n";
+
         UT::trans_model coorTransECI2MEE = [&mu](const VectorXd &satECI) -> VectorXd
         {
             // Perform coordinate transformation and return the result
