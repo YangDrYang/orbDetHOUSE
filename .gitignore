@@ -46,6 +46,10 @@ odvenv/
 bin/.DS_Store
 out/.DS_Store
 
+CUT/pts_4_18.csv
+CUT/pts_4_19.csv
+CUT/pts_4_20.csv
+
 # *.PAS
 # *.EOF
 
