@@ -31,14 +31,14 @@ Running:
   - bin/scripts/convertECEF2ECI
   - bin/scripts/testOrbProp yamls/config_orb.yml
   - bin/scripts/testOrbDetCCData yamls/config_ccdata_mee.yml
-- examples of results analyses and visualisations 
-  - python3 pyscripts/analyseOrbitProp.py
 - output files will be saved into the "out/out_sub" directory
 
-Analysis and plot:
+Analyses and plots:
 
 - call python functions in the "pyscripts" directory after install relevant python packages
 - analysis results will be saved in the "out/out_sub" directory and plots will be saved in the "plots" directory
+- examples of results analyses and visualisations 
+  - python3 pyscripts/analyseOrbitProp.py
 
 Notes:
 
