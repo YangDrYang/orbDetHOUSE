@@ -32,10 +32,11 @@
 # *.app
 
 # Output data files
-*.csv
 *.eps
 *.svg
 *.pdf
+*.png
+*.PAS
 
 odvenv/
 .vscode/
