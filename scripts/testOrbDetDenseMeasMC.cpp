@@ -409,27 +409,31 @@ VectorXd stdVec2EigenVec(const vector<double> &stdVec)
     return eigenVec;
 }
 
-void initEGMCoef(string filename)
+bool initEGMCoef(const string& filename)
 {
     ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Failed to open file: " << filename << endl;
+        return false; // Indicate failure to open the file
+    }
+
     string line;
     int n, m;
     double cmn, smn;
 
     while (getline(file, line))
     {
-        // line structure:
-        // m        n       Cnm     Snm     0      0
         istringstream buffer(line);
         buffer >> m >> n >> cmn >> smn;
 
-        // gravity model degree
         if (m < GRAVITY_DEG_M && n < GRAVITY_DEG_M)
         {
             egm.cmn(m, n) = cmn;
             egm.smn(m, n) = smn;
         }
     }
+
+    return true; // Indicate success
 }
 
 void initGlobalVariables(VectorXd &initialStateVec, string stateType)
