@@ -44,7 +44,7 @@ Notes:
 
 - be careful with the directory of Eigen, Boost and Yaml-cpp, better to install them using CMake inside their file folders
 - adjust the directories in Makefile accordingly to include these libraries
-- the author is working on a version with full functionalities
+- the author is updating the repo from time to time
 
 Reference:
 
