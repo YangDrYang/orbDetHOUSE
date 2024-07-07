@@ -15,7 +15,9 @@ Dependencies:
 Compiling:
 
 - compilation is handled by the makefile, run make to rebuild (make must be installed) or clean main functions in the "scripts" directory.
-- examples: make FILENAME=testOrbProp and make FILENAME=testOrbProp clean
+- examples: 
+  - make FILENAME=convertECEF2ECI and make FILENAME=convertECEF2ECI clean
+  - make FILENAME=testOrbDetCCData and make FILENAME=testOrbDetCCData clean
 - the binary object files are stored in the "bin/bin_sub" directory
 
 Running:
@@ -24,7 +26,9 @@ Running:
 - parameters can be set using the yaml files in the yamls directory
 - by default the program will read the "config.yaml" file, however
   you can provide an argument to read a different yaml file
-- example: bin/scripts/testOrbProp yamls/config_orb.yml
+- example: 
+  - bin/scripts/convertECEF2ECI
+  - bin/scripts/testOrbDetCCData yamls/config_ccdata_mee.yml
 - output files will be saved into the "out/out_sub" directory
 
 Analysis and plot:
