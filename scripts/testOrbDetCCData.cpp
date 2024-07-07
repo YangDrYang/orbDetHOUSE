@@ -427,27 +427,31 @@ VectorXd stdVec2EigenVec(const vector<double> &stdVec)
     return eigenVec;
 }
 
-void initEGMCoef(string filename)
+bool initEGMCoef(const string& filename)
 {
     ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Failed to open file: " << filename << endl;
+        return false; // Indicate failure to open the file
+    }
+
     string line;
     int n, m;
     double cmn, smn;
 
     while (getline(file, line))
     {
-        // line structure:
-        // m        n       Cnm     Snm     0      0
         istringstream buffer(line);
         buffer >> m >> n >> cmn >> smn;
 
-        // gravity model degree
         if (m < GRAVITY_DEG_M && n < GRAVITY_DEG_M)
         {
             egm.cmn(m, n) = cmn;
             egm.smn(m, n) = smn;
         }
     }
+
+    return true; // Indicate success
 }
 
 // void initGlobalVariables(struct InitialState &initialState, struct FileInfo &suppFiles)
@@ -480,14 +484,14 @@ void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, Matrix
     }
     else if (stateType == "mee")
     {
-        cout << "Convert state from ECI to MEE\n";
+        // cout << "Convert state from ECI to MEE\n";
 
         MatrixXd rvCov = initialCov;
 
         const double mu = GM_Earth;
 
-        cout << "COE:" << eci2coe(initialStateVec, mu) << "\n";
-        cout << "MEE:" << eci2mee(initialStateVec, mu) << "\n";
+        cout << "COE:" << eci2coe(initialStateVec, mu).transpose() << "\n";
+        cout << "MEE:" << eci2mee(initialStateVec, mu).transpose() << "\n";
 
         UT::trans_model coorTransECI2MEE = [&mu](const VectorXd &satECI) -> VectorXd
         {
@@ -570,7 +574,7 @@ int main(int argc, char *argv[])
     // initGlobalVariables(initialState, suppFiles);
     initGlobalVariables(initialStateVec, initialCov, procNoiseCov, initialStateType, suppFiles);
     cout << "initialStateVec:\t\n"
-         << initialStateVec << endl;
+         << initialStateVec.transpose() << endl;
     cout << "initialCov:\t\n"
          << initialCov << endl;
     cout << "procNoiseCov:\t\n"
@@ -752,7 +756,7 @@ int main(int argc, char *argv[])
                     cout << "An exception occurred: " << e.what() << endl;
                 }
             }
-            cout << "Number of successful trials: \t" << nSuccess.transpose() << endl;
+            // cout << "Number of successful trials: \t" << nSuccess.transpose() << endl;
         }
     }
 

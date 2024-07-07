@@ -78,7 +78,7 @@ void SRHOUSE::predict(double tp)
             if (sig.wgt(0) < delta)
                 sig = Sigma(distxi, distw, 0);
             // Sigma sig(distxi, distw, delta);
-            cout << "weights in prediction:\t" << sig.wgt.transpose() << endl;
+            // cout << "weights in prediction:\t" << sig.wgt.transpose() << endl;
 
             MatrixXd Xp(nx, sig.n_pts);
 
@@ -115,7 +115,7 @@ void SRHOUSE::predict(double tp)
         if (sig.wgt(0) < delta)
             sig = Sigma(distxi, distw, 0);
         // Sigma sig(distxi, distw, delta);
-        cout << "weights in prediction:\t" << sig.wgt.transpose() << endl;
+        // cout << "weights in prediction:\t" << sig.wgt.transpose() << endl;
 
         MatrixXd Xp(nx, sig.n_pts);
         for (int i = 0; i < sig.n_pts; i++)
@@ -179,7 +179,7 @@ void SRHOUSE::update(const VectorXd &z)
     // VectorXd res = z - Z.col(0);
     // cout << "residuals: " << res(0) << "\t" << res(1) << endl;
 
-    cout << "weights in update:\t" << sig.wgt.transpose() << endl;
+    // cout << "weights in update:\t" << sig.wgt.transpose() << endl;
     xm = distx.back().mean;
     zm = Z * sig.wgt;
 

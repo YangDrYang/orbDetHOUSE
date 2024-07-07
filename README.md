@@ -35,7 +35,7 @@ Notes:
 
 - be careful with the directory of Eigen, Boost and Yaml-cpp, better to install them using CMake inside their file folders
 - adjust the directories in Makefile accordingly to include these libraries
-- the author is working on a version with full functionalities
+- due to confidentiality of the real-world optical data, only a short samples are released
 
 Reference:
 
