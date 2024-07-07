@@ -1,10 +1,10 @@
 # required
 filter_options:
-  square_root: true
+  square_root: false
   HOUSE: true
   UKF: true
-  CUT4: false
-  CUT6: false
+  CUT4: true
+  CUT6: true
   num_trials: 1
 
 # requried
@@ -59,7 +59,7 @@ measurement_parameters:
   # measurement file
   meas_file: ccdata/meas_data_id_46984.csv
   # ground station (as ECEF, velocities assumed to be 0)
-  ground_station: [-2730164.38085497, 3714370.03545681, 4393632.92952871, 0, 0, 0] #Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
+  ground_station: [-2730000, 3714000, 4394000, 0, 0, 0] #Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
   dim_meas: 2
   # measurement error with units [arcsec, arcsec]
   # right_ascension_error: 5
