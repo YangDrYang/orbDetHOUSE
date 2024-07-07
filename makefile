@@ -14,8 +14,8 @@ LocalDIR = usr/local
 FUNDIR = scripts
 
 # for compiling orbmdl and filter
-CPPFLAGS = --std=c++11 -Wall -pedantic -g -O3 
-CFLAGS = -Wall -pedantic -g -O3 
+CPPFLAGS = --std=c++11 -Wall -pedantic -g
+CFLAGS = -Wall -pedantic -g
 INCLUDE = -I/$(LocalDIR)/include/ -I/$(LocalDIR)/include/eigen3/ -I/$(LocalDIR)/boost_1_81_0 -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
 
 # orbmdl files
