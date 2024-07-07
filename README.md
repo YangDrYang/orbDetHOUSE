@@ -42,7 +42,7 @@ Analyses and plots:
 
 Notes:
 
-- all functions/files have been tested on Macbook 3.1 GHz Quad-Core Intel Core i7 only; Other OS runing gcc/g++ should also work but need to work out proper configurations
+- all functions/files have been tested on Macbook 3.1 GHz Quad-Core Intel Core i7; Other OS runing gcc/g++ should also work but need to work out proper configurations
 - be careful with the directory of Eigen, Boost and Yaml-cpp, better to install them using CMake inside their file folders
 - adjust the directories in Makefile accordingly to include these libraries
 - the author is updating the repo from time to time
