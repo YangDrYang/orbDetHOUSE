@@ -4,6 +4,7 @@ Dependencies:
 
 - HOUSE by Z. Stojanovski and D. Savransky: https://github.com/SIOSlab/HOUSE.git
 - CUTpoints by N. Adurthi, P. Singla, and T. Singh: https://github.com/nadurthi/CUTpoints using the Matlab function cut_sigma_points.m to generate .csv files in the "CUT" directory
+  - the .csv files have been generated, which include two large files (>100 MB). They can potentially result in some issues with Git. 
 - SOFA: http://www.iausofa.org/2021_0512.html
 - nrlmsise-00: https://github.com/magnific0/nrlmsise-00.git
 - jpl_eph: https://github.com/Bill-Gray/jpl_eph.git
