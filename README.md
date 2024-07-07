@@ -23,7 +23,7 @@ Compiling:
 
 Running:
 
-- the repo includes an executable compiled for MacBook Intel
+- the repo includes an executable compiled for MacBook Intel Core i7
 - parameters can be set using the yaml files in the yamls directory
 - by default the program will read the "config.yaml" file, however
   you can provide an argument to read a different yaml file
@@ -42,6 +42,7 @@ Analyses and plots:
 
 Notes:
 
+- all functions/files have been tested on Macbook 3.1 GHz Quad-Core Intel Core i7 only; Other OS runing gcc/g++ should also work but need to work out proper configurations
 - be careful with the directory of Eigen, Boost and Yaml-cpp, better to install them using CMake inside their file folders
 - adjust the directories in Makefile accordingly to include these libraries
 - the author is updating the repo from time to time
