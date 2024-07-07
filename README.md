@@ -19,7 +19,7 @@ Compiling:
 
 Running:
 
-- the repo includes an executable compiled for MacBook
+- the repo includes an executable compiled for MacBook Intel
 - parameters can be set using the yaml files in the yamls directory
 - by default the program will read the "config.yaml" file, however
   you can provide an argument to read a different yaml file
@@ -31,9 +31,12 @@ Analysis and plot:
 - call python functions in the "pyscripts" directory after install relevant python packages
 - analysis results will be saved in the "out/out_sub" directory and plots will be saved in the "plots" directory
 
-Note:
+Notes:
 
 - be careful with the directory of Eigen, Boost and Yaml-cpp, better to install them using CMake inside their file folders
 - adjust the directories in Makefile accordingly to include these libraries
+- the author is working on a version with full functionalities
 
-# OrbDetHOUSE
+Reference:
+
+- please cite my paper when you use the codes: Yang Yang, Square-Root Higher-Order Unscented Estimators for Robust Orbit Determination, IEEE Transactions on Aerospace and Electronic Systems, DOI: 10.1109/TAES.2024.3423851.
