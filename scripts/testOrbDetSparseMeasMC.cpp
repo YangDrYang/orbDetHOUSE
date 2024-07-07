@@ -519,7 +519,10 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType)
     initEGMCoef("./auxdata/GGM03S.txt");
     erpt = {.n = 14};
 
-    readerp("./auxdata/cod15657.erp", &erpt);
+    if (!readerp("./auxdata/cod15657.erp", &erpt)){
+        cerr << "Failed to read ERP file" << endl;
+        return; // Assuming readerp returns a bool indicating success/failure
+    }
     // cout << "erpt mjd\t" << erpt.data->mjd << endl;
 
     // // transform ground station from
@@ -544,19 +547,18 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType)
     getIERS(epoch.startMJD);
 
     pJPLEph = jpl_init_ephemeris("./auxdata/linux_p1550p2650.440", nullptr, nullptr);
+    if (!pJPLEph) {
+        cerr << "Failed to initialize JPL ephemeris" << endl;
+        return; // Check if jpl_init_ephemeris returns nullptr on failure
+    } 
 
-    VectorXd rvECI = VectorXd::Zero(6);
-    string ecefTag = "ECEF";
-    if (stateType == ecefTag)
+    double dimState = initialStateVec.size();
+    if (stateType == "ECEF")
     {
         cout << "Converted state from ECEF to ECI\n";
-        VectorXd rvECI = VectorXd::Zero(6);
+        VectorXd rvECI = VectorXd::Zero(dimState);
         ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialStateVec, rvECI);
         initialStateVec = rvECI;
-    }
-    else
-    {
-        rvECI = initialStateVec;
     }
 }
 
@@ -595,6 +597,8 @@ int main(int argc, char *argv[])
 
     // initialise
     initGlobalVariables(initialStateVec, initialStateType);
+
+    cout << "running to here\n";
 
     // UKF state & measurement models
     DynamicModel::stf g = accelerationModel;

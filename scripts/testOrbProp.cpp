@@ -115,7 +115,6 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     getIERS(epoch.startMJD + tSec / 86400);
 
     eci2ecef_sofa(epoch.startMJD + tSec / 86400, iersInstance, mECI2ECEF, mdECI2ECEF);
-    cout << "running to here\n";
 
     Vector3d acceleration;
     orbitProp.updPropagator(epoch.startMJD + tSec / 86400, leapSec, &erpt);
@@ -371,9 +370,7 @@ int main(int argc, char *argv[])
     timer.tick();
     for (int k = 1; k < nTotalSteps; k++)
     {   
-        cout << "start time:\t" << time << "\tend time:\t" << time + dt << endl;
         propStateVec = orbFun(time, time + dt, propStateVec, VectorXd::Zero(6));
-        cout << "propStateVec:\t" << propStateVec << endl;
         time += dt;
         if (initialStateType == "MEE")
         {
