@@ -23,27 +23,33 @@ initial_orbtial_parameters:
   # initial state of satillite (type ECEF or ECI), unit: m, m/s
   initial_state: [-1049836.531406142516062,-4275236.478115282021463,-6337381.515492259524763,5944.446546185818079,2819.968620172394367,-2885.421064631562786]
   initial_state_type: ECI
-  # initial_state_type: MEE
-  initial_covariance: 
-
 
 # optional, if not defined they will be set to default values
 propagator_truth_settings:
+  # earth_gravity: true
   earth_gravity_model_order: 100
   earth_gravity_model_degree: 100
   third_body_attraction: true
   third_body_sun: true
   third_body_moon: true
+  # third_body_planet: true
   solid_earth_tide: true
   ocean_tide_loading: true
-  solar_radiation_pressure : true
+  solar_radiation_pressure: true
+  # thermal_emission: false
+  # earth_albedo: false
+  # infrared_radiation: false
   atmospheric_drag: true
   relativity_effect: true
+  # antenna_thrust: false
+  # empirical_acceleration: false
+  # satellite_manoeuvre: false
   srpCoef: 1.23
   srpArea : 8.73
   dragCoef: 2.0
   dragArea : 4.091655
   satMass : 961.831
+  # odeInteg: default
 
 # optional
 supporting_files:

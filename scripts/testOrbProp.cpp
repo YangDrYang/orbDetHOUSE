@@ -115,14 +115,15 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     getIERS(epoch.startMJD + tSec / 86400);
 
     eci2ecef_sofa(epoch.startMJD + tSec / 86400, iersInstance, mECI2ECEF, mdECI2ECEF);
+    cout << "running to here\n";
 
     Vector3d acceleration;
     orbitProp.updPropagator(epoch.startMJD + tSec / 86400, leapSec, &erpt);
 
     if (abs(X(1)) < 1 && abs(X(2)) < 1) // modified equnoctial elements
     {
-        // calculate acceleration
-        Xf = orbitProp.calculateTimeDerivativeMEE(X, mECI2ECEF);
+        // // calculate acceleration
+        // Xf = orbitProp.calculateTimeDerivativeMEE(X, mECI2ECEF);
     }
     else // Cartesian elements
     {
@@ -131,6 +132,7 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
         // set state vector
         Xf.head(3) = X.tail(3);
         Xf.tail(3) = acceleration;
+        // cout << "acceleration:\t" << acceleration << endl;
     }
 
     return Xf;
@@ -156,6 +158,7 @@ void readConfigFile(string fileName, ForceModels &optProp, struct ScenarioInfo &
     initialState.dimState = dimState;
     vector<double> tempVec;
     initialState.initialStateType = orbitParams["initial_state_type"].as<string>();
+    
     // read params as standard vector, convert to eigen vector
     tempVec = orbitParams["initial_state"].as<vector<double>>();
     initialState.initialStateVec = stdVec2EigenVec(tempVec);
@@ -226,36 +229,46 @@ VectorXd stdVec2EigenVec(const vector<double> &stdVec)
     return eigenVec;
 }
 
-void initEGMCoef(string filename)
+bool initEGMCoef(const string& filename)
 {
     ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Failed to open file: " << filename << endl;
+        return false; // Indicate failure to open the file
+    }
+
     string line;
     int n, m;
     double cmn, smn;
 
     while (getline(file, line))
     {
-        // line structure:
-        // m        n       Cnm     Snm     0      0
         istringstream buffer(line);
         buffer >> m >> n >> cmn >> smn;
 
-        // gravity model degree
         if (m < GRAVITY_DEG_M && n < GRAVITY_DEG_M)
         {
             egm.cmn(m, n) = cmn;
             egm.smn(m, n) = smn;
         }
     }
+
+    return true; // Indicate success
 }
 
 void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct FileInfo &suppFiles)
 {
-    initEGMCoef(suppFiles.grvFile);
+    if (!initEGMCoef(suppFiles.grvFile)) {
+        cerr << "Failed to initialize EGM coefficients from " << suppFiles.grvFile << endl;
+        return; // Assuming initEGMCoef returns a bool indicating success/failure
+    }
 
-    erpt = {.n = 0};
     // cout << suppFiles.erpFile << endl;
-    readerp(suppFiles.erpFile, &erpt);
+    erpt = {.n = 0};
+    if (!readerp(suppFiles.erpFile, &erpt)) {
+        cerr << "Failed to read ERP file: " << suppFiles.erpFile << endl;
+        return; // Assuming readerp returns a bool indicating success/failure
+    }
     // cout << "erpt mjd\t" << erpt.data->mjd << endl;
 
     // get leap seconds from the table
@@ -265,22 +278,29 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
 
     const char *ephFile = suppFiles.ephFile.c_str();
     pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
+    if (!pJPLEph) {
+        cerr << "Failed to initialize JPL ephemeris from " << suppFiles.ephFile << endl;
+        return; // Check if jpl_init_ephemeris returns nullptr on failure
+    }    
 
-    string ecefTag = "ECEF";
-    if (stateType == ecefTag)
-    {
-        cout << "Convert state from ECEF to ECI\n";
-        VectorXd rvECI = VectorXd::Zero(6);
-        ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialStateVec, rvECI);
-        initialStateVec = rvECI;
-    }
-    else if (stateType == "MEE")
-    {
-        cout << "Convert state from ECI to MEE\n";
-        VectorXd rvECI = VectorXd::Zero(6);
-        rvECI = initialStateVec;
-        initialStateVec = coe2mee(eci2coe(rvECI, GM_Earth));
-    }
+    //todo: fix the error zsh: abort      bin/scripts/testOrbProp yamls/config_orb.yml
+    // cout << "initial state type:\t" << stateType << endl;
+    // if (stateType == "ECEF")
+    // {
+    //     cout << "Convert state from ECEF to ECI\n";
+    //     VectorXd rvECI = VectorXd::Zero(6);
+    //     ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialStateVec, rvECI);
+    //     initialStateVec = rvECI;
+    //     cout << "ECI initial state:\t" << initialStateVec << endl;
+    // }
+    // else if (stateType == "MEE")
+    // {
+    //     cout << "Convert state from ECI to MEE\n";
+    //     VectorXd rvECI = VectorXd::Zero(6);
+    //     rvECI = initialStateVec;
+    //     initialStateVec = coe2mee(eci2coe(rvECI, GM_Earth));
+    //     cout << "MEE initial state:\t" << initialStateVec << endl;
+    // }
 }
 
 int main(int argc, char *argv[])
@@ -314,10 +334,10 @@ int main(int argc, char *argv[])
     const int dimState = initialState.dimState;
     string initialStateType = initialState.initialStateType;
     VectorXd initialStateVec = initialState.initialStateVec;
-    MatrixXd initialCov = initialState.initialCovarianceMat;
 
     // initialise
     initGlobalVariables(initialStateVec, initialStateType, suppFiles);
+
     // setup orbit propagator
     orbitProp.setPropOption(forceModelsPropOpt);
     orbitProp.printPropOption();
@@ -335,10 +355,11 @@ int main(int argc, char *argv[])
     tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
     MatrixXd tableTrajTruth(nTotalSteps, dimState + 1);
     tableTrajTruth.col(0) = tSec;
+    cout << "initial state type:\t" << initialStateType << endl;
     if (initialStateType == "MEE")
     {
-        VectorXd meeSat = initialStateVec;
-        tableTrajTruth.row(0).tail(dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
+        // VectorXd meeSat = initialStateVec;
+        // tableTrajTruth.row(0).tail(dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
     }
     else
     {
@@ -349,21 +370,23 @@ int main(int argc, char *argv[])
     Timer timer;
     timer.tick();
     for (int k = 1; k < nTotalSteps; k++)
-    {
+    {   
+        cout << "start time:\t" << time << "\tend time:\t" << time + dt << endl;
         propStateVec = orbFun(time, time + dt, propStateVec, VectorXd::Zero(6));
+        cout << "propStateVec:\t" << propStateVec << endl;
         time += dt;
         if (initialStateType == "MEE")
         {
-            VectorXd meeSat = propStateVec;
-            tableTrajTruth.row(k).tail(dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
-            // cout << "meeSat:\t" << coe2eci(mee2coe(meeSat), GM_Earth) << endl;
+            // VectorXd meeSat = propStateVec;
+            // tableTrajTruth.row(k).tail(dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
+            // // cout << "meeSat:\t" << coe2eci(mee2coe(meeSat), GM_Earth) << endl;
         }
         else
         {
             tableTrajTruth.row(k).tail(dimState) = propStateVec;
         }
 
-        // cout << "The " << k + 1 << "th time step" << endl;
+        cout << "The " << k + 1 << "th time step" << endl;
     }
     cout << "The total time consumption is:\t" << timer.tock() << endl;
     // header for the saved file

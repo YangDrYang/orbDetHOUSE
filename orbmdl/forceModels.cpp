@@ -285,6 +285,7 @@ Propagator::Propagator()
 void Propagator::setPropOption(
 	ForceModels forceMdl)
 {
+	cout << "Setting propagator options" << endl;
 	/* Options from yaml file */
 	propOpt.centerStarType = eEarth;
 	propOpt.flagEarthGravity = forceMdl.earth_gravity;
@@ -316,6 +317,8 @@ void Propagator::setPropOption(
 	propOpt.flagSatelliteManoeuvre = forceMdl.satellite_manoeuvre;
 
 	propOpt.odeInteg = forceMdl.odeInteg;
+
+	cout << "Propagator options set" << endl;
 
 	/* Parameters from yaml file */
 	propOpt.optEarthGravMdl.earthGravAccDeg.mMax = forceMdl.egmAccDeg;

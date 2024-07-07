@@ -92,7 +92,7 @@ struct MeasModel
 
 // // prototypes
 // VectorXd orbitModel(double t, const VectorXd &X);
-void initEGMCoef(string filename);
+bool initEGMCoef(const string& filename);
 VectorXd stdVec2EigenVec(const vector<double> &stdVec);
 void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
                     struct MeasModel &measMdl, struct Filters &filters, struct FileInfo &suppFiles);
