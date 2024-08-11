@@ -1,10 +1,4 @@
 #include "orbit_propagator_wrapper.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <ctime>
-#include <cmath>
-#include <yaml-cpp/yaml.h>
 
 OrbitPropagatorWapper::OrbitPropagatorWapper(const std::string &configFilename, double param1, int param2)
     : param1_(param1), param2_(param2)
