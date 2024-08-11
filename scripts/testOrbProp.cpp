@@ -1,33 +1,5 @@
 #include "testOrbDet.hpp"
 
-#define R_EARTH 6371E3
-#define DEG M_PI / 180
-#define ARC_MIN M_PI / (180 * 60)
-#define ARC_SEC M_PI / (180 * 60 * 60)
-#define MAXLEAPS 18
-const double leaps[MAXLEAPS + 1][7] =
-    {
-        /* leap seconds (y,m,d,h,m,s,utc-gpst) */
-        {2017, 1, 1, 0, 0, 0, -18},
-        {2015, 7, 1, 0, 0, 0, -17},
-        {2012, 7, 1, 0, 0, 0, -16},
-        {2009, 1, 1, 0, 0, 0, -15},
-        {2006, 1, 1, 0, 0, 0, -14},
-        {1999, 1, 1, 0, 0, 0, -13},
-        {1997, 7, 1, 0, 0, 0, -12},
-        {1996, 1, 1, 0, 0, 0, -11},
-        {1994, 7, 1, 0, 0, 0, -10},
-        {1993, 7, 1, 0, 0, 0, -9},
-        {1992, 7, 1, 0, 0, 0, -8},
-        {1991, 1, 1, 0, 0, 0, -7},
-        {1990, 1, 1, 0, 0, 0, -6},
-        {1988, 1, 1, 0, 0, 0, -5},
-        {1985, 7, 1, 0, 0, 0, -4},
-        {1983, 7, 1, 0, 0, 0, -3},
-        {1982, 7, 1, 0, 0, 0, -2},
-        {1981, 7, 1, 0, 0, 0, -1},
-        {0}};
-
 // propagator variables
 erp_t erpt;
 double leapSec;
@@ -36,55 +8,6 @@ EGMCoef egm;
 void *pJPLEph;
 Propagator orbitProp;
 struct EpochInfo epoch;
-
-time_t convertMJD2Time_T(double mjd)
-{
-    // Convert MJD to Unix timestamp
-    double unix_time = (mjd - 40587) * 86400.0;
-
-    // Convert Unix timestamp to time_t
-    time_t t = static_cast<time_t>(unix_time);
-
-    return t;
-}
-
-double getLeapSecond(time_t t)
-{
-    // convert to tm
-    tm tm = *gmtime(&t);
-    int year = tm.tm_year + 1900;
-
-    // find the latest leap second that is earlier than t
-    int i;
-    for (i = 0; i < MAXLEAPS; i++)
-    {
-        if (leaps[i][0] < year || (leaps[i][0] == year && leaps[i][1] < tm.tm_mon + 1) ||
-            (leaps[i][0] == year && leaps[i][1] == tm.tm_mon + 1 && leaps[i][2] <= tm.tm_mday))
-        {
-            break;
-        }
-    }
-
-    // return the leap second value
-    return leaps[i][6];
-}
-
-void getIERS(double mjd)
-{
-    // get leap seconds from the table
-    // double leapSec = -getLeapSecond(convertMJD2Time_T(mjd));
-
-    double erpv[4] = {};
-    geterp_from_utc(&erpt, leapSec, mjd, erpv);
-
-    double dUT1_UTC = erpv[2];
-    double dUTC_TAI = -(19 + leapSec);
-    double xp = erpv[0];
-    double yp = erpv[1];
-    double lod = erpv[3];
-
-    iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
-}
 
 VectorXd simpleAccerationModel(double t, const VectorXd &X, const VectorXd &fd);
 VectorXd simpleAccerationModel(double t, const VectorXd &X, const VectorXd &fd)
@@ -112,7 +35,7 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     // get leap seconds from the table
     leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD + tSec / 86400));
     // set up the IERS instance
-    getIERS(epoch.startMJD + tSec / 86400);
+    getIERS(epoch.startMJD + tSec / 86400, erpt, iersInstance);
 
     eci2ecef_sofa(epoch.startMJD + tSec / 86400, iersInstance, mECI2ECEF, mdECI2ECEF);
 
@@ -157,7 +80,7 @@ void readConfigFile(string fileName, ForceModels &optProp, struct ScenarioInfo &
     initialState.dimState = dimState;
     vector<double> tempVec;
     initialState.initialStateType = orbitParams["initial_state_type"].as<string>();
-    
+
     // read params as standard vector, convert to eigen vector
     tempVec = orbitParams["initial_state"].as<vector<double>>();
     initialState.initialStateVec = stdVec2EigenVec(tempVec);
@@ -228,10 +151,11 @@ VectorXd stdVec2EigenVec(const vector<double> &stdVec)
     return eigenVec;
 }
 
-bool initEGMCoef(const string& filename)
+bool initEGMCoef(const string &filename)
 {
     ifstream file(filename);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         cerr << "Failed to open file: " << filename << endl;
         return false; // Indicate failure to open the file
     }
@@ -257,14 +181,16 @@ bool initEGMCoef(const string& filename)
 
 void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct FileInfo &suppFiles)
 {
-    if (!initEGMCoef(suppFiles.grvFile)) {
+    if (!initEGMCoef(suppFiles.grvFile))
+    {
         cerr << "Failed to initialize EGM coefficients from " << suppFiles.grvFile << endl;
         return; // Assuming initEGMCoef returns a bool indicating success/failure
     }
 
     // cout << suppFiles.erpFile << endl;
     erpt = {.n = 0};
-    if (!readerp(suppFiles.erpFile, &erpt)) {
+    if (!readerp(suppFiles.erpFile, &erpt))
+    {
         cerr << "Failed to read ERP file: " << suppFiles.erpFile << endl;
         return; // Assuming readerp returns a bool indicating success/failure
     }
@@ -273,33 +199,34 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
     // get leap seconds from the table
     leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD));
     // set up the IERS instance
-    getIERS(epoch.startMJD);
+    getIERS(epoch.startMJD, erpt, iersInstance);
 
     const char *ephFile = suppFiles.ephFile.c_str();
     pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
-    if (!pJPLEph) {
+    if (!pJPLEph)
+    {
         cerr << "Failed to initialize JPL ephemeris from " << suppFiles.ephFile << endl;
         return; // Check if jpl_init_ephemeris returns nullptr on failure
-    }    
+    }
 
-    //todo: fix the error zsh: abort      bin/scripts/testOrbProp yamls/config_orb.yml
-    // cout << "initial state type:\t" << stateType << endl;
-    // if (stateType == "ECEF")
-    // {
-    //     cout << "Convert state from ECEF to ECI\n";
-    //     VectorXd rvECI = VectorXd::Zero(6);
-    //     ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialStateVec, rvECI);
-    //     initialStateVec = rvECI;
-    //     cout << "ECI initial state:\t" << initialStateVec << endl;
-    // }
-    // else if (stateType == "MEE")
-    // {
-    //     cout << "Convert state from ECI to MEE\n";
-    //     VectorXd rvECI = VectorXd::Zero(6);
-    //     rvECI = initialStateVec;
-    //     initialStateVec = coe2mee(eci2coe(rvECI, GM_Earth));
-    //     cout << "MEE initial state:\t" << initialStateVec << endl;
-    // }
+    // todo: fix the error zsh: abort      bin/scripts/testOrbProp yamls/config_orb.yml
+    //  cout << "initial state type:\t" << stateType << endl;
+    //  if (stateType == "ECEF")
+    //  {
+    //      cout << "Convert state from ECEF to ECI\n";
+    //      VectorXd rvECI = VectorXd::Zero(6);
+    //      ecef2eciVec_sofa(epoch.startMJD, iersInstance, initialStateVec, rvECI);
+    //      initialStateVec = rvECI;
+    //      cout << "ECI initial state:\t" << initialStateVec << endl;
+    //  }
+    //  else if (stateType == "MEE")
+    //  {
+    //      cout << "Convert state from ECI to MEE\n";
+    //      VectorXd rvECI = VectorXd::Zero(6);
+    //      rvECI = initialStateVec;
+    //      initialStateVec = coe2mee(eci2coe(rvECI, GM_Earth));
+    //      cout << "MEE initial state:\t" << initialStateVec << endl;
+    //  }
 }
 
 int main(int argc, char *argv[])
@@ -369,7 +296,7 @@ int main(int argc, char *argv[])
     Timer timer;
     timer.tick();
     for (int k = 1; k < nTotalSteps; k++)
-    {   
+    {
         propStateVec = orbFun(time, time + dt, propStateVec, VectorXd::Zero(6));
         time += dt;
         if (initialStateType == "MEE")

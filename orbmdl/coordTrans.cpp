@@ -1,4 +1,58 @@
+#include "auxillaryData.hpp"
 #include "coordTrans.hpp"
+
+time_t convertMJD2Time_T(double mjd)
+{
+	// Convert MJD to Unix timestamp
+	double unix_time = (mjd - 40587) * 86400.0;
+
+	// Convert Unix timestamp to time_t
+	time_t t = static_cast<time_t>(unix_time);
+
+	return t;
+}
+
+double getLeapSecond(time_t t)
+{
+	// convert to tm
+	tm tm = *gmtime(&t);
+	int year = tm.tm_year + 1900;
+
+	// find the latest leap second that is earlier than t
+	int i;
+	for (i = 0; i < MAXLEAPS; i++)
+	{
+		if (leaps[i][0] < year || (leaps[i][0] == year && leaps[i][1] < tm.tm_mon + 1) ||
+			(leaps[i][0] == year && leaps[i][1] == tm.tm_mon + 1 && leaps[i][2] <= tm.tm_mday))
+		{
+			break;
+		}
+	}
+
+	// return the leap second value
+	return leaps[i][6];
+}
+
+void getIERS(double mjd, const erp_t erpt, IERS &iersInstance)
+{
+	// get leap seconds from the table
+	double leapSec = -getLeapSecond(convertMJD2Time_T(mjd));
+
+	double erpv[4] = {};
+	// cout << "leap second:   " << leapSec << "   "
+	//      << "mjd:   " << mjd << endl;
+	geterp_from_utc(&erpt, leapSec, mjd, erpv);
+
+	double dUT1_UTC = erpv[2];
+	double dUTC_TAI = -(19 + leapSec);
+	double xp = erpv[0];
+	double yp = erpv[1];
+	double lod = erpv[3];
+
+	iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
+
+	// cout << "dUT1_UTC:  " << dUT1_UTC << "dUTC_TAI: " << dUTC_TAI << "xp:   " << xp << endl;
+}
 
 void arrayMat2eigenMat(
 	const double arrayMat[3][3], ///< c++ 2D array

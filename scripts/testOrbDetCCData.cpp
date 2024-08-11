@@ -8,29 +8,6 @@
 #define DEG M_PI / 180
 #define ARC_MIN M_PI / (180 * 60)
 #define ARC_SEC M_PI / (180 * 60 * 60)
-#define MAXLEAPS 18
-const double leaps[MAXLEAPS + 1][7] =
-    {
-        /* leap seconds (y,m,d,h,m,s,utc-gpst) */
-        {2017, 1, 1, 0, 0, 0, -18},
-        {2015, 7, 1, 0, 0, 0, -17},
-        {2012, 7, 1, 0, 0, 0, -16},
-        {2009, 1, 1, 0, 0, 0, -15},
-        {2006, 1, 1, 0, 0, 0, -14},
-        {1999, 1, 1, 0, 0, 0, -13},
-        {1997, 7, 1, 0, 0, 0, -12},
-        {1996, 1, 1, 0, 0, 0, -11},
-        {1994, 7, 1, 0, 0, 0, -10},
-        {1993, 7, 1, 0, 0, 0, -9},
-        {1992, 7, 1, 0, 0, 0, -8},
-        {1991, 1, 1, 0, 0, 0, -7},
-        {1990, 1, 1, 0, 0, 0, -6},
-        {1988, 1, 1, 0, 0, 0, -5},
-        {1985, 7, 1, 0, 0, 0, -4},
-        {1983, 7, 1, 0, 0, 0, -3},
-        {1982, 7, 1, 0, 0, 0, -2},
-        {1981, 7, 1, 0, 0, 0, -1},
-        {0}};
 
 // propagator variables
 erp_t erpt;
@@ -42,59 +19,6 @@ void *pJPLEph;
 Propagator orbitProp;
 struct EpochInfo epoch;
 
-time_t convertMJD2Time_T(double mjd)
-{
-    // Convert MJD to Unix timestamp
-    double unix_time = (mjd - 40587) * 86400.0;
-
-    // Convert Unix timestamp to time_t
-    time_t t = static_cast<time_t>(unix_time);
-
-    return t;
-}
-
-double getLeapSecond(time_t t)
-{
-    // convert to tm
-    tm tm = *gmtime(&t);
-    int year = tm.tm_year + 1900;
-
-    // find the latest leap second that is earlier than t
-    int i;
-    for (i = 0; i < MAXLEAPS; i++)
-    {
-        if (leaps[i][0] < year || (leaps[i][0] == year && leaps[i][1] < tm.tm_mon + 1) ||
-            (leaps[i][0] == year && leaps[i][1] == tm.tm_mon + 1 && leaps[i][2] <= tm.tm_mday))
-        {
-            break;
-        }
-    }
-
-    // return the leap second value
-    return leaps[i][6];
-}
-
-void getIERS(double mjd)
-{
-    // get leap seconds from the table
-    double leapSec = -getLeapSecond(convertMJD2Time_T(mjd));
-
-    double erpv[4] = {};
-    // cout << "leap second:   " << leapSec << "   "
-    //      << "mjd:   " << mjd << endl;
-    geterp_from_utc(&erpt, leapSec, mjd, erpv);
-
-    double dUT1_UTC = erpv[2];
-    double dUTC_TAI = -(19 + leapSec);
-    double xp = erpv[0];
-    double yp = erpv[1];
-    double lod = erpv[3];
-
-    iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
-
-    // cout << "dUT1_UTC:  " << dUT1_UTC << "dUTC_TAI: " << dUTC_TAI << "xp:   " << xp << endl;
-}
-
 VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
 {
     VectorXd Xf(6);
@@ -105,7 +29,7 @@ VectorXd accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
     // get leap seconds from the table
     double leapSec = -getLeapSecond(convertMJD2Time_T(epoch.startMJD + tSec / 86400));
     // set up the IERS instance
-    getIERS(epoch.startMJD + tSec / 86400);
+    getIERS(epoch.startMJD + tSec / 86400, erpt, iersInstance);
 
     eci2ecef_sofa(epoch.startMJD + tSec / 86400, iersInstance, mECI2ECEF, mdECI2ECEF);
 
@@ -145,7 +69,7 @@ Vector2d measurementModel(double tSec, const VectorXd &satECI, const VectorXd &s
     // cout << "leapSec:   " << leapSec << endl;
 
     // set up the IERS instance
-    getIERS(epoch.startMJD + tSec / 86400);
+    getIERS(epoch.startMJD + tSec / 86400, erpt, iersInstance);
 
     // cout << "starting mjd:  " << epoch.startMJD << endl;
     ecef2eciVec_sofa(epoch.startMJD + tSec / 86400, iersInstance, stnECEF_, stnECI);
@@ -180,7 +104,7 @@ Vector2d measurementMEEModel(double tSec, const VectorXd &satMEE, const VectorXd
     VectorXd stnECEF_ = stnECEF; // define a new variable that is not a const vector
 
     // set up the IERS instance
-    getIERS(epoch.startMJD + tSec / 86400);
+    getIERS(epoch.startMJD + tSec / 86400, erpt, iersInstance);
 
     // transfer the station coordinate from ECEF to ECI
     ecef2eciVec_sofa(epoch.startMJD + tSec / 86400, iersInstance, stnECEF_, stnECI);
@@ -427,10 +351,11 @@ VectorXd stdVec2EigenVec(const vector<double> &stdVec)
     return eigenVec;
 }
 
-bool initEGMCoef(const string& filename)
+bool initEGMCoef(const string &filename)
 {
     ifstream file(filename);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         cerr << "Failed to open file: " << filename << endl;
         return false; // Indicate failure to open the file
     }
@@ -469,7 +394,7 @@ void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, Matrix
     readerp(suppFiles.erpFile, &erpt);
 
     // set up the IERS instance
-    getIERS(epoch.startMJD);
+    getIERS(epoch.startMJD, erpt, iersInstance);
 
     const char *ephFile = suppFiles.ephFile.c_str();
     pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
