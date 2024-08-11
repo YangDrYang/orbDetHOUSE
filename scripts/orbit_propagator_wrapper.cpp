@@ -19,7 +19,7 @@ std::vector<double> OrbitPropagatorWapper::propagate(double initial_position, do
     // Initialize the propagator with necessary parameters
     propagator.setPropOption(forceModelsPropOpt_);
     propagator.printPropOption();
-    propgator.initPropagator(initialState_.initialStateVec, epoch_.startMJD, leapSec_, &erpt_, egm_, pJPLEph_);
+    propagator.initPropagator(initialState_.initialStateVec, epoch_.startMJD, leapSec_, &erpt_, egm_, pJPLEph_);
 
     double absErr = 1E-6;
     double relErr = 1E-6;
@@ -183,7 +183,7 @@ void OrbitPropagatorWapper::initGlobalVariables()
     }
 
     leapSec_ = -getLeapSecond(convertMJD2Time_T(epoch_.startMJD));
-    getIERS(epoch_.startMJD);
+    getIERS(epoch_.startMJD, erpt_, iersInstance_);
 
     const char *ephFile = suppFiles_.ephFile.c_str();
     pJPLEph_ = jpl_init_ephemeris(ephFile, nullptr, nullptr);
