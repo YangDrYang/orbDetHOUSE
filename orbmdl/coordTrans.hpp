@@ -2,6 +2,7 @@
 #ifndef ___COORDTRANS_HPP__
 #define ___COORDTRANS_HPP__
 
+#include "auxillaryData.hpp"
 #include "satRefSys.hpp"
 #include "constants.hpp"
 #include "sofam.hpp"

@@ -2,29 +2,6 @@
 #include <iostream>
 using namespace std;
 
-#define MAXLEAPS 18
-const double leaps[MAXLEAPS + 1][7] =
-    {
-        /* leap seconds (y,m,d,h,m,s,utc-gpst) */
-        {2017, 1, 1, 0, 0, 0, -18},
-        {2015, 7, 1, 0, 0, 0, -17},
-        {2012, 7, 1, 0, 0, 0, -16},
-        {2009, 1, 1, 0, 0, 0, -15},
-        {2006, 1, 1, 0, 0, 0, -14},
-        {1999, 1, 1, 0, 0, 0, -13},
-        {1997, 7, 1, 0, 0, 0, -12},
-        {1996, 1, 1, 0, 0, 0, -11},
-        {1994, 7, 1, 0, 0, 0, -10},
-        {1993, 7, 1, 0, 0, 0, -9},
-        {1992, 7, 1, 0, 0, 0, -8},
-        {1991, 1, 1, 0, 0, 0, -7},
-        {1990, 1, 1, 0, 0, 0, -6},
-        {1988, 1, 1, 0, 0, 0, -5},
-        {1985, 7, 1, 0, 0, 0, -4},
-        {1983, 7, 1, 0, 0, 0, -3},
-        {1982, 7, 1, 0, 0, 0, -2},
-        {1981, 7, 1, 0, 0, 0, -1},
-        {0}};
 erp_t erpt;
 IERS iersInstance;
 
@@ -114,61 +91,6 @@ void writeCSV(const string &filename, const MatrixXd &data, const vector<string>
     {
         cerr << "Failed to open file: " << filename << endl;
     }
-}
-
-time_t convertMJD2Time_T(double mjd)
-{
-    // Convert MJD to Unix timestamp
-    double unix_time = (mjd - 40587) * 86400.0;
-
-    // Convert Unix timestamp to time_t
-    time_t t = static_cast<time_t>(unix_time);
-
-    return t;
-}
-
-double getLeapSecond(time_t t)
-{
-    // convert to tm
-    tm tm = *gmtime(&t);
-    int year = tm.tm_year + 1900;
-
-    // find the latest leap second that is earlier than t
-    int i;
-    for (i = 0; i < MAXLEAPS; i++)
-    {
-        if (leaps[i][0] < year || (leaps[i][0] == year && leaps[i][1] < tm.tm_mon + 1) ||
-            (leaps[i][0] == year && leaps[i][1] == tm.tm_mon + 1 && leaps[i][2] <= tm.tm_mday))
-        {
-            break;
-        }
-    }
-
-    // return the leap second value
-    return leaps[i][6];
-}
-
-void getIERS(double mjd)
-{
-    // get leap seconds from the table
-    double leapSec = -getLeapSecond(convertMJD2Time_T(mjd));
-
-    double erpv[4] = {};
-    // cout << "leap second:   " << leapSec << "   "
-    //      << "mjd:   " << mjd << endl;
-    geterp_from_utc(&erpt, leapSec, mjd, erpv);
-
-    double dUT1_UTC = erpv[2];
-    double dUTC_TAI = -(19 + leapSec);
-    double xp = erpv[0];
-    double yp = erpv[1];
-    double lod = erpv[3];
-
-    // cout << "MJD: \t" << mjd << "xp: \t" << erpv[0] << "yp: \t" << erpv[1] << " " << erpv[2] << endl;
-
-    iersInstance.Set(dUT1_UTC, dUTC_TAI, xp, yp, lod);
-
-    // cout << "dUT1_UTC:  " << dUT1_UTC << "dUTC_TAI: " << dUTC_TAI << "xp:   " << xp << endl;
 }
 
 string getFileExtension(const string &filename)
@@ -277,7 +199,7 @@ int main(int argc, char *argv[])
     {
         VectorXd stnECI = VectorXd::Zero(6);
         // cout << tMJD[i] << endl;
-        getIERS(tMJD[i]);
+        getIERS(tMJD[i], erpt, iersInstance);
         ecef2eciVec_sofa(tMJD[i], iersInstance, stnECEF, stnECI);
         // cout << stnECI << endl;
 
@@ -369,7 +291,7 @@ int main(int argc, char *argv[])
             VectorXd satECI = VectorXd::Zero(3);
             double epochMJD = orbCPF(i, 2) + orbCPF(i, 3) / 86400;
             cout << "epochMJD:  " << epochMJD << endl;
-            getIERS(epochMJD);
+            getIERS(epochMJD, erpt, iersInstance);
             ecef2eciVec_sofa(epochMJD, iersInstance, satECEF, satECI);
             cout << "satECI" << satECI.transpose() << endl;
 
