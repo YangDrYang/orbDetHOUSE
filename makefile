@@ -14,9 +14,12 @@ LocalDIR = usr/local
 FUNDIR = scripts
 
 # for compiling orbmdl and filter
-CPPFLAGS = --std=c++11 -Wall -pedantic -g
-CFLAGS = -Wall -pedantic -g
-INCLUDE = -I/$(LocalDIR)/include/ -I/$(LocalDIR)/include/eigen3/ -I/$(LocalDIR)/boost_1_81_0 -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
+SDK_PATH = $(shell xcrun --sdk macosx --show-sdk-path)
+CPPFLAGS = --std=c++11 -stdlib=libc++ -Wall -pedantic -g -isysroot $(SDK_PATH) -nostdinc++ -I$(SDK_PATH)/usr/include/c++/v1
+CFLAGS = -Wall -pedantic -g -isysroot $(SDK_PATH)
+
+INCLUDE = -I$(SDK_PATH)/usr/include/c++/v1 -I/$(LocalDIR)/include/ -I/$(LocalDIR)/include/eigen3/ -I/$(LocalDIR)/boost_1_81_0 -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
+LDFLAGS = -L/usr/local/lib
 
 # orbmdl files
 ORBMDL_SRC = $(wildcard orbmdl/*.cpp) $(wildcard orbmdl/3rdparty/*.cpp) $(wildcard orbmdl/sofa/*.cpp)
@@ -42,7 +45,7 @@ OBJECTS = $(ORBMDL_AR) $(FILTER_AR) $(NRLMSISE00_AR)
 
 # ----- COMPILE ORBDET -----
 $(OBJDIR)/$(FUNDIR)/$(FILENAME): $(ORBDET_OBJ) $(OBJECTS)
-	$(CXX) $(CPPFLAGS) $(INCLUDE) $(OBJECTS) $(ORBDET_OBJ) -L$(OBJDIR)/filter -lfilter -lyaml-cpp -L$(OBJDIR)/orbmdl -lorbmdl -lnrlmsise00 -o $@
+	$(CXX) $(CPPFLAGS) $(INCLUDE) $(OBJECTS) $(ORBDET_OBJ) $(LDFLAGS) -lyaml-cpp -L$(OBJDIR)/filter -lfilter -L$(OBJDIR)/orbmdl -lorbmdl -lnrlmsise00 -o $@
 
 # compile ORBDET object file
 $(ORBDET_OBJ): $(OBJDIR)/$(FUNDIR)/%.o : $(FUNDIR)/%.cpp
