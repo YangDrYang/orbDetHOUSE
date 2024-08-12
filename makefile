@@ -1,84 +1,58 @@
-CXX = g++
-CC = gcc
+# Makefile for orbit_propagator project
 
-# create directories
-$(shell mkdir -p bin/orbmdl)
-$(shell mkdir -p bin/orbmdl/3rdparty)
-$(shell mkdir -p bin/orbmdl/sofa)
-$(shell mkdir -p bin/orbmdl/nrlmsise-00)
-$(shell mkdir -p bin/filter)
-$(shell mkdir -p bin/scripts)
+# Compiler and flags
+CXX = clang++
 
-OBJDIR = bin
-LocalDIR = usr/local
-FUNDIR = scripts
+# Set SDKROOT
+SDKROOT = $(shell xcrun --sdk macosx --show-sdk-path)
 
-# for compiling orbmdl and filter
-SDK_PATH = $(shell xcrun --sdk macosx --show-sdk-path)
-CPPFLAGS = --std=c++11 -stdlib=libc++ -Wall -pedantic -g -isysroot $(SDK_PATH) -nostdinc++ -I$(SDK_PATH)/usr/include/c++/v1
-CFLAGS = -Wall -pedantic -g -isysroot $(SDK_PATH)
+# Compiler and flags
+CXXFLAGS = -std=c++11 -isystem $(SDKROOT)/usr/include/c++/v1 -isysroot $(SDKROOT) -Wall -pedantic -g -Wno-error -v
+CFLAGS = -isysroot $(SDKROOT) -Wall -pedantic -g
+LDFLAGS = -L$(SDKROOT)/usr/lib -lSystem
 
-INCLUDE = -I$(SDK_PATH)/usr/include/c++/v1 -I/$(LocalDIR)/include/ -I/$(LocalDIR)/include/eigen3/ -I/$(LocalDIR)/boost_1_81_0 -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
-LDFLAGS = -L/usr/local/lib
+# Include directories
+INCLUDES = -Iorbmdl -Iorbmdl/3rdparty -Iorbmdl/sofa -Iorbmdl/nrlmsise-00 -Ifilter \
+           -I/usr/local/include -I/usr/local/include/eigen3 -I/usr/local/boost_1_81_0 \
+           -I/Users/yangyang/Documents/GitHub/ordDetHOUSEPublished/orbDetHOUSE/odvenv/lib/python3.8/site-packages/pybind11/include \
+           -I/Library/Frameworks/Python.framework/Versions/3.8/include/python3.8 \
+           -I$(SDKROOT)/usr/include \
+           -I$(SDKROOT)/usr/include/c++/v1
 
-# orbmdl files
-ORBMDL_SRC = $(wildcard orbmdl/*.cpp) $(wildcard orbmdl/3rdparty/*.cpp) $(wildcard orbmdl/sofa/*.cpp)
-ORBMDL_OBJ = $(ORBMDL_SRC:orbmdl/%.cpp=$(OBJDIR)/orbmdl/%.o)
-ORBMDL_AR = $(OBJDIR)/orbmdl/liborbmdl.a
-
-# nrlmsise-00 (drag density model) files
-NRLMSISE00_SRC = orbmdl/nrlmsise-00/nrlmsise-00.c orbmdl/nrlmsise-00/nrlmsise-00_data.c
-NRLMSISE00_OBJ = $(NRLMSISE00_SRC:orbmdl/nrlmsise-00/%.c=$(OBJDIR)/orbmdl/nrlmsise-00/%.o)
-NRLMSISE00_AR = $(OBJDIR)/orbmdl/libnrlmsise00.a
-
-# filter files
+# Source files
+ORBMDL_SRC = $(wildcard orbmdl/*.cpp orbmdl/3rdparty/*.cpp orbmdl/sofa/*.cpp)
+NRLMSISE00_SRC = $(wildcard orbmdl/nrlmsise-00/*.c)
 FILTER_SRC = $(wildcard filter/*.cpp)
-FILTER_OBJ = $(FILTER_SRC:filter/%.cpp=$(OBJDIR)/filter/%.o)
-FILTER_AR = $(OBJDIR)/filter/libfilter.a
 
-# ORBDET files
-FILENAME ?= 
-ORBDET_SRC = $(FUNDIR)/$(FILENAME).cpp
-ORBDET_OBJ = $(ORBDET_SRC:$(FUNDIR)/%.cpp=$(OBJDIR)/$(FUNDIR)/%.o)
+# Object files
+ORBMDL_OBJ = $(ORBMDL_SRC:.cpp=.o)
+NRLMSISE00_OBJ = $(NRLMSISE00_SRC:.c=.o)
+FILTER_OBJ = $(FILTER_SRC:.cpp=.o)
 
-OBJECTS = $(ORBMDL_AR) $(FILTER_AR) $(NRLMSISE00_AR)
+# Targets
+all: orbit_propagator_wrapper.so
 
-# ----- COMPILE ORBDET -----
-$(OBJDIR)/$(FUNDIR)/$(FILENAME): $(ORBDET_OBJ) $(OBJECTS)
-	$(CXX) $(CPPFLAGS) $(INCLUDE) $(OBJECTS) $(ORBDET_OBJ) $(LDFLAGS) -lyaml-cpp -L$(OBJDIR)/filter -lfilter -L$(OBJDIR)/orbmdl -lorbmdl -lnrlmsise00 -o $@
+# Build libraries
+liborbmdl.a: $(ORBMDL_OBJ)
+	ar rcs $@ $^
 
-# compile ORBDET object file
-$(ORBDET_OBJ): $(OBJDIR)/$(FUNDIR)/%.o : $(FUNDIR)/%.cpp
-	$(CXX) $(CPPFLAGS) $(INCLUDE) -c $< -o $@
+libnrlmsise00.a: $(NRLMSISE00_OBJ)
+	ar rcs $@ $^
 
-# ----- COMPILE orbmdl -----
-# compile orbmdl object files
-$(ORBMDL_OBJ): $(OBJDIR)/orbmdl/%.o : orbmdl/%.cpp
-	$(CXX) $(CPPFLAGS) $(INCLUDE) -c $< -o $@
+libfilter.a: $(FILTER_OBJ)
+	ar rcs $@ $^
 
-# ----- COMPILE nrlmsise-00 -----
-# compile nrlmsise-00 object files
-$(NRLMSISE00_OBJ): $(OBJDIR)/orbmdl/nrlmsise-00/%.o : orbmdl/nrlmsise-00/%.c
-	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+# Build the main library
+orbit_propagator_wrapper.so: orbmdl/orbit_propagator_wrapper_py.o orbmdl/orbit_propagator_wrapper.o liborbmdl.a libnrlmsise00.a libfilter.a
+	$(CXX) -shared -o $@ $^ $(LDFLAGS) -lyaml-cpp
 
-# create orbmdl library
-$(ORBMDL_AR): $(ORBMDL_OBJ)
-	ar rcs $(ORBMDL_AR) $(ORBMDL_OBJ)
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-# create nrlmsise-00 library
-$(NRLMSISE00_AR): $(NRLMSISE00_OBJ)
-	ar rcs $(NRLMSISE00_AR) $(NRLMSISE00_OBJ)
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-# ----- COMPILE filter -----
-# create filter library
-$(FILTER_AR): $(FILTER_OBJ)
-	ar rcs $(FILTER_AR) $(FILTER_OBJ)
-
-# compile filter object files
-$(FILTER_OBJ): $(OBJDIR)/filter/%.o : filter/%.cpp
-	$(CXX) $(CPPFLAGS) $(INCLUDE) -c $< -o $@
-
-# ----- CLEAN -----
-.PHONY: clean
+# Clean up
 clean:
-	rm -f $(OBJDIR)/*.o $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(OBJDIR)/orbmdl/nrlmsise-00/*.o $(ORBMDL_AR) $(NRLMSISE00_AR) $(OBJDIR)/filter/*.o $(FILTER_AR) $(OBJDIR)/$(FUNDIR)/$(FILENAME).o $(OBJDIR)/$(FUNDIR)/$(FILENAME)
+	rm -f $(ORBMDL_OBJ) $(NRLMSISE00_OBJ) $(FILTER_OBJ) orbmdl/orbit_propagator_wrapper_py.o orbmdl/orbit_propagator_wrapper.o liborbmdl.a libnrlmsise00.a libfilter.a orbit_propagator_wrapper.so

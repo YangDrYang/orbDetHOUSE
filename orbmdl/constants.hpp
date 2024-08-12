@@ -2,11 +2,9 @@
 #ifndef __CONSTANTS___HPP_
 #define __CONSTANTS___HPP_
 
-#include <map>
 #include <Eigen/Dense>
 
 using namespace Eigen;
-using std::map;
 
 #define CLIGHT 299792458.0 /* speed of light (m/s) */
 

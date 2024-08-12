@@ -2,19 +2,21 @@
 #define ORBIT_PROPAGATOR_WRAPPER_H
 
 #include "testOrbDet.hpp"
+using namespace std;
 
 class OrbitPropagatorWapper
 {
 public:
     DynamicModel::stf accelerationModel;
-    OrbitPropagatorWapper(const std::string &configFilename, double param1, int param2);
-    std::vector<double> propagate(double initial_position, double initial_velocity, double time);
+    // OrbitPropagatorWapper(const string &configFilename, double param1, int param2);
+    OrbitPropagatorWapper(const string &configFilename);
+    vector<double> propagate();
 
 private:
-    void readConfigFile(const std::string &fileName);
+    void readConfigFile(const string &fileName);
     void initGlobalVariables();
-    Eigen::VectorXd stdVec2EigenVec(const std::vector<double> &stdVec);
-    bool initEGMCoef(const std::string &filename);
+    VectorXd stdVec2EigenVec(const vector<double> &stdVec);
+    bool initEGMCoef(const string &filename);
 
     // Member variables
     double param1_;

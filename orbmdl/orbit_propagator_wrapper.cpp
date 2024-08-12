@@ -1,13 +1,18 @@
 #include "orbit_propagator_wrapper.h"
 
-OrbitPropagatorWapper::OrbitPropagatorWapper(const std::string &configFilename, double param1, int param2)
-    : param1_(param1), param2_(param2)
+// OrbitPropagatorWapper::OrbitPropagatorWapper(const string &configFilename, double param1, int param2)
+//     : param1_(param1), param2_(param2)
+// {
+//     readConfigFile(configFilename);
+//     initGlobalVariables();
+// }
+OrbitPropagatorWapper::OrbitPropagatorWapper(const string &configFilename)
 {
     readConfigFile(configFilename);
     initGlobalVariables();
 }
 
-std::vector<double> OrbitPropagatorWapper::propagate(double initial_position, double initial_velocity, double time)
+vector<double> OrbitPropagatorWapper::propagate()
 {
     Propagator propagator;
     // Initialize the propagator with necessary parameters
@@ -20,16 +25,17 @@ std::vector<double> OrbitPropagatorWapper::propagate(double initial_position, do
     DynamicModel::stf accMdl = accelerationModel;
     DynamicModel orbFun(accMdl, initialState_.dimState, absErr, relErr);
 
+    double time = 0;
     double dt = epoch_.timeStep;
     int nTotalSteps = (epoch_.endMJD - epoch_.startMJD) * 86400 / dt + 1;
-    std::cout << "total steps:\t" << nTotalSteps << std::endl;
+    cout << "total steps:\t" << nTotalSteps << endl;
 
     // Linear spaced times
-    Eigen::VectorXd tSec;
+    VectorXd tSec;
     tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
-    Eigen::MatrixXd tableTrajTruth(nTotalSteps, initialState_.dimState + 1);
+    MatrixXd tableTrajTruth(nTotalSteps, initialState_.dimState + 1);
     tableTrajTruth.col(0) = tSec;
-    std::cout << "initial state type:\t" << initialState_.initialStateType << std::endl;
+    cout << "initial state type:\t" << initialState_.initialStateType << endl;
 
     if (initialState_.initialStateType == "MEE")
     {
@@ -41,12 +47,12 @@ std::vector<double> OrbitPropagatorWapper::propagate(double initial_position, do
         tableTrajTruth.row(0).tail(initialState_.dimState) = initialState_.initialStateVec;
     }
 
-    Eigen::VectorXd propStateVec = initialState_.initialStateVec;
+    VectorXd propStateVec = initialState_.initialStateVec;
     Timer timer;
     timer.tick();
     for (int k = 1; k < nTotalSteps; k++)
     {
-        propStateVec = orbFun(time, time + dt, propStateVec, Eigen::VectorXd::Zero(6));
+        propStateVec = orbFun(time, time + dt, propStateVec, VectorXd::Zero(6));
         time += dt;
         if (initialState_.initialStateType == "MEE")
         {
@@ -59,12 +65,12 @@ std::vector<double> OrbitPropagatorWapper::propagate(double initial_position, do
             tableTrajTruth.row(k).tail(initialState_.dimState) = propStateVec;
         }
 
-        std::cout << "The " << k + 1 << "th time step" << std::endl;
+        cout << "The " << k + 1 << "th time step" << endl;
     }
-    std::cout << "The total time consumption is:\t" << timer.tock() << std::endl;
+    cout << "The total time consumption is:\t" << timer.tock() << endl;
 
-    // Convert the result to a std::vector<double>
-    std::vector<double> result;
+    // Convert the result to a vector<double>
+    vector<double> result;
     for (int i = 0; i < tableTrajTruth.rows(); ++i)
     {
         for (int j = 0; j < tableTrajTruth.cols(); ++j)
@@ -73,15 +79,15 @@ std::vector<double> OrbitPropagatorWapper::propagate(double initial_position, do
         }
     }
 
-    // Save the results to a CSV file
-    std::vector<std::string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-    std::string propFile = snrInfo_.outDir + "/prop_results.csv";
-    EigenCSV::write(tableTrajTruth, headerTraj, propFile);
+    // // Save the results to a CSV file
+    // vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
+    // string propFile = snrInfo_.outDir + "/prop_results.csv";
+    // EigenCSV::write(tableTrajTruth, headerTraj, propFile);
 
     return result;
 }
 
-void OrbitPropagatorWapper::readConfigFile(const std::string &fileName)
+void OrbitPropagatorWapper::readConfigFile(const string &fileName)
 {
     // load file
     YAML::Node config = YAML::LoadFile(fileName);
@@ -92,17 +98,17 @@ void OrbitPropagatorWapper::readConfigFile(const std::string &fileName)
     snrInfo_.epoch.startMJD = snrParams["MJD_start"].as<double>();
     snrInfo_.epoch.endMJD = snrParams["MJD_end"].as<double>();
     snrInfo_.epoch.timeStep = snrParams["time_step"].as<double>();
-    snrInfo_.outDir = snrParams["output_directory"].as<std::string>();
+    snrInfo_.outDir = snrParams["output_directory"].as<string>();
 
     // read orbital parameters (required)
     YAML::Node orbitParams = config["initial_orbtial_parameters"];
     int dimState = orbitParams["dim_state"].as<int>();
     initialState_.dimState = dimState;
-    std::vector<double> tempVec;
-    initialState_.initialStateType = orbitParams["initial_state_type"].as<std::string>();
+    vector<double> tempVec;
+    initialState_.initialStateType = orbitParams["initial_state_type"].as<string>();
 
     // read params as standard vector, convert to eigen vector
-    tempVec = orbitParams["initial_state"].as<std::vector<double>>();
+    tempVec = orbitParams["initial_state"].as<vector<double>>();
     initialState_.initialStateVec = stdVec2EigenVec(tempVec);
 
     // read propagator settings for filters (optional)
@@ -156,23 +162,23 @@ void OrbitPropagatorWapper::readConfigFile(const std::string &fileName)
 
     // read file options for info/data that are relied on
     YAML::Node fileOpt = config["supporting_files"];
-    suppFiles_.erpFile = fileOpt["ERP_file"].as<std::string>();
-    suppFiles_.grvFile = fileOpt["gravity_file"].as<std::string>();
-    suppFiles_.ephFile = fileOpt["ephemeris_file"].as<std::string>();
+    suppFiles_.erpFile = fileOpt["ERP_file"].as<string>();
+    suppFiles_.grvFile = fileOpt["gravity_file"].as<string>();
+    suppFiles_.ephFile = fileOpt["ephemeris_file"].as<string>();
 }
 
 void OrbitPropagatorWapper::initGlobalVariables()
 {
     if (!initEGMCoef(suppFiles_.grvFile))
     {
-        std::cerr << "Failed to initialize EGM coefficients from " << suppFiles_.grvFile << std::endl;
+        cerr << "Failed to initialize EGM coefficients from " << suppFiles_.grvFile << endl;
         return;
     }
 
     erpt_ = {.n = 0};
     if (!readerp(suppFiles_.erpFile, &erpt_))
     {
-        std::cerr << "Failed to read ERP file: " << suppFiles_.erpFile << std::endl;
+        cerr << "Failed to read ERP file: " << suppFiles_.erpFile << endl;
         return;
     }
 
@@ -183,14 +189,14 @@ void OrbitPropagatorWapper::initGlobalVariables()
     pJPLEph_ = jpl_init_ephemeris(ephFile, nullptr, nullptr);
     if (!pJPLEph_)
     {
-        std::cerr << "Failed to initialize JPL ephemeris from " << suppFiles_.ephFile << std::endl;
+        cerr << "Failed to initialize JPL ephemeris from " << suppFiles_.ephFile << endl;
         return;
     }
 }
 
-Eigen::VectorXd OrbitPropagatorWapper::stdVec2EigenVec(const std::vector<double> &stdVec)
+VectorXd OrbitPropagatorWapper::stdVec2EigenVec(const vector<double> &stdVec)
 {
-    Eigen::VectorXd eigenVec(stdVec.size());
+    VectorXd eigenVec(stdVec.size());
     for (int i = 0; i < stdVec.size(); i++)
     {
         eigenVec(i) = stdVec[i];
@@ -198,22 +204,22 @@ Eigen::VectorXd OrbitPropagatorWapper::stdVec2EigenVec(const std::vector<double>
     return eigenVec;
 }
 
-bool OrbitPropagatorWapper::initEGMCoef(const std::string &filename)
+bool OrbitPropagatorWapper::initEGMCoef(const string &filename)
 {
-    std::ifstream file(filename);
+    ifstream file(filename);
     if (!file.is_open())
     {
-        std::cerr << "Failed to open file: " << filename << std::endl;
+        cerr << "Failed to open file: " << filename << endl;
         return false;
     }
 
-    std::string line;
+    string line;
     int n, m;
     double cmn, smn;
 
-    while (std::getline(file, line))
+    while (getline(file, line))
     {
-        std::istringstream buffer(line);
+        istringstream buffer(line);
         buffer >> m >> n >> cmn >> smn;
 
         if (m < GRAVITY_DEG_M && n < GRAVITY_DEG_M)

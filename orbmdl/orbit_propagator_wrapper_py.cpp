@@ -5,7 +5,7 @@
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(orbit_propagator, m)
+PYBIND11_MODULE(orbit_propagator_wrapper, m)
 {
     py::class_<OrbitPropagatorWapper>(m, "OrbitPropagatorWapper")
         .def(py::init<const std::string &, double, int>())
