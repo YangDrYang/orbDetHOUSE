@@ -75,6 +75,7 @@ VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, cons
         VectorXd dxdt0 = f(t, xx, ww);
         dxdt = *(new vector<double>(dxdt0.data(), dxdt0.data() + dxdt0.size()));
     };
+    cout << "running the propagator until here" << endl;
     // // Observer, prints time and state when called (during integration)
     // auto my_observer = [&](const state_type &x, const double t)
     // {

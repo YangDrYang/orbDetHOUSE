@@ -23,8 +23,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/filter.dir/filter/ukf.cpp.o.d"
   "CMakeFiles/filter.dir/filter/ut.cpp.o"
   "CMakeFiles/filter.dir/filter/ut.cpp.o.d"
-  "libfilter.a"
-  "libfilter.pdb"
+  "lib/libfilter.a"
+  "lib/libfilter.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

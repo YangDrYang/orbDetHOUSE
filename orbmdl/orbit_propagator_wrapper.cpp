@@ -14,6 +14,7 @@ OrbitPropagatorWapper::OrbitPropagatorWapper(const string &configFilename)
 
 vector<double> OrbitPropagatorWapper::propagate()
 {
+    epoch_ = snrInfo_.epoch;
     Propagator propagator;
     // Initialize the propagator with necessary parameters
     propagator.setPropOption(forceModelsPropOpt_);
@@ -26,9 +27,12 @@ vector<double> OrbitPropagatorWapper::propagate()
     DynamicModel orbFun(accMdl, initialState_.dimState, absErr, relErr);
 
     double time = 0;
+
     double dt = epoch_.timeStep;
     int nTotalSteps = (epoch_.endMJD - epoch_.startMJD) * 86400 / dt + 1;
-    cout << "total steps:\t" << nTotalSteps << endl;
+    // cout << "start time:\t" << epoch_.startMJD << endl;
+    // cout << "end time:\t" << epoch_.endMJD << endl;
+    // cout << "total steps:\t" << nTotalSteps << endl;
 
     // Linear spaced times
     VectorXd tSec;
@@ -36,6 +40,9 @@ vector<double> OrbitPropagatorWapper::propagate()
     MatrixXd tableTrajTruth(nTotalSteps, initialState_.dimState + 1);
     tableTrajTruth.col(0) = tSec;
     cout << "initial state type:\t" << initialState_.initialStateType << endl;
+
+    // cout << "initial state dimension:\t" << initialState_.dimState << endl;
+    // cout << "initial state vector:\t" << initialState_.initialStateVec.transpose() << endl;
 
     if (initialState_.initialStateType == "MEE")
     {

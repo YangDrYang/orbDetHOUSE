@@ -85,8 +85,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/orbmdl.dir/orbmdl/sofa/s06.cpp.o.d"
   "CMakeFiles/orbmdl.dir/orbmdl/sofa/sp00.cpp.o"
   "CMakeFiles/orbmdl.dir/orbmdl/sofa/sp00.cpp.o.d"
-  "liborbmdl.a"
-  "liborbmdl.pdb"
+  "lib/liborbmdl.a"
+  "lib/liborbmdl.pdb"
 )
 
 # Per-language clean rules from dependency scanning.
