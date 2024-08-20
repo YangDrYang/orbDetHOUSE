@@ -1,3 +1,3 @@
 file(REMOVE_RECURSE
-  "liborbmdl.a"
+  "lib/liborbmdl.a"
 )

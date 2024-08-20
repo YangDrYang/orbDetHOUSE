@@ -12,12 +12,12 @@ public:
     OrbitPropagatorWapper(const string &configFilename);
     vector<double> propagate();
 
-private:
     void readConfigFile(const string &fileName);
     void initGlobalVariables();
     VectorXd stdVec2EigenVec(const vector<double> &stdVec);
     bool initEGMCoef(const string &filename);
 
+private:
     // Member variables
     double param1_;
     int param2_;

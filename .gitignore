@@ -54,3 +54,5 @@ CUT/pts_4_20.csv
 # *.EOF
 
 makefile
+
+build/

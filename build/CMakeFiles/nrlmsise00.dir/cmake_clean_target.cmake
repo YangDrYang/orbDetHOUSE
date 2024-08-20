@@ -1,3 +1,3 @@
 file(REMOVE_RECURSE
-  "libnrlmsise00.a"
+  "lib/libnrlmsise00.a"
 )
