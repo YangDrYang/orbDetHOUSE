@@ -1,128 +1,88 @@
 #include "dyn.hpp"
-#include "ode.hpp"
-
-#include <boost/numeric/odeint.hpp>
 #include <iostream>
-#include <vector>
+#include <cmath>
+#include <functional>
 
 using namespace Eigen;
-using namespace boost::numeric::odeint;
-// Defining a shorthand for the type of the mathematical state
-typedef vector<double> state_type;
-// Constructor
-DynamicModel::DynamicModel(const stf &f_, int n_, double abstol_,
-                           double reltol_) : f(f_), n(n_), abstol(abstol_), reltol(reltol_),
-                                             work(100 + 21 * n_) {}
+using namespace std;
 
-// DynamicModel::DynamicModel(const stg &g_) : f(nullptr), g(g_), n(0), abstol(0), reltol(0),
-//                                             work(100 + 21 * 0) {}
+DynamicModel::DynamicModel(const stf &f_, int n_, double abstol_, double reltol_)
+    : f(f_), n(n_), abstol(abstol_), reltol(reltol_), work(VectorXd::Zero(n_)) {}
 
-// // Propagate state from ti to tf with noise w
-// VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, const VectorXd &w)
-// {
+// Reference: https://github.com/kofes/satellite-model/tree/master/src/helpers/integrals
+//  Initialize RKF78_A_TABLE as an Eigen::MatrixXd
+const MatrixXd RKF78_A_TABLE = (MatrixXd(13, 12) << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                2.0 / 27.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                1.0 / 36.0, 1.0 / 12.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                1.0 / 24.0, 0.0, 1.0 / 8.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                5.0 / 12.0, 0.0, -25.0 / 16.0, 25.0 / 16.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                1.0 / 20.0, 0.0, 0.0, 1.0 / 4.0, 1.0 / 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                -25.0 / 108.0, 0.0, 0.0, 125.0 / 108.0, -65.0 / 27.0, 125.0 / 54.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                31.0 / 300, 0.0, 0.0, 0.0, 61.0 / 225.0, -2.0 / 9.0, 13.0 / 900.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                                2.0, 0.0, 0.0, -53.0 / 6.0, 704.0 / 45.0, -107.0 / 9.0, 67.0 / 90.0, 3.0, 0.0, 0.0, 0.0, 0.0,
+                                -91.0 / 108.0, 0.0, 0.0, 23.0 / 108.0, -976.0 / 135.0, 311.0 / 54.0, -19.0 / 60.0, 17.0 / 6.0, -1.0 / 12.0, 0.0, 0.0, 0.0,
+                                2383.0 / 4100, 0.0, 0.0, -341.0 / 164.0, 4496.0 / 1025.0, -301.0 / 82.0, 2133.0 / 4100.0, 45.0 / 82.0, 45.0 / 164.0, 18.0 / 41.0, 0.0, 0.0,
+                                3.0 / 205.0, 0.0, 0.0, 0.0, 0.0, -6.0 / 41.0, -3.0 / 205.0, -3.0 / 41.0, 3.0 / 41.0, 6.0 / 41.0, 0.0, 0.0,
+                                -1777.0 / 4100.0, 0.0, 0.0, -341.0 / 164.0, 4496.0 / 1025.0, -289.0 / 82.0, 2193.0 / 4100.0, 51.0 / 82.0, 33.0 / 164.0, 12.0 / 41.0, 0.0, 1.0)
+                                   .finished();
+const VectorXd RKF78_B_TABLE = (VectorXd(13) << 0.0, 0.0, 0.0, 0.0, 0.0, 34.0 / 105.0, 9.0 / 35.0, 9.0 / 35.0, 9.0 / 280.0, 9.0 / 280.0, 0, 41.0 / 840.0, 41.0 / 840.0).finished();
+const VectorXd RKF78_C_TABLE = (VectorXd(13) << 0.0, 2.0 / 27.0, 1.0 / 9.0, 1.0 / 6.0, 5.0 / 12.0, 0.5, 5.0 / 6.0, 1.0 / 6.0, 2.0 / 3.0, 1.0 / 3.0, 1.0, 0.0, 1.0).finished();
 
-//     VectorXd x = xi;
-//     // typedef std::vector< double > state_type;
-//     if (tf > ti)
-//     {
-//         // auto state = [this](state_type &x, state_type &dxdt, const double t) -> void {
-//         //     f(t, )
-//         // };
-
-//         odefun fode = [this, &w](double t, double *y, double *yd) -> void
-//         {
-//             Map<VectorXd> x(y, n), xd(yd, n);
-//             xd = f(t, x, w);
-//         };
-
-//         double t = ti;
-//         int flag = 1;
-
-//         ode(fode, n, x.data(), t, tf, reltol, abstol, flag, work.data(), iwork);
-
-//         //        if (flag != 2)
-//         //            std::cout << "ODE Error: " << flag << std::endl;
-//     }
-
-//     return x;
-// }
-
-// Propagate state from ti to tf with noise w using Boost RKF78 integrator
-VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, const VectorXd &w)
+VectorXd rkf78(
+    function<VectorXd(const VectorXd &, double)> f,
+    const VectorXd &initialValue,
+    double from,
+    double to,
+    double dh)
 {
-    // // Error stepper, used to create the controlled stepper
-    // typedef runge_kutta_fehlberg78<state_type> rkf78;
-    // // Controlled stepper:
-    // // it's built on an error stepper and allows us to have the output at each
-    // // internally defined (refined) timestep, via integrate_adaptive call
-    // typedef controlled_runge_kutta<rkf78> ctrl_rkck78;
+    size_t N = fabs(to - from) / dh;
+    N += (fabs(to - from) / dh - N) > 1e-5 ? 1 : 0;
+    char direction = ((to - from > 0) ? 1 : -1);
 
-    // // Error stepper, used to create the controlled stepper
-    // typedef runge_kutta_cash_karp54<state_type> rkck54;
+    VectorXd y = initialValue;
+    MatrixXd k(y.size(), RKF78_A_TABLE.rows());
 
-    // // Controlled stepper:
-    // // it's built on an error stepper and allows us to have the output at each
-    // // internally defined (refined) timestep, via integrate_adaptive call
-    // typedef controlled_runge_kutta<rkck54> ctrl_rkck54;
-
-    // Define the error stepper
-    typedef runge_kutta_cash_karp54<state_type> error_stepper_rkck54;
-
-    auto my_system = [&](const state_type &x, state_type &dxdt, const double t)
+    for (size_t i = 0; i < N; ++i)
     {
-        VectorXd ww = VectorXd::Zero(x.size());
-        VectorXd xx = VectorXd::Map(&x[0], x.size());
-        VectorXd dxdt0 = f(t, xx, ww);
-        dxdt = *(new vector<double>(dxdt0.data(), dxdt0.data() + dxdt0.size()));
-    };
-    cout << "running the propagator until here" << endl;
-    // // Observer, prints time and state when called (during integration)
-    // auto my_observer = [&](const state_type &x, const double t)
-    // {
-    //     cout << t << "   " << x[0] << "   " << x[1] << "   " << x[2] << "   " << x[3] << "   " << x[4] << "   " << x[5] << endl;
-    // };
-    double dt = tf - ti;
-    state_type xd(xi.data(), xi.data() + xi.size());
-    // double rel_tol = 1e-6;
-    // double abs_tol = 1e-6;
-    // integrate_adaptive(ctrl_rkck78(rel_tol, abs_tol), my_system, xd, ti, tf, dt, my_observer);
-    // integrate_adaptive(rkf78(), my_system, xd, ti, tf, dt, my_observer);
-    // integrate_adaptive(make_controlled(abs_tol, rel_tol, error_stepper_rkck54()), my_system, xd, ti, tf, dt, my_observer);
-    integrate_adaptive(make_controlled(abstol, reltol, error_stepper_rkck54()), my_system, xd, ti, tf, dt);
+        double x = direction * i * dh + from;
 
-    return VectorXd::Map(&xd[0], xd.size()) + w;
-    // VectorXd x = xi;
-    // if (tf > ti)
-    // {
-    //     double dt = tf - ti;
-    //     int ndim = n;
-    //     const state_type x0(xi);
-    //     integrate_adaptive(
-    //         rkf78, [&](const state_type &y, state_type &dydt, double t)
-    //         {
-    //             VectorXd x = y;
-    //             VectorXd xd = f(t, x, w);
-    //             dydt = xd; },
-    //         x0, ti, tf, dt);
-    // }
+        // Compute k values
+        for (size_t j = 0; j < RKF78_A_TABLE.rows(); ++j)
+        {
+            VectorXd summaryAK = VectorXd::Zero(y.size());
+
+            for (size_t l = 0; l < j; ++l)
+            {
+                summaryAK += RKF78_A_TABLE(j, l) * k.col(l);
+            }
+
+            k.col(j) = dh * f(y + summaryAK, x + RKF78_C_TABLE(j) * dh);
+        }
+
+        // Compute the next step for y
+        for (size_t j = 0; j < RKF78_B_TABLE.size(); ++j)
+        {
+            y += k.col(j) * RKF78_B_TABLE(j);
+        }
+    }
+
+    return y; // Return the final value of y
 }
 
-// // for the projectile example
-// // Propagate state from ti to tf with noise w using Boost RKF78 integrator
-// VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, const VectorXd &w)
-// {
-//     // Define the error stepper
-//     typedef runge_kutta_cash_karp54<state_type> error_stepper_rkck54;
+VectorXd DynamicModel::operator()(double ti, double tf, const VectorXd &xi, const VectorXd &w)
+{
+    double dt = tf - ti;
+    VectorXd xd = xi;
 
-//     auto my_system = [&](const state_type &x, state_type &dxdt, const double t)
-//     {
-//         VectorXd xx = VectorXd::Map(&x[0], x.size());
-//         VectorXd dxdt0 = f(t, xx, w);
-//         dxdt = *(new vector<double>(dxdt0.data(), dxdt0.data() + dxdt0.size()));
-//     };
-//     double dt = tf - ti;
-//     state_type xd(xi.data(), xi.data() + xi.size());
-//     integrate_adaptive(make_controlled(abstol, reltol, error_stepper_rkck54()), my_system, xd, ti, tf, dt);
+    // Define the system function
+    auto orb_dyn = [&](const VectorXd &x, double t)
+    {
+        VectorXd ww = VectorXd::Zero(x.size());
+        return f(t, x, ww);
+    };
 
-//     return VectorXd::Map(&xd[0], xd.size());
-// }
+    // Use the custom RKF78 integrator
+    xd = rkf78(orb_dyn, xi, ti, tf, dt);
+
+    return xd + w;
+}
