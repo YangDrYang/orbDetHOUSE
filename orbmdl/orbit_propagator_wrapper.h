@@ -10,7 +10,7 @@ public:
     DynamicModel::stf accelerationModel;
     // OrbitPropagatorWapper(const string &configFilename, double param1, int param2);
     OrbitPropagatorWapper(const string &configFilename);
-    vector<double> propagate();
+    MatrixXd propagate();
 
     void readConfigFile(const string &fileName);
     void initGlobalVariables();
