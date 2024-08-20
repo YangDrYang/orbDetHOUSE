@@ -1,4 +1,5 @@
 #include "orbit_propagator_wrapper.h"
+using namespace std;
 
 // OrbitPropagatorWapper::OrbitPropagatorWapper(const string &configFilename, double param1, int param2)
 //     : param1_(param1), param2_(param2)
@@ -8,90 +9,98 @@
 // }
 OrbitPropagatorWapper::OrbitPropagatorWapper(const string &configFilename)
 {
-    readConfigFile(configFilename);
-    initGlobalVariables();
+    try
+    {
+        readConfigFile(configFilename);
+        initGlobalVariables();
+    }
+    catch (const exception &e)
+    {
+        cerr << "Exception in constructor: " << e.what() << endl;
+        throw;
+    }
 }
 
-vector<double> OrbitPropagatorWapper::propagate()
+MatrixXd OrbitPropagatorWapper::propagate()
 {
-    epoch_ = snrInfo_.epoch;
-    Propagator propagator;
-    // Initialize the propagator with necessary parameters
-    propagator.setPropOption(forceModelsPropOpt_);
-    propagator.printPropOption();
-    propagator.initPropagator(initialState_.initialStateVec, epoch_.startMJD, leapSec_, &erpt_, egm_, pJPLEph_);
-
-    double absErr = 1E-6;
-    double relErr = 1E-6;
-    DynamicModel::stf accMdl = accelerationModel;
-    DynamicModel orbFun(accMdl, initialState_.dimState, absErr, relErr);
-
-    double time = 0;
-
-    double dt = epoch_.timeStep;
-    int nTotalSteps = (epoch_.endMJD - epoch_.startMJD) * 86400 / dt + 1;
-    // cout << "start time:\t" << epoch_.startMJD << endl;
-    // cout << "end time:\t" << epoch_.endMJD << endl;
-    // cout << "total steps:\t" << nTotalSteps << endl;
-
-    // Linear spaced times
-    VectorXd tSec;
-    tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
-    MatrixXd tableTrajTruth(nTotalSteps, initialState_.dimState + 1);
-    tableTrajTruth.col(0) = tSec;
-    cout << "initial state type:\t" << initialState_.initialStateType << endl;
-
-    // cout << "initial state dimension:\t" << initialState_.dimState << endl;
-    // cout << "initial state vector:\t" << initialState_.initialStateVec.transpose() << endl;
-
-    if (initialState_.initialStateType == "MEE")
+    try
     {
-        // VectorXd meeSat = initialState_.initialStateVec;
-        // tableTrajTruth.row(0).tail(initialState_.dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
-    }
-    else
-    {
-        tableTrajTruth.row(0).tail(initialState_.dimState) = initialState_.initialStateVec;
-    }
+        epoch_ = snrInfo_.epoch;
+        Propagator propagator;
+        // Initialize the propagator with necessary parameters
+        propagator.setPropOption(forceModelsPropOpt_);
+        propagator.printPropOption();
+        propagator.initPropagator(initialState_.initialStateVec, epoch_.startMJD, leapSec_, &erpt_, egm_, pJPLEph_);
 
-    VectorXd propStateVec = initialState_.initialStateVec;
-    Timer timer;
-    timer.tick();
-    for (int k = 1; k < nTotalSteps; k++)
-    {
-        propStateVec = orbFun(time, time + dt, propStateVec, VectorXd::Zero(6));
-        time += dt;
+        double absErr = 1E-6;
+        double relErr = 1E-6;
+        DynamicModel::stf accMdl = accelerationModel;
+        DynamicModel orbFun(accMdl, initialState_.dimState, absErr, relErr);
+
+        double time = 0;
+
+        double dt = epoch_.timeStep;
+        int nTotalSteps = (epoch_.endMJD - epoch_.startMJD) * 86400 / dt + 1;
+        // cout << "start time:\t" << epoch_.startMJD << endl;
+        // cout << "end time:\t" << epoch_.endMJD << endl;
+        // cout << "total steps:\t" << nTotalSteps << endl;
+
+        // Linear spaced times
+        VectorXd tSec;
+        tSec.setLinSpaced(nTotalSteps, 0, (nTotalSteps - 1) * dt);
+        MatrixXd tableTrajTruth(nTotalSteps, initialState_.dimState + 1);
+        tableTrajTruth.col(0) = tSec;
+        cout << "initial state type:\t" << initialState_.initialStateType << endl;
+
+        // cout << "initial state dimension:\t" << initialState_.dimState << endl;
+        // cout << "initial state vector:\t" << initialState_.initialStateVec.transpose() << endl;
+
         if (initialState_.initialStateType == "MEE")
         {
-            // VectorXd meeSat = propStateVec;
-            // tableTrajTruth.row(k).tail(initialState_.dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
-            // // cout << "meeSat:\t" << coe2eci(mee2coe(meeSat), GM_Earth) << endl;
+            // VectorXd meeSat = initialState_.initialStateVec;
+            // tableTrajTruth.row(0).tail(initialState_.dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
         }
         else
         {
-            tableTrajTruth.row(k).tail(initialState_.dimState) = propStateVec;
+            tableTrajTruth.row(0).tail(initialState_.dimState) = initialState_.initialStateVec;
         }
 
-        cout << "The " << k + 1 << "th time step" << endl;
-    }
-    cout << "The total time consumption is:\t" << timer.tock() << endl;
+        VectorXd propStateVec = initialState_.initialStateVec;
 
-    // Convert the result to a vector<double>
-    vector<double> result;
-    for (int i = 0; i < tableTrajTruth.rows(); ++i)
-    {
-        for (int j = 0; j < tableTrajTruth.cols(); ++j)
+        Timer timer;
+        timer.tick();
+        for (int k = 1; k < nTotalSteps; k++)
         {
-            result.push_back(tableTrajTruth(i, j));
+            propStateVec = orbFun(time, time + dt, propStateVec, VectorXd::Zero(6));
+            time += dt;
+            cout << "The 1st time step" << endl;
+            if (initialState_.initialStateType == "MEE")
+            {
+                // VectorXd meeSat = propStateVec;
+                // tableTrajTruth.row(k).tail(initialState_.dimState) = coe2eci(mee2coe(meeSat), GM_Earth);
+                // // cout << "meeSat:\t" << coe2eci(mee2coe(meeSat), GM_Earth) << endl;
+            }
+            else
+            {
+                tableTrajTruth.row(k).tail(initialState_.dimState) = propStateVec;
+            }
+
+            cout << "The " << k + 1 << "th time step" << endl;
         }
+        cout << "The total time consumption is:\t" << timer.tock() << endl;
+
+        // Save the results to a CSV file
+        vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
+        string propFile = snrInfo_.outDir + "/prop_results.csv";
+        EigenCSV::write(tableTrajTruth, headerTraj, propFile);
+
+        return tableTrajTruth;
     }
-
-    // // Save the results to a CSV file
-    // vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-    // string propFile = snrInfo_.outDir + "/prop_results.csv";
-    // EigenCSV::write(tableTrajTruth, headerTraj, propFile);
-
-    return result;
+    catch (const exception &e)
+    {
+        cerr << "Exception in propagate: " << e.what() << endl;
+        throw;
+    }
 }
 
 void OrbitPropagatorWapper::readConfigFile(const string &fileName)
