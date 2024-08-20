@@ -1,0 +1,79 @@
+# Compiler settings
+CXX = g++
+CC = gcc
+
+# Directories
+OBJDIR = bin
+LocalDIR = /usr/local
+FUNDIR = scripts
+SDKROOT = $(shell xcrun --sdk macosx --show-sdk-path)
+PYBIND11_INCLUDE = $(shell python3 -m pybind11 --includes)
+
+# Flags and includes
+CPPFLAGS = --std=c++20 -stdlib=libc++ -isystem $(SDKROOT)/usr/include/c++/v1 \
+           -isysroot $(SDKROOT) -nostdinc++ -Wall -pedantic -g
+CFLAGS = -isysroot $(SDKROOT) -Wall -pedantic -g
+LDFLAGS = -L$(SDKROOT)/usr/lib \
+          -L/Library/Frameworks/Python.framework/Versions/3.10/lib \
+          -L./lib \
+          -lpython3.10 -lyaml-cpp -v
+
+INCLUDE = -I/$(LocalDIR)/include/ \
+		  -I$(SDKROOT)/usr/include \
+          -I$(PYBIND11_INCLUDE) \	
+		  -I/$(LocalDIR)/include/eigen3/ \	  
+          -I/Library/Frameworks/Python.framework/Versions/3.10/include/python3.10 \
+          -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
+		  
+
+# Source files
+ORBMDL_SRC = $(wildcard orbmdl/*.cpp orbmdl/3rdparty/*.cpp orbmdl/sofa/*.cpp)
+NRLMSISE00_SRC = $(wildcard orbmdl/nrlmsise-00/*.c)
+FILTER_SRC = $(wildcard filter/*.cpp)
+
+# Object files
+ORBMDL_OBJ = $(ORBMDL_SRC:.cpp=.o)
+NRLMSISE00_OBJ = $(NRLMSISE00_SRC:.c=.o)
+FILTER_OBJ = $(FILTER_SRC:.cpp=.o)
+
+# Libraries
+ORBMDL_AR = lib/liborbmdl.a
+NRLMSISE00_AR = lib/libnrlmsise00.a
+FILTER_AR = lib/libfilter.a
+
+# FILENAME variable to be passed as an argument
+FILENAME ?= 
+
+# Targets
+all: lib/liborbmdl.a lib/libnrlmsise00.a lib/libfilter.a lib/orbit_propagator_wrapper.so $(OBJDIR)/$(FUNDIR)/$(FILENAME)
+
+# Build libraries
+lib/liborbmdl.a: $(ORBMDL_OBJ)
+	ar rcs $@ $^
+
+lib/libnrlmsise00.a: $(NRLMSISE00_OBJ)
+	ar rcs $@ $^
+
+lib/libfilter.a: $(FILTER_OBJ)
+	ar rcs $@ $^
+
+# Build the main shared library
+lib/orbit_propagator_wrapper.so: orbmdl/orbit_propagator_wrapper_py.o orbmdl/orbit_propagator_wrapper.o $(ORBMDL_AR) $(NRLMSISE00_AR) $(FILTER_AR)
+	$(CXX) -shared -o $@ $^ $(LDFLAGS)
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CPPFLAGS) $(INCLUDE) -c $< -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
+
+# Compile the ORBDET program
+$(OBJDIR)/$(FUNDIR)/$(FILENAME): $(OBJDIR)/$(FUNDIR)/$(FILENAME).o $(ORBMDL_AR) $(FILTER_AR) $(NRLMSISE00_AR)
+	$(CXX) $(CPPFLAGS) $(INCLUDE) $^ $(LDFLAGS) -o $@
+
+# Clean up
+clean:
+	rm -f $(ORBMDL_OBJ) $(NRLMSISE00_OBJ) $(FILTER_OBJ) orbmdl/orbit_propagator_wrapper_py.o \
+		  orbmdl/orbit_propagator_wrapper.o $(ORBMDL_AR) $(NRLMSISE00_AR) $(FILTER_AR) \
+		  lib/orbit_propagator_wrapper.so $(OBJDIR)/$(FUNDIR)/$(FILENAME).o
