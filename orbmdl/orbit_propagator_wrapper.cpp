@@ -1,13 +1,10 @@
 #include "orbit_propagator_wrapper.h"
 using namespace std;
 
-// OrbitPropagatorWapper::OrbitPropagatorWapper(const string &configFilename, double param1, int param2)
-//     : param1_(param1), param2_(param2)
-// {
-//     readConfigFile(configFilename);
-//     initGlobalVariables();
-// }
-OrbitPropagatorWapper::OrbitPropagatorWapper(const string &configFilename)
+// Constructor
+OrbitPropagatorWrapper::OrbitPropagatorWrapper(const string &configFilename)
+    : orbFun([this](double t, const VectorXd &x, const VectorXd &w)
+             { return this->accelerationModel(t, x, w); }, 6, 1e-13, 1e-13) // Initialise orbFun with accelerationModel
 {
     try
     {
@@ -21,21 +18,50 @@ OrbitPropagatorWapper::OrbitPropagatorWapper(const string &configFilename)
     }
 }
 
-MatrixXd OrbitPropagatorWapper::propagate()
+VectorXd OrbitPropagatorWrapper::accelerationModel(double tSec, const VectorXd &X, const VectorXd &fd)
+{
+    VectorXd Xf(6);
+
+    Matrix3d mECI2ECEF = Matrix3d::Identity();
+    Matrix3d mdECI2ECEF = Matrix3d::Identity();
+
+    // get leap seconds from the table
+    leapSec_ = -getLeapSecond(convertMJD2Time_T(epoch_.startMJD + tSec / 86400));
+    // set up the IERS instance
+    getIERS(epoch_.startMJD + tSec / 86400, erpt_, iersInstance_);
+
+    eci2ecef_sofa(epoch_.startMJD + tSec / 86400, iersInstance_, mECI2ECEF, mdECI2ECEF);
+
+    Vector3d acceleration;
+    orbitProp.updPropagator(epoch_.startMJD + tSec / 86400, leapSec_, &erpt_);
+
+    if (abs(X(1)) < 1 && abs(X(2)) < 1) // modified equnoctial elements
+    {
+        // // calculate acceleration
+        // Xf = orbitProp.calculateTimeDerivativeMEE(X, mECI2ECEF);
+    }
+    else // Cartesian elements
+    {
+        // calculate acceleration
+        acceleration = orbitProp.calculateAcceleration(X.head(3), X.tail(3), mECI2ECEF);
+        // set state vector
+        Xf.head(3) = X.tail(3);
+        Xf.tail(3) = acceleration;
+        // cout << "acceleration:\t" << acceleration << endl;
+    }
+
+    return Xf;
+}
+
+MatrixXd OrbitPropagatorWrapper::propagateOrbit()
 {
     try
     {
         epoch_ = snrInfo_.epoch;
-        Propagator propagator;
         // Initialize the propagator with necessary parameters
-        propagator.setPropOption(forceModelsPropOpt_);
-        propagator.printPropOption();
-        propagator.initPropagator(initialState_.initialStateVec, epoch_.startMJD, leapSec_, &erpt_, egm_, pJPLEph_);
-
-        double absErr = 1E-6;
-        double relErr = 1E-6;
-        DynamicModel::stf accMdl = accelerationModel;
-        DynamicModel orbFun(accMdl, initialState_.dimState, absErr, relErr);
+        orbitProp.setPropOption(forceModelsPropOpt_);
+        orbitProp.printPropOption();
+        orbitProp.initPropagator(initialState_.initialStateVec, epoch_.startMJD, leapSec_, &erpt_, egm_, pJPLEph_);
 
         double time = 0;
 
@@ -73,7 +99,6 @@ MatrixXd OrbitPropagatorWapper::propagate()
         {
             propStateVec = orbFun(time, time + dt, propStateVec, VectorXd::Zero(6));
             time += dt;
-            cout << "The 1st time step" << endl;
             if (initialState_.initialStateType == "MEE")
             {
                 // VectorXd meeSat = propStateVec;
@@ -89,11 +114,6 @@ MatrixXd OrbitPropagatorWapper::propagate()
         }
         cout << "The total time consumption is:\t" << timer.tock() << endl;
 
-        // Save the results to a CSV file
-        vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-        string propFile = snrInfo_.outDir + "/prop_results.csv";
-        EigenCSV::write(tableTrajTruth, headerTraj, propFile);
-
         return tableTrajTruth;
     }
     catch (const exception &e)
@@ -103,7 +123,12 @@ MatrixXd OrbitPropagatorWapper::propagate()
     }
 }
 
-void OrbitPropagatorWapper::readConfigFile(const string &fileName)
+void OrbitPropagatorWrapper::saveResults(const MatrixXd &results, const vector<string> &header, const string &fileName)
+{
+    EigenCSV::write(results, header, snrInfo_.outDir + fileName);
+}
+
+void OrbitPropagatorWrapper::readConfigFile(const string &fileName)
 {
     // load file
     YAML::Node config = YAML::LoadFile(fileName);
@@ -183,7 +208,7 @@ void OrbitPropagatorWapper::readConfigFile(const string &fileName)
     suppFiles_.ephFile = fileOpt["ephemeris_file"].as<string>();
 }
 
-void OrbitPropagatorWapper::initGlobalVariables()
+void OrbitPropagatorWrapper::initGlobalVariables()
 {
     if (!initEGMCoef(suppFiles_.grvFile))
     {
@@ -210,7 +235,7 @@ void OrbitPropagatorWapper::initGlobalVariables()
     }
 }
 
-VectorXd OrbitPropagatorWapper::stdVec2EigenVec(const vector<double> &stdVec)
+VectorXd OrbitPropagatorWrapper::stdVec2EigenVec(const vector<double> &stdVec)
 {
     VectorXd eigenVec(stdVec.size());
     for (int i = 0; i < stdVec.size(); i++)
@@ -220,7 +245,7 @@ VectorXd OrbitPropagatorWapper::stdVec2EigenVec(const vector<double> &stdVec)
     return eigenVec;
 }
 
-bool OrbitPropagatorWapper::initEGMCoef(const string &filename)
+bool OrbitPropagatorWrapper::initEGMCoef(const string &filename)
 {
     ifstream file(filename);
     if (!file.is_open())
