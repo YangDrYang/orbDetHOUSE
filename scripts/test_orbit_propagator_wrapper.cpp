@@ -14,14 +14,14 @@ int main(int argc, char *argv[])
 
     try
     {
-        OrbitPropagatorWapper propagator(configFilename);
-        MatrixXd result = propagator.propagate();
-
+        OrbitPropagatorWrapper propagator(configFilename);
+        MatrixXd results = propagator.propagateOrbit();
+        // Save the results to a CSV file
         vector<string> headerTraj({"tSec", "x", "y", "z", "vx", "vy", "vz"});
-        string propFile = "out/out_prop/prop_results.csv";
-        EigenCSV::write(result, headerTraj, propFile);
+        string resultsFileName = "/prop_results.csv";
+        propagator.saveResults(results, headerTraj, resultsFileName);
     }
-    catch (const std::exception &e)
+    catch (const exception &e)
     {
         cerr << "Exception: " << e.what() << endl;
         return 1;

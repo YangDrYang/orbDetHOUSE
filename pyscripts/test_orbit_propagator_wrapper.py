@@ -24,6 +24,13 @@ except ModuleNotFoundError as e:
     print(f"Error: {e}")
 
 # Assuming you have a class named OrbitPropagator in your C++ code
-propagator = orbit_propagator_wrapper.OrbitPropagatorWapper("yamls/config_orb.yml")
-result = propagator.propagate()
-print("propagated orbit:", result)
+propagator = orbit_propagator_wrapper.OrbitPropagatorWrapper("yamls/config_orb.yml")
+results = propagator.propagateOrbit()
+
+# Define the headers and results file name
+headerTraj = ["tSec", "x", "y", "z", "vx", "vy", "vz"]
+resultsFileName = "/prop_results_py.csv"
+# Save the results
+propagator.saveResults(results, headerTraj, resultsFileName)
+
+# print("propagated orbit:", results)

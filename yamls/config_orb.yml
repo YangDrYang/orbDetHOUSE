@@ -3,13 +3,6 @@
 scenario_parameters:
   # time step in seconds, MJD in days
   time_step: 10
-  # # time duration of each pass in seconds
-  # time_pass: 120
-  # MJD_start: 59348.916238425903430 
-  # MJD_end: 59349.999571759297396
-  # ## cc data epochs
-  # MJD_start: 59349.51137986922 
-  # MJD_end:  59349.51288590162
   MJD_start: 59348.916238425903430
   MJD_end: 59349.999571759297396
   max_time_step: 45
