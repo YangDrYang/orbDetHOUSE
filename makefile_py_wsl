@@ -1,0 +1,64 @@
+# Makefile for orbit_propagator project
+
+# Compiler and flags
+CXX = g++
+CC = gcc
+
+# Set SDKROOT (not needed for WSL)
+# SDKROOT = $(shell xcrun --sdk macosx --show-sdk-path)
+PYBIND11_INCLUDE := $(shell python3 -m pybind11 --includes)
+
+# Compiler and flags
+CXXFLAGS = --std=c++11 -Wall -pedantic -g -fPIC
+CFLAGS = -Wall -pedantic -g -fPIC
+LDFLAGS = -L/usr/wsllib \
+			-L/usr/local/wsllib \
+			-L./wsllib \
+			-lpython3.10 -v
+
+INCLUDES = -I/usr/include/c++/v1 \
+           -I/usr/local/include -I/usr/include/eigen3 \
+           -I$(PYBIND11_INCLUDE) \
+           -I/home/yang_space_yang/github/orbDetHOUSE-1/.venv/lib/python3.10/site-packages/pybind11/include \
+           -I/usr/include/python3.10 \
+		   -I/usr/include/yaml-cpp \
+           -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter 
+
+
+# Source files
+ORBMDL_SRC = $(wildcard orbmdl/*.cpp orbmdl/3rdparty/*.cpp orbmdl/sofa/*.cpp)
+NRLMSISE00_SRC = $(wildcard orbmdl/nrlmsise-00/*.c)
+FILTER_SRC = $(wildcard filter/*.cpp)
+
+# Object files
+ORBMDL_OBJ = $(ORBMDL_SRC:.cpp=.o)
+NRLMSISE00_OBJ = $(NRLMSISE00_SRC:.c=.o)
+FILTER_OBJ = $(FILTER_SRC:.cpp=.o)
+
+# Targets
+all: wsllib/liborbmdl.a wsllib/libnrlmsise00.a wsllib/libfilter.a wsllib/orbit_propagator_wrapper.so
+
+# Build libraries
+wsllib/liborbmdl.a: $(ORBMDL_OBJ)
+	ar rcs $@ $^
+
+wsllib/libnrlmsise00.a: $(NRLMSISE00_OBJ)
+	ar rcs $@ $^
+
+wsllib/libfilter.a: $(FILTER_OBJ)
+	ar rcs $@ $^
+
+# Build the main library
+wsllib/orbit_propagator_wrapper.so: orbmdl/orbit_propagator_wrapper_py.o orbmdl/orbit_propagator_wrapper.o wsllib/liborbmdl.a wsllib/libnrlmsise00.a wsllib/libfilter.a
+	$(CXX) -shared -o $@ $^ $(LDFLAGS) -lyaml-cpp
+
+# Compile source files
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+# Clean up
+clean:
+	rm -f $(ORBMDL_OBJ) $(NRLMSISE00_OBJ) $(FILTER_OBJ) orbmdl/orbit_propagator_wrapper_py.o orbmdl/orbit_propagator_wrapper.o wsllib/liborbmdl.a wsllib/libnrlmsise00.a wsllib/libfilter.a wsllib/orbit_propagator_wrapper.so
