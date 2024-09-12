@@ -1,4 +1,4 @@
-# OrbDetHOUSE: The Higher-Order Unscented Estimator for Orbit Determination
+# High-fidelity Orbit Propagator
 
 A python wrapper for the C++ propagator is working now. Instructions are presented as below:
 
