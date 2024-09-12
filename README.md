@@ -8,9 +8,6 @@ A python wrapper for the C++ propagator is working now. Instructions are present
 
 Dependencies of C++ codes:
 
-- HOUSE by Z. Stojanovski and D. Savransky: https://github.com/SIOSlab/HOUSE.git
-- CUTpoints by N. Adurthi, P. Singla, and T. Singh: https://github.com/nadurthi/CUTpoints using the Matlab function cut_sigma_points.m to generate .csv files in the "CUT" directory
-  - the .csv files have been generated, which include two large files (>100 MB). They can potentially result in some issues with Git.
 - SOFA: http://www.iausofa.org/2021_0512.html
 - nrlmsise-00: https://github.com/magnific0/nrlmsise-00.git
 - jpl_eph: https://github.com/Bill-Gray/jpl_eph.git
@@ -22,9 +19,7 @@ Compiling:
 
 - compilation is handled by the makefile, run make to rebuild (make must be installed) or clean main functions in the "scripts" directory.
 - examples:
-  - make FILENAME=convertECEF2ECI and make FILENAME=convertECEF2ECI clean
   - make FILENAME=testOrbProp and make FILENAME=testOrbProp clean
-  - make FILENAME=testOrbDetCCData and make FILENAME=testOrbDetCCData clean
 - the binary object files are stored in the "bin/bin_sub" directory
 
 Running:
@@ -34,9 +29,7 @@ Running:
 - by default the program will read the "config.yaml" file, however
   you can provide an argument to read a different yaml file
 - examples of main calculations:
-  - bin/scripts/convertECEF2ECI
   - bin/scripts/testOrbProp yamls/config_orb.yml
-  - bin/scripts/testOrbDetCCData yamls/config_ccdata_mee.yml
 - output files will be saved into the "out/out_sub" directory
 
 Analyses and plots:
