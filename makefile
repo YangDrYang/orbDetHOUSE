@@ -14,17 +14,16 @@ LocalDIR = usr/local
 FUNDIR = scripts
 
 # for compiling orbmdl and filter
-SDK_PATH = $(shell xcrun --sdk macosx --show-sdk-path)
 PYBIND11_INCLUDE := $(shell python3 -m pybind11 --includes)
-CPPFLAGS = --std=c++11 -stdlib=libc++ -Wall -pedantic -g -isysroot $(SDK_PATH) -nostdinc++ -I$(SDK_PATH)/usr/include/c++/v1
-CFLAGS = -Wall -pedantic -g -isysroot $(SDK_PATH)
+CPPFLAGS = --std=c++11 -Wall -pedantic -g
+CFLAGS = -Wall -pedantic -g
 
-INCLUDE = -I$(SDK_PATH)/usr/include/c++/v1 \
-			-I/$(LocalDIR)/include/ \
-			-I/$(LocalDIR)/include/eigen3/ \
-			-I$(PYBIND11_INCLUDE) \
-			-I/Library/Frameworks/Python.framework/Versions/3.10/include/python3.10 \
-			-I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
+INCLUDE = -I/usr/include/c++/v1 \
+            -I/$(LocalDIR)/include/ \
+            -I/$(LocalDIR)/include/eigen3/ \
+            -I$(PYBIND11_INCLUDE) \
+            -I/usr/include/python3.10 \
+            -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
 LDFLAGS = -L/usr/local/lib
 
 # orbmdl files

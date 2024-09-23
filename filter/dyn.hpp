@@ -50,6 +50,9 @@ public:
     // Absolute & relative tolerance
     const double absTol, relTol;
 
+    // Type alias for StateFun
+    using stf = StateFun;
+
     // Constructor
     DynamicModel(const StateFun &dynODE_, int n_,
                  double absTol_, double relTol_);

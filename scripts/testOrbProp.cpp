@@ -188,7 +188,7 @@ void initGlobalVariables(VectorXd &initialStateVec, string stateType, struct Fil
     }
 
     // cout << suppFiles.erpFile << endl;
-    erpt = {.n = 0};
+    erpt.n = 0;
     if (!readerp(suppFiles.erpFile, &erpt))
     {
         cerr << "Failed to read ERP file: " << suppFiles.erpFile << endl;

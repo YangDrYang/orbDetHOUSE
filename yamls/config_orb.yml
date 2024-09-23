@@ -32,7 +32,7 @@ propagator_truth_settings:
   # thermal_emission: false
   # earth_albedo: false
   # infrared_radiation: false
-  atmospheric_drag: true
+  atmospheric_drag: false
   relativity_effect: true
   # antenna_thrust: false
   # empirical_acceleration: false
