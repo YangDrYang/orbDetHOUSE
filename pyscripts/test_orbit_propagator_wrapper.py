@@ -43,6 +43,6 @@ def main(lib_path):
 if __name__ == "__main__":
     # Default lib_path if not provided
     default_lib_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "../wsllib")
+        os.path.join(os.path.dirname(__file__), "../lib")
     )
     main(default_lib_path)
