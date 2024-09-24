@@ -3,8 +3,9 @@
 A python wrapper for the C++ propagator is working now. Instructions are presented as below:
 
 - Install the package pybind11. In my case, I use pip instal pybind11 into my Python virtual environment.
-- Generate the shared object file by runing make -f makefile_py. It it also recommended to clean all existing objective (with the file extension of .o) and excutable (with the file extension of .a) files first by running make -f makefile_py clean.
+- For Mac users, generate the shared object file by runing make -f makefile_py. It it also recommended to clean all existing objective (with the file extension of .o) and excutable (with the file extension of .a) files first by running make -f makefile_py clean.
 - Run the Python file: python3.10 pyscripts/test_orbit_propagator_wrapper.py. Note: the Python version 3.10 must be used exactly as the shared object file is generated using this version, see the makefile_py for details.
+- For the installation on WSL, the relevant files are test_orbit_propagator_wrapper_wsl.py and makefile_py_wsl instead.
 
 Dependencies of C++ codes:
 
