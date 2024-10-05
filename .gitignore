@@ -39,6 +39,7 @@
 *.PAS
 
 odvenv/
+.venv/
 .vscode/
 # ccdata/
 
