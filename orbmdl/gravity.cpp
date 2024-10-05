@@ -7,6 +7,7 @@
 #include "sofa.hpp"
 
 #include <iostream>
+#include <vector>
 // typedef std::ostream Trace;
 
 Vector3d CalcPolarAngles(Vector3d mVec)
@@ -64,16 +65,18 @@ MatrixXd Legendre(
 {
 	MatrixXd pnm = MatrixXd::Zero(m + 1, n + 1);
 	double s = 0, h = 0;
+	const double cos_phi = cos(phi);
+	const double sin_phi = sin(phi);
 
 	pnm(0, 0) = 1;
-	pnm(1, 1) = sqrt(3) * cos(phi);
+	pnm(1, 1) = sqrt(3) * cos_phi;
 
 	/* diagonal coefficients
 	 */
 	for (int i = 2; i <= m; i++)
 	{
 		s = i;
-		pnm(i, i) = sqrt((2 * s + 1) / (2 * s)) * cos(phi) * pnm(i - 1, i - 1);
+		pnm.coeffRef(i, i) = sqrt((2 * s + 1) / (2 * s)) * cos_phi * pnm.coeff(i - 1, i - 1);
 	}
 
 	/* horizontal first step coefficients
@@ -81,7 +84,7 @@ MatrixXd Legendre(
 	for (int i = 1; i <= m; i++)
 	{
 		s = i;
-		pnm(i, i - 1) = sqrt(2 * s + 1) * sin(phi) * pnm(i - 1, i - 1);
+		pnm.coeffRef(i, i - 1) = sqrt(2 * s + 1) * sin_phi * pnm.coeff(i - 1, i - 1);
 	}
 
 	/* horizontal second step coefficients
@@ -93,12 +96,11 @@ MatrixXd Legendre(
 		{
 			s = i;
 			h = j;
-			pnm(i, j) = sqrt((2 * s + 1) / ((s - h) * (s + h))) * (sqrt(2 * s - 1) * sin(phi) * pnm(i - 1, j) - sqrt(((s + h - 1) * (s - h - 1)) / (2 * s - 3)) * pnm(i - 2, j));
+			pnm.coeffRef(i, j) = sqrt((2 * s + 1) / ((s - h) * (s + h))) * (sqrt(2 * s - 1) * sin_phi * pnm.coeff(i - 1, j) - sqrt(((s + h - 1) * (s - h - 1)) / (2 * s - 3)) * pnm.coeff(i - 2, j));
 		}
 		j++;
 		k++;
 	} while (j <= n);
-
 	return pnm;
 }
 
@@ -111,9 +113,11 @@ MatrixXd LegendreD(
 	MatrixXd pnm, ///< Normalised Legendre polynomial matrix
 	double phi)	  ///< Geocentric latitude in radian
 {
+	const double sin_phi = sin(phi);
+	const double cos_phi = cos(phi);
 	MatrixXd dpnm = MatrixXd::Zero(m + 1, n + 1);
-	dpnm(0, 0) = 0.0;
-	dpnm(1, 1) = -sqrt(3) * sin(phi);
+	dpnm.coeffRef(0, 0) = 0.0;
+	dpnm.coeffRef(1, 1) = -sqrt(3) * sin_phi;
 
 	/* diagonal coefficients
 	 */
@@ -121,7 +125,7 @@ MatrixXd LegendreD(
 	for (int i = 2; i <= m; i++)
 	{
 		s = i;
-		dpnm(i, i) = sqrt((2 * s + 1) / (2 * s)) * (cos(phi) * dpnm(i - 1, i - 1) - sin(phi) * pnm(i - 1, i - 1));
+		dpnm.coeffRef(i, i) = sqrt((2 * s + 1) / (2 * s)) * (cos_phi * dpnm.coeff(i - 1, i - 1) - sin_phi * pnm.coeff(i - 1, i - 1));
 	}
 
 	/* horizontal first step coefficients
@@ -129,7 +133,7 @@ MatrixXd LegendreD(
 	for (int i = 1; i <= m; i++)
 	{
 		s = i;
-		dpnm(i, i - 1) = sqrt(2 * s + 1) * ((cos(phi) * pnm(i - 1, i - 1)) + (sin(phi) * dpnm(i - 1, i - 1)));
+		dpnm.coeffRef(i, i - 1) = sqrt(2 * s + 1) * ((cos_phi * pnm.coeff(i - 1, i - 1)) + (sin_phi * dpnm.coeff(i - 1, i - 1)));
 	}
 
 	/* horizontal second step coefficients
@@ -141,7 +145,7 @@ MatrixXd LegendreD(
 		{
 			s = i;
 			h = j;
-			dpnm(i, j) = sqrt((2 * s + 1) / ((s - h) * (s + h))) * ((sqrt(2 * s - 1) * sin(phi) * dpnm(i - 1, j)) + sqrt(2 * s - 1) * cos(phi) * pnm(i - 1, j) - sqrt(((s + h - 1) * (s - h - 1)) / (2 * s - 3)) * dpnm(i - 2, j));
+			dpnm.coeffRef(i, j) = sqrt((2 * s + 1) / ((s - h) * (s + h))) * ((sqrt(2 * s - 1) * sin_phi * dpnm.coeff(i - 1, j)) + sqrt(2 * s - 1) * cos_phi * pnm.coeff(i - 1, j) - sqrt(((s + h - 1) * (s - h - 1)) / (2 * s - 3)) * dpnm.coeff(i - 2, j));
 		}
 		j++;
 		k++;
@@ -531,30 +535,46 @@ Vector3d GravityModel::centralBodyGravityAcc(
 		oceanTidesCorrection(mjdUTC, egmCoef, vecRAESun, vecRAEMoon);
 	}
 
-	Vector3d rSat_bf = mECI2BF * rSat; // Body-fixed position
+	const Vector3d rSat_bf = mECI2BF * rSat; // Body-fixed position
 
 	double rSat_latgc = asin(rSat_bf(2) / rSat_bf.norm()); // Geocentric latitude of satellite (n)
 	double rSat_longc = atan2(rSat_bf(1), rSat_bf(0));	   // Geocentric longitude of satellite (n)
 
-	MatrixXd pnm = Legendre(mMax, nMax, rSat_latgc);		// Legendre matrix given order/degree
-	MatrixXd dpnm = LegendreD(mMax, nMax, pnm, rSat_latgc); // Normalised Legendre matrix given order/degree
+	const MatrixXd pnm = Legendre(mMax, nMax, rSat_latgc);		// Legendre matrix given order/degree
+	const MatrixXd dpnm = LegendreD(mMax, nMax, pnm, rSat_latgc); // Normalised Legendre matrix given order/degree
 
 	double dUdr = 0;
 	double dUdlatgc = 0;
 	double dUdlongc = 0;
 
+	const double tmp_a =  (GM_Earth / rSat_bf.norm());
+	const double tmp_b = (RE_WGS84 / rSat_bf.norm());
+	const double tmp_c = (-GM_Earth / rSat_bf.squaredNorm());
+
+	std::vector<double> sin_table(mMax + 1);
+	std::vector<double> cos_table(mMax + 1);
+	for (int n = 0; n <= mMax; n++) {
+		sin_table[n] = sin(n * rSat_longc);
+		cos_table[n] = cos(n * rSat_longc);
+	}
 	for (int m = 0; m <= nMax; m++)
 	{
-		int nd = m;
-		double b1 = (-GM_Earth / rSat_bf.squaredNorm()) * pow((RE_WGS84 / rSat_bf.norm()), nd) * (m + 1);
-		double b2 = (GM_Earth / rSat_bf.norm()) * pow((RE_WGS84 / rSat_bf.norm()), nd);
-		double b3 = (GM_Earth / rSat_bf.norm()) * pow((RE_WGS84 / rSat_bf.norm()), nd);
+		const double tmp_d = pow(tmp_b,m);
+
+		const double b1 = tmp_c * tmp_d * (m + 1);
+		const double b2 = tmp_a * tmp_d;
+		const double b3 = tmp_a * tmp_d;
 
 		for (int n = 0; n <= mMax; n++)
 		{
-			q1 += pnm(m, n) * (egmCoef.cmn(m, n) * cos(n * rSat_longc) + egmCoef.smn(m, n) * sin(n * rSat_longc));
-			q2 += dpnm(m, n) * (egmCoef.cmn(m, n) * cos(n * rSat_longc) + egmCoef.smn(m, n) * sin(n * rSat_longc));
-			q3 += n * pnm(m, n) * (egmCoef.smn(m, n) * cos(n * rSat_longc) - egmCoef.cmn(m, n) * sin(n * rSat_longc));
+			const double tmp_cmn = egmCoef.cmn.coeff(m, n);
+			const double tmp_smn = egmCoef.smn.coeff(m, n);
+			const double tmp_sin = sin_table[n];
+			const double tmp_cos = cos_table[n];
+			const double tmp_pnm = pnm.coeff(m,n);
+			q1 += tmp_pnm * (tmp_cmn * tmp_cos + tmp_smn * tmp_sin);
+			q2 += dpnm.coeff(m, n) * (tmp_cmn * tmp_cos + tmp_smn * tmp_sin);
+			q3 += n * tmp_pnm * (tmp_smn * tmp_cos - tmp_cmn * tmp_sin);
 		}
 
 		dUdr += q1 * b1;
