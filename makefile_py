@@ -9,18 +9,18 @@ SDKROOT = $(shell xcrun --sdk macosx --show-sdk-path)
 PYBIND11_INCLUDE := $(shell python3 -m pybind11 --includes)
 
 # Compiler and flags
-CXXFLAGS = --std=c++11 -stdlib=libc++ -Wall -pedantic -g -isysroot $(SDK_PATH) -nostdinc++ -I$(SDK_PATH)/usr/include/c++/v1
-CFLAGS = -Wall -pedantic -g -isysroot $(SDK_PATH)
+CXXFLAGS = --std=c++11 -stdlib=libc++ -Wall -pedantic -g -isysroot $(SDKROOT) -nostdinc++ -I$(SDKROOT)/usr/include/c++/v1 -DEIGEN_DONT_VECTORIZE -DEIGEN_DONT_ALIGN
+CFLAGS = -Wall -pedantic -g -isysroot $(SDKROOT)
 LDFLAGS = -L$(SDKROOT)/usr/lib \
             -L/Library/Frameworks/Python.framework/Versions/3.10/lib \
             -L./lib \
-            -lpython3.10 -v
+            -lpython3.10
 
 # Include directories
 INCLUDES = -I$(SDKROOT)/usr/include/c++/v1 \
 			-I/usr/local/include -I/usr/local/include/eigen3 \
 			-I$(PYBIND11_INCLUDE) \
-            -I/Users/yangyang/Documents/GitHub/ordDetHOUSEPublished/orbDetHOUSE/odvenv/lib/python3.10/site-packages/pybind11/include \
+            -I/Users/yangyang/Documents/GitHub/ordDetHOUSEPublished/orbDetHOUSE/.venv/lib/python3.10/site-packages/pybind11/include \
             -I/Library/Frameworks/Python.framework/Versions/3.10/include/python3.10 \
 			-I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter 
 
