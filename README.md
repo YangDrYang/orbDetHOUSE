@@ -49,7 +49,7 @@ Notes:
     cd yaml-cpp
     mkdir build
     cd build
-    cmake -DCMAKE_OSX_ARCHITECTURES=arm64 ..
+    cmake .. -DCMAKE_CXX_COMPILER=g++-11 -DCMAKE_CXX_FLAGS="--std=c++11 -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -I/usr/local/include"
     make
     ```
 - adjust the directories in Makefile accordingly to include these libraries
