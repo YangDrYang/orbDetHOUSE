@@ -43,7 +43,7 @@ Notes:
 
 - all functions/files have been tested on Macbook 3.1 GHz Quad-Core Intel Core i7; Other OS runing gcc/g++ should also work but you need to work out proper configurations
 - be careful with the directory of Eigen, Boost and Yaml-cpp, better to install them using CMake inside their file folders
-  - For instance I install yaml-cpp in the current directory using these command:
+  - For instance I install yaml-cpp in the current directory on my Apple M2 laptop using these commands:
     ```sh
     git clone https://github.com/jbeder/yaml-cpp.git
     cd yaml-cpp
