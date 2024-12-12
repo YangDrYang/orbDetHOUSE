@@ -1,5 +1,5 @@
-CXX = g++
-CC = gcc
+CXX = g++-11
+CC = gcc-11
 
 # create directories
 $(shell mkdir -p bin/orbmdl)
@@ -10,13 +10,14 @@ $(shell mkdir -p bin/filter)
 $(shell mkdir -p bin/scripts)
 
 OBJDIR = bin
-LocalDIR = usr/local
+LocalDIR = /usr/local
 FUNDIR = scripts
 
 # for compiling orbmdl and filter
-CPPFLAGS = --std=c++11 -Wall -pedantic -g
-CFLAGS = -Wall -pedantic -g
-INCLUDE = -I/$(LocalDIR)/include/ -I/$(LocalDIR)/include/eigen3/ -I/$(LocalDIR)/boost_1_81_0 -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
+CPPFLAGS = --std=c++11 -Wall -pedantic -g -O3 
+CFLAGS = -Wall -pedantic -g -O3 
+LDFLAGS = -L./yaml-cpp/build -L$(LocalDIR)/lib -L$(OBJDIR)/filter -L$(OBJDIR)/orbmdl -lfilter -lorbmdl -lnrlmsise00 -lyaml-cpp
+INCLUDE = -I$(LocalDIR)/include/eigen3/ -I$(LocalDIR)/boost_1_81_0 -I./yaml-cpp/include -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
 
 # orbmdl files
 ORBMDL_SRC = $(wildcard orbmdl/*.cpp) $(wildcard orbmdl/3rdparty/*.cpp) $(wildcard orbmdl/sofa/*.cpp)
@@ -28,54 +29,20 @@ NRLMSISE00_SRC = orbmdl/nrlmsise-00/nrlmsise-00.c orbmdl/nrlmsise-00/nrlmsise-00
 NRLMSISE00_OBJ = $(NRLMSISE00_SRC:orbmdl/nrlmsise-00/%.c=$(OBJDIR)/orbmdl/nrlmsise-00/%.o)
 NRLMSISE00_AR = $(OBJDIR)/orbmdl/libnrlmsise00.a
 
-# filter files
-FILTER_SRC = $(wildcard filter/*.cpp)
-FILTER_OBJ = $(FILTER_SRC:filter/%.cpp=$(OBJDIR)/filter/%.o)
-FILTER_AR = $(OBJDIR)/filter/libfilter.a
+# targets
+all: $(ORBMDL_AR) $(NRLMSISE00_AR)
 
-# ORBDET files
-FILENAME ?= 
-ORBDET_SRC = $(FUNDIR)/$(FILENAME).cpp
-ORBDET_OBJ = $(ORBDET_SRC:$(FUNDIR)/%.cpp=$(OBJDIR)/$(FUNDIR)/%.o)
+$(ORBMDL_AR): $(ORBMDL_OBJ)
+	ar rcs $@ $^
 
-OBJECTS = $(ORBMDL_AR) $(FILTER_AR) $(NRLMSISE00_AR)
+$(NRLMSISE00_AR): $(NRLMSISE00_OBJ)
+	ar rcs $@ $^
 
-# ----- COMPILE ORBDET -----
-$(OBJDIR)/$(FUNDIR)/$(FILENAME): $(ORBDET_OBJ) $(OBJECTS)
-	$(CXX) $(CPPFLAGS) $(INCLUDE) $(OBJECTS) $(ORBDET_OBJ) -L$(OBJDIR)/filter -lfilter -lyaml-cpp -L$(OBJDIR)/orbmdl -lorbmdl -lnrlmsise00 -o $@
-
-# compile ORBDET object file
-$(ORBDET_OBJ): $(OBJDIR)/$(FUNDIR)/%.o : $(FUNDIR)/%.cpp
+$(OBJDIR)/orbmdl/%.o: orbmdl/%.cpp
 	$(CXX) $(CPPFLAGS) $(INCLUDE) -c $< -o $@
 
-# ----- COMPILE orbmdl -----
-# compile orbmdl object files
-$(ORBMDL_OBJ): $(OBJDIR)/orbmdl/%.o : orbmdl/%.cpp
-	$(CXX) $(CPPFLAGS) $(INCLUDE) -c $< -o $@
-
-# ----- COMPILE nrlmsise-00 -----
-# compile nrlmsise-00 object files
-$(NRLMSISE00_OBJ): $(OBJDIR)/orbmdl/nrlmsise-00/%.o : orbmdl/nrlmsise-00/%.c
+$(OBJDIR)/orbmdl/nrlmsise-00/%.o: orbmdl/nrlmsise-00/%.c
 	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $@
 
-# create orbmdl library
-$(ORBMDL_AR): $(ORBMDL_OBJ)
-	ar rcs $(ORBMDL_AR) $(ORBMDL_OBJ)
-
-# create nrlmsise-00 library
-$(NRLMSISE00_AR): $(NRLMSISE00_OBJ)
-	ar rcs $(NRLMSISE00_AR) $(NRLMSISE00_OBJ)
-
-# ----- COMPILE filter -----
-# create filter library
-$(FILTER_AR): $(FILTER_OBJ)
-	ar rcs $(FILTER_AR) $(FILTER_OBJ)
-
-# compile filter object files
-$(FILTER_OBJ): $(OBJDIR)/filter/%.o : filter/%.cpp
-	$(CXX) $(CPPFLAGS) $(INCLUDE) -c $< -o $@
-
-# ----- CLEAN -----
-.PHONY: clean
 clean:
-	rm -f $(OBJDIR)/*.o $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(OBJDIR)/orbmdl/nrlmsise-00/*.o $(ORBMDL_AR) $(NRLMSISE00_AR) $(OBJDIR)/filter/*.o $(FILTER_AR) $(OBJDIR)/$(FUNDIR)/$(FILENAME).o $(OBJDIR)/$(FUNDIR)/$(FILENAME)
+	rm -rf $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/nrlmsise-00/*.o $(ORBMDL_AR) $(NRLMSISE00_AR)
