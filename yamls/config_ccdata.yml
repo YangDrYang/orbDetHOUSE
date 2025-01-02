@@ -1,9 +1,10 @@
 # required
 filter_options:
-  HOUSE: true
+  square_root: false
+  HOUSE: false
   UKF: true
-  CUT4: true
-  CUT6: true
+  CUT4: false
+  CUT6: false
   num_trials: 1
 
 # requried
@@ -58,8 +59,9 @@ measurement_parameters:
   ground_station: [-2730164.38085497, 3714370.03545681, 4393632.92952871, 0, 0, 0] #Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
   dim_meas: 2
   # measurement error with units [arcsec, arcsec]
-  right_ascension_error: 3
-  declination_error: 3
+  measurement_std: [5, 5]
+  measurement_skew: [0, 0]
+  measurement_kurt: [3, 3]
 
 
 # optional, if not defined they will be set to default values

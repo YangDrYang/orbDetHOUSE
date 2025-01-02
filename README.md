@@ -15,9 +15,9 @@ Compiling:
 
 - compilation is handled by the makefile, run make to rebuild (make must be installed) or clean main functions in the "scripts" directory.
 - examples:
-  - make FILENAME=convertECEF2ECI and make FILENAME=convertECEF2ECI clean
-  - make FILENAME=testOrbProp and make FILENAME=testOrbProp clean
-  - make FILENAME=testOrbDetCCData and make FILENAME=testOrbDetCCData clean
+  - make FILENAME=convertECEF2ECI and make clean
+  - make FILENAME=testOrbProp and make clean
+  - make FILENAME=testOrbDetCCData and make clean
 - the binary object files are stored in the "bin/bin_sub" directory
 
 Running:

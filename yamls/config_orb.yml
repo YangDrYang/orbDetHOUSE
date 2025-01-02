@@ -1,5 +1,4 @@
-
-# requried
+# required
 scenario_parameters:
   # time step in seconds, MJD in days
   time_step: 10
@@ -17,11 +16,11 @@ scenario_parameters:
   # output_directory: out
   output_directory: out/out_prop
 
-# requried
-initial_orbtial_parameters:
+# required
+initial_orbital_parameters:  # fixed typo here
   dim_state: 6
-  # initial state of satillite (type ECEF or ECI), unit: m, m/s
-  initial_state: [-1049836.531406142516062,-4275236.478115282021463,-6337381.515492259524763,5944.446546185818079,2819.968620172394367,-2885.421064631562786]
+  # initial state of satellite (type ECEF or ECI), unit: m, m/s
+  initial_state: [-1049836.531406142516062, -4275236.478115282021463, -6337381.515492259524763, 5944.446546185818079, 2819.968620172394367, -2885.421064631562786]
   initial_state_type: ECI
 
 # optional, if not defined they will be set to default values
@@ -45,10 +44,10 @@ propagator_truth_settings:
   # empirical_acceleration: false
   # satellite_manoeuvre: false
   srpCoef: 1.23
-  srpArea : 8.73
+  srpArea: 8.73
   dragCoef: 2.0
-  dragArea : 4.091655
-  satMass : 961.831
+  dragArea: 4.091655
+  satMass: 961.831
   # odeInteg: default
 
 # optional

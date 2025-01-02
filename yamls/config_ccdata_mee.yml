@@ -1,76 +1,46 @@
-# required
 filter_options:
   square_root: false
-  HOUSE: true
+  HOUSE: false
   UKF: true
-  CUT4: true
-  CUT6: true
+  CUT4: false
+  CUT6: false
   num_trials: 1
 
-# requried
 scenario_parameters:
-  MJD_start: 59349.51137986922 # 2021-May-15
-  # MJD_end: 59349.51137986922 # 2021-May-15
-  # MJD_end:  59349.51140078588 # 2021-May-17
-  # MJD_end:  59349.51288590162 # 2021-May-17
-  MJD_end:  59351.54470621643 # 2021-May-17
-  # MJD_start: 59349.51137986922 # 2021-May-15
-  # MJD_end:  59349.51250939351
+  MJD_start: 59349.51137986922
+  MJD_end: 59351.54470621643
   max_time_step: 180
-  # max_time_step: 1800
-  # this directory must exist
   output_directory: out/out_ccdata
 
-# requried
 initial_orbtial_parameters:
   dim_state: 6
-  # initial state of satillite (type ECEF or ECI), unit: m, m/s
-  initial_state: [-3669575.62359752, 1040418.51432516,6705990.19621435,-5051.32766883,-4686.71761172,-2035.77367562] # initial condition from tle 
-  # initial_state: [-3670344.7060020026,1040280.3902267866,6705782.195689557,-5051.439372019426,-4686.233409635222,-2035.9701596230573] # pod reference 
-  # initial_state: [-4299182.037649778,424377.41311747686,6392328.627819218,-4602.143031060031,-4768.812901435728,-2776.03925579375]
-  initial_state_type: MEE
-  # initial_covariance: #Ref.: https://doi.org/10.2514/1.G006481
-  initial_covariance: # eci coordinate
+  initial_state_type: "MEE"
+  initial_state: [-3669575.62359752, 1040418.51432516, 6705990.19621435, -5051.32766883, -4686.71761172, -2035.77367562]
+  initial_covariance: 
     - [1.0e+6, 0, 0, 0, 0, 0]
     - [0, 1.0e+4, 0, 0, 0, 0]
     - [0, 0, 4.0e+4, 0, 0, 0]
     - [0, 0, 0, 0.01, 0, 0]
     - [0, 0, 0, 0, 0.25, 0]
-    - [0, 0, 0, 0, 0, 0.04]    
+    - [0, 0, 0, 0, 0, 0.04]
   initial_skewness: -1.6
-  initial_kurtosis: 15    
-  process_noise_covariance: # ric coordinate
+  initial_kurtosis: 15
+  process_noise_covariance: 
     - [0.25, 0, 0, 0, 0, 0]
     - [0, 0.25, 0, 0, 0, 0]
     - [0, 0, 0.25, 0, 0, 0]
     - [0, 0, 0, 0.0001, 0, 0]
     - [0, 0, 0, 0, 0.0001, 0]
     - [0, 0, 0, 0, 0, 0.0001]
-  # process_noise_covariance: # ric coordinate
-  #   - [10, 0, 0, 0, 0, 0]
-  #   - [0, 10, 0, 0, 0, 0]
-  #   - [0, 0, 10, 0, 0, 0]
-  #   - [0, 0, 0, 0.000002, 0, 0]
-  #   - [0, 0, 0, 0, 0.000002, 0]
-  #   - [0, 0, 0, 0, 0, 0.000002]
 
-# requried
 measurement_parameters:
-  # measurement file
   meas_file: ccdata/meas_data_id_46984.csv
-  # ground station (as ECEF, velocities assumed to be 0)
-  ground_station: [-2730000, 3714000, 4394000, 0, 0, 0] #Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
+  ground_station: [-2730000, 3714000, 4394000, 0, 0, 0]
   dim_meas: 2
-  # measurement error with units [arcsec, arcsec]
-  # right_ascension_error: 5
-  # declination_error: 5
   measurement_std: [5, 5]
   measurement_skew: [0, 0]
   measurement_kurt: [3, 3]
-  # measurement_skew: [-0.67, -0.67]
-  # measurement_kurt: [0.30, 4.33]
 
-# optional, if not defined they will be set to default values
 propagator_filter_settings:
   earth_gravity_model_order: 100
   earth_gravity_model_degree: 100
@@ -79,7 +49,7 @@ propagator_filter_settings:
   third_body_moon: true
   solid_earth_tide: true
   ocean_tide_loading: true
-  solar_radiation_pressure : true
+  solar_radiation_pressure: true
   atmospheric_drag: true
   relativity_effect: true
   srpCoef: 1.23
@@ -87,24 +57,7 @@ propagator_filter_settings:
   dragCoef: 2.0
   dragArea: 4.091655
   satMass: 961.831
-# propagator_filter_settings:
-#   earth_gravity_model_order: 20
-#   earth_gravity_model_degree: 20
-#   third_body_attraction: false
-#   third_body_sun: false
-#   third_body_moon: false
-#   solid_earth_tide: false
-#   ocean_tide_loading: false
-#   solar_radiation_pressure : true
-#   atmospheric_drag: true
-#   relativity_effect: false
-#   srpCoef: 1.23
-#   srpArea: 8.73
-#   dragCoef: 2.0
-#   dragArea: 4.091655
-#   satMass: 961.831
 
-# optional
 supporting_files:
   gravity_file: ./auxdata/GGM03S.txt
   ephemeris_file: ./auxdata/linux_p1550p2650.440

@@ -253,9 +253,9 @@ VectorXd mee2eci(const VectorXd &mee, double mu)
 	return coe2eci(mee2coe(mee), mu);
 }
 
-VectorXd ric2eci(const VectorXd &ric, const VectorXd &eci)
-{
-}
+// VectorXd ric2eci(const VectorXd &ric, const VectorXd &eci)
+// {
+// }
 
 // Function to rotate the RIC covariance matrix to the ECI frame based on ECI state vector
 MatrixXd ric2eci(const MatrixXd &ric, const VectorXd &eci)

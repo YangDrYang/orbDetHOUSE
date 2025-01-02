@@ -287,134 +287,212 @@ MatrixXd readCSV(const string &filename, int headerLinesToSkip)
     return matrix;
 }
 
-void readConfigFile(string fileName, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
+void readConfigFile(const string &fileName, ForceModels &optFilter, struct ScenarioInfo &snrInfo, struct InitialState &initialState,
                     struct MeasModel &measMdl, struct Filters &filters, struct FileInfo &suppFiles)
 {
-    // load file
-    YAML::Node config = YAML::LoadFile(fileName);
-    YAML::Node parameter;
-
-    // read filter options (required)
-    YAML::Node filterOpts = config["filter_options"];
-    filters.squareRoot = filterOpts["square_root"].as<bool>();
-    filters.house = filterOpts["HOUSE"].as<bool>();
-    filters.ukf = filterOpts["UKF"].as<bool>();
-    filters.cut4 = filterOpts["CUT4"].as<bool>();
-    filters.cut6 = filterOpts["CUT6"].as<bool>();
-    filters.numTrials = filterOpts["num_trials"].as<int>();
-
-    // read scenario parameters (required)
-    YAML::Node snrParams = config["scenario_parameters"];
-    snrInfo.epoch.startMJD = snrParams["MJD_start"].as<double>();
-    snrInfo.epoch.endMJD = snrParams["MJD_end"].as<double>();
-    snrInfo.epoch.maxTimeStep = snrParams["max_time_step"].as<double>();
-    snrInfo.outDir = snrParams["output_directory"].as<string>();
-
-    // read orbital parameters (required)
-    YAML::Node orbitParams = config["initial_orbtial_parameters"];
-    int dimState = orbitParams["dim_state"].as<int>();
-    initialState.dimState = dimState;
-    vector<double> tempVec;
-    initialState.initialStateType = orbitParams["initial_state_type"].as<string>();
-    // read params as standard vector, convert to eigen vector
-    tempVec = orbitParams["initial_state"].as<vector<double>>();
-    initialState.initialStateVec = stdVec2EigenVec(tempVec);
-    // Read matrix from YAML file
-    MatrixXd tempMat = MatrixXd::Zero(dimState, dimState);
-    const YAML::Node &covInitState = orbitParams["initial_covariance"];
-    for (int i = 0; i < dimState; ++i)
+    try
     {
-        const YAML::Node &row = covInitState[i];
-        for (int j = 0; j < dimState; ++j)
-        {
-            tempMat(i, j) = row[j].as<double>();
-        }
-    }
-    initialState.initialCovarianceMat = tempMat;
-    initialState.initialSkewness = orbitParams["initial_skewness"].as<double>();
-    initialState.initialKurtosis = orbitParams["initial_kurtosis"].as<double>();
+        // load file
+        cout << "Loading configuration file: " << fileName << endl;
+        YAML::Node config = YAML::LoadFile(fileName);
+        cout << "Configuration file loaded successfully." << endl;
 
-    tempMat = MatrixXd::Zero(dimState, dimState);
-    const YAML::Node &covProNoise = orbitParams["process_noise_covariance"];
-    for (int i = 0; i < dimState; ++i)
+        YAML::Node parameter;
+
+        // read filter options (required)
+        YAML::Node filterOpts = config["filter_options"];
+        filters.squareRoot = filterOpts["square_root"] ? filterOpts["square_root"].as<bool>() : false; // Default value
+        filters.house = filterOpts["HOUSE"].as<bool>();
+        filters.ukf = filterOpts["UKF"].as<bool>();
+        filters.cut4 = filterOpts["CUT4"].as<bool>();
+        filters.cut6 = filterOpts["CUT6"].as<bool>();
+        filters.numTrials = filterOpts["num_trials"].as<int>();
+
+        // Print filter options
+        cout << "Filter options:" << endl;
+        cout << "squareRoot: " << filters.squareRoot << endl;
+        cout << "house: " << filters.house << endl;
+        cout << "ukf: " << filters.ukf << endl;
+        cout << "cut4: " << filters.cut4 << endl;
+        cout << "cut6: " << filters.cut6 << endl;
+        cout << "numTrials: " << filters.numTrials << endl;
+
+        // read scenario parameters (required)
+        YAML::Node snrParams = config["scenario_parameters"];
+        snrInfo.epoch.startMJD = snrParams["MJD_start"].as<double>();
+        snrInfo.epoch.endMJD = snrParams["MJD_end"].as<double>();
+        snrInfo.epoch.maxTimeStep = snrParams["max_time_step"].as<double>();
+        snrInfo.outDir = snrParams["output_directory"].as<string>();
+
+        // Print scenario parameters
+        cout << "Scenario parameters:" << endl;
+        cout << "startMJD: " << snrInfo.epoch.startMJD << endl;
+        cout << "endMJD: " << snrInfo.epoch.endMJD << endl;
+        cout << "maxTimeStep: " << snrInfo.epoch.maxTimeStep << endl;
+        cout << "output_directory: " << snrInfo.outDir << endl;
+
+        // read orbital parameters (required)
+        YAML::Node orbitParams = config["initial_orbtial_parameters"];
+        int dimState = orbitParams["dim_state"].as<int>();
+        initialState.dimState = dimState;
+        vector<double> tempVec;
+        initialState.initialStateType = orbitParams["initial_state_type"].as<string>();
+        // read params as standard vector, convert to eigen vector
+        tempVec = orbitParams["initial_state"].as<vector<double>>();
+        initialState.initialStateVec = stdVec2EigenVec(tempVec);
+        // Read matrix from YAML file
+        MatrixXd tempMat = MatrixXd::Zero(dimState, dimState);
+        const YAML::Node &covInitState = orbitParams["initial_covariance"];
+        for (int i = 0; i < dimState; ++i)
+        {
+            const YAML::Node &row = covInitState[i];
+            for (int j = 0; j < dimState; ++j)
+            {
+                tempMat(i, j) = row[j].as<double>();
+            }
+        }
+        initialState.initialCovarianceMat = tempMat;
+        initialState.initialSkewness = orbitParams["initial_skewness"].as<double>();
+        initialState.initialKurtosis = orbitParams["initial_kurtosis"].as<double>();
+
+        tempMat = MatrixXd::Zero(dimState, dimState);
+        const YAML::Node &covProNoise = orbitParams["process_noise_covariance"];
+        for (int i = 0; i < dimState; ++i)
+        {
+            const YAML::Node &row = covProNoise[i];
+            for (int j = 0; j < dimState; ++j)
+            {
+                tempMat(i, j) = row[j].as<double>();
+            }
+        }
+        initialState.processNoiseCovarianceMat = tempMat;
+
+        // Print orbital parameters
+        cout << "Orbital parameters:" << endl;
+        cout << "dimState: " << dimState << endl;
+        cout << "initialStateType: " << initialState.initialStateType << endl;
+        cout << "initialStateVec: " << initialState.initialStateVec.transpose() << endl;
+        cout << "initialCovarianceMat: " << endl
+             << initialState.initialCovarianceMat << endl;
+        cout << "initialSkewness: " << initialState.initialSkewness << endl;
+        cout << "initialKurtosis: " << initialState.initialKurtosis << endl;
+        cout << "processNoiseCovarianceMat: " << endl
+             << initialState.processNoiseCovarianceMat << endl;
+
+        // read measurement characristics (noise standard deviations)
+        YAML::Node measParams = config["measurement_parameters"];
+        measMdl.measFile = measParams["meas_file"].as<string>();
+        tempVec = measParams["ground_station"].as<vector<double>>();
+        measMdl.groundStation = stdVec2EigenVec(tempVec);
+        measMdl.dimMeas = measParams["dim_meas"].as<int>();
+        vector<double> tempVec2 = measParams["measurement_std"].as<vector<double>>();
+        measMdl.errorStatistics.stdVec = Map<VectorXd>(tempVec2.data(), tempVec2.size());
+        tempVec2 = measParams["measurement_skew"].as<vector<double>>();
+        measMdl.errorStatistics.skewVec = Map<VectorXd>(tempVec2.data(), tempVec2.size());
+        tempVec2 = measParams["measurement_kurt"].as<vector<double>>();
+        measMdl.errorStatistics.kurtVec = Map<VectorXd>(tempVec2.data(), tempVec2.size());
+
+        // Print measurement parameters
+        cout << "Measurement parameters:" << endl;
+        cout << "measFile: " << measMdl.measFile << endl;
+        cout << "groundStation: " << measMdl.groundStation.transpose() << endl;
+        cout << "dimMeas: " << measMdl.dimMeas << endl;
+        cout << "measurement_std: " << measMdl.errorStatistics.stdVec.transpose() << endl;
+        cout << "measurement_skew: " << measMdl.errorStatistics.skewVec.transpose() << endl;
+        cout << "measurement_kurt: " << measMdl.errorStatistics.kurtVec.transpose() << endl;
+
+        // read propagator settings for filters (optional)
+        YAML::Node propFilterSettings = config["propagator_filter_settings"];
+        if (parameter = propFilterSettings["earth_gravaity"])
+            optFilter.earth_gravity = parameter.as<bool>();
+        if (parameter = propFilterSettings["earth_gravity_model_order"])
+            optFilter.egmAccOrd = parameter.as<int>();
+        if (parameter = propFilterSettings["earth_gravity_model_degree"])
+            optFilter.egmAccDeg = parameter.as<int>();
+        if (parameter = propFilterSettings["solid_earth_tide"])
+            optFilter.solid_earth_tide = parameter.as<bool>();
+        if (parameter = propFilterSettings["ocean_tide_loading"])
+            optFilter.ocean_tide_loading = parameter.as<bool>();
+        if (parameter = propFilterSettings["third_body_attraction"])
+            optFilter.third_body_attraction = parameter.as<bool>();
+        if (parameter = propFilterSettings["third_body_sun"])
+            optFilter.third_body_sun = parameter.as<bool>();
+        if (parameter = propFilterSettings["third_body_moon"])
+            optFilter.third_body_moon = parameter.as<bool>();
+        if (parameter = propFilterSettings["third_body_planet"])
+            optFilter.third_body_planet = parameter.as<bool>();
+        if (parameter = propFilterSettings["relativity_effect"])
+            optFilter.relativity_effect = parameter.as<bool>();
+        if (parameter = propFilterSettings["atmospheric_drag"])
+            optFilter.atmospheric_drag = parameter.as<bool>();
+        if (parameter = propFilterSettings["solar_radiation_pressure"])
+            optFilter.solar_radiation_pressure = parameter.as<bool>();
+        if (parameter = propFilterSettings["thermal_emission"])
+            optFilter.thermal_emission = parameter.as<bool>();
+        if (parameter = propFilterSettings["earth_albedo"])
+            optFilter.earth_albedo = parameter.as<bool>();
+        if (parameter = propFilterSettings["infrared_radiation"])
+            optFilter.infrared_radiation = parameter.as<bool>();
+        if (parameter = propFilterSettings["antenna_thrust"])
+            optFilter.antenna_thrust = parameter.as<bool>();
+        if (parameter = propFilterSettings["empirical_acceleration"])
+            optFilter.empirical_acceleration = parameter.as<bool>();
+        if (parameter = propFilterSettings["satellite_manoeuvre"])
+            optFilter.satellite_manoeuvre = parameter.as<bool>();
+        if (parameter = propFilterSettings["satMass"])
+            optFilter.satMass = parameter.as<double>();
+        if (parameter = propFilterSettings["srpArea"])
+            optFilter.srpArea = parameter.as<double>();
+        if (parameter = propFilterSettings["srpCoef"])
+            optFilter.srpCoef = parameter.as<double>();
+        if (parameter = propFilterSettings["dragArea"])
+            optFilter.dragArea = parameter.as<double>();
+        if (parameter = propFilterSettings["dragCoef"])
+            optFilter.dragCoef = parameter.as<double>();
+
+        // Print propagator settings
+        cout << "Propagator settings:" << endl;
+        cout << "earth_gravity: " << optFilter.earth_gravity << endl;
+        cout << "egmAccOrd: " << optFilter.egmAccOrd << endl;
+        cout << "egmAccDeg: " << optFilter.egmAccDeg << endl;
+        cout << "solid_earth_tide: " << optFilter.solid_earth_tide << endl;
+        cout << "ocean_tide_loading: " << optFilter.ocean_tide_loading << endl;
+        cout << "third_body_attraction: " << optFilter.third_body_attraction << endl;
+        cout << "third_body_sun: " << optFilter.third_body_sun << endl;
+        cout << "third_body_moon: " << optFilter.third_body_moon << endl;
+        cout << "third_body_planet: " << optFilter.third_body_planet << endl;
+        cout << "relativity_effect: " << optFilter.relativity_effect << endl;
+        cout << "atmospheric_drag: " << optFilter.atmospheric_drag << endl;
+        cout << "solar_radiation_pressure: " << optFilter.solar_radiation_pressure << endl;
+        cout << "thermal_emission: " << optFilter.thermal_emission << endl;
+        cout << "earth_albedo: " << optFilter.earth_albedo << endl;
+        cout << "infrared_radiation: " << optFilter.infrared_radiation << endl;
+        cout << "antenna_thrust: " << optFilter.antenna_thrust << endl;
+        cout << "empirical_acceleration: " << optFilter.empirical_acceleration << endl;
+        cout << "satellite_manoeuvre: " << optFilter.satellite_manoeuvre << endl;
+        cout << "satMass: " << optFilter.satMass << endl;
+        cout << "srpArea: " << optFilter.srpArea << endl;
+        cout << "srpCoef: " << optFilter.srpCoef << endl;
+        cout << "dragArea: " << optFilter.dragArea << endl;
+        cout << "dragCoef: " << optFilter.dragCoef << endl;
+
+        // read file options for info/data that are relied on
+        YAML::Node fileOpt = config["supporting_files"];
+        suppFiles.erpFile = fileOpt["ERP_file"].as<string>();
+        suppFiles.grvFile = fileOpt["gravity_file"].as<string>();
+        suppFiles.ephFile = fileOpt["ephemeris_file"].as<string>();
+
+        // Print supporting files
+        cout << "Supporting files:" << endl;
+        cout << "ERP_file: " << suppFiles.erpFile << endl;
+        cout << "gravity_file: " << suppFiles.grvFile << endl;
+        cout << "ephemeris_file: " << suppFiles.ephFile << endl;
+    }
+    catch (const YAML::Exception &e)
     {
-        const YAML::Node &row = covProNoise[i];
-        for (int j = 0; j < dimState; ++j)
-        {
-            tempMat(i, j) = row[j].as<double>();
-        }
+        cerr << "Error: YAML exception: " << e.what() << endl;
+        exit(1);
     }
-    initialState.processNoiseCovarianceMat = tempMat;
-
-    // read measurement characristics (noise standard deviations)
-    YAML::Node measParams = config["measurement_parameters"];
-    measMdl.measFile = measParams["meas_file"].as<string>();
-    tempVec = measParams["ground_station"].as<vector<double>>();
-    measMdl.groundStation = stdVec2EigenVec(tempVec);
-    measMdl.dimMeas = measParams["dim_meas"].as<int>();
-    // measMdl.errorStatistics.rightAscensionErr = measParams["right_ascension_error"].as<double>();
-    // measMdl.errorStatistics.declinationErr = measParams["declination_error"].as<double>();
-    vector<double> tempVec2 = measParams["measurement_std"].as<vector<double>>();
-    measMdl.errorStatistics.stdVec = Map<VectorXd>(tempVec2.data(), tempVec2.size());
-    tempVec2 = measParams["measurement_skew"].as<vector<double>>();
-    measMdl.errorStatistics.skewVec = Map<VectorXd>(tempVec2.data(), tempVec2.size());
-    tempVec2 = measParams["measurement_kurt"].as<vector<double>>();
-    measMdl.errorStatistics.kurtVec = Map<VectorXd>(tempVec2.data(), tempVec2.size());
-
-    // read propagator settings for filters (optional)
-    YAML::Node propFilterSettings = config["propagator_filter_settings"];
-    if (parameter = propFilterSettings["earth_gravaity"])
-        optFilter.earth_gravity = parameter.as<bool>();
-    if (parameter = propFilterSettings["earth_gravity_model_order"])
-        optFilter.egmAccOrd = parameter.as<int>();
-    if (parameter = propFilterSettings["earth_gravity_model_degree"])
-        optFilter.egmAccDeg = parameter.as<int>();
-    if (parameter = propFilterSettings["solid_earth_tide"])
-        optFilter.solid_earth_tide = parameter.as<bool>();
-    if (parameter = propFilterSettings["ocean_tide_loading"])
-        optFilter.ocean_tide_loading = parameter.as<bool>();
-    if (parameter = propFilterSettings["third_body_attraction"])
-        optFilter.third_body_attraction = parameter.as<bool>();
-    if (parameter = propFilterSettings["third_body_sun"])
-        optFilter.third_body_sun = parameter.as<bool>();
-    if (parameter = propFilterSettings["third_body_moon"])
-        optFilter.third_body_moon = parameter.as<bool>();
-    if (parameter = propFilterSettings["third_body_planet"])
-        optFilter.third_body_planet = parameter.as<bool>();
-    if (parameter = propFilterSettings["relativity_effect"])
-        optFilter.relativity_effect = parameter.as<bool>();
-    if (parameter = propFilterSettings["atmospheric_drag"])
-        optFilter.atmospheric_drag = parameter.as<bool>();
-    if (parameter = propFilterSettings["solar_radiation_pressure"])
-        optFilter.solar_radiation_pressure = parameter.as<bool>();
-    if (parameter = propFilterSettings["thermal_emission"])
-        optFilter.thermal_emission = parameter.as<bool>();
-    if (parameter = propFilterSettings["earth_albedo"])
-        optFilter.earth_albedo = parameter.as<bool>();
-    if (parameter = propFilterSettings["infrared_radiation"])
-        optFilter.infrared_radiation = parameter.as<bool>();
-    if (parameter = propFilterSettings["antenna_thrust"])
-        optFilter.antenna_thrust = parameter.as<bool>();
-    if (parameter = propFilterSettings["empirical_acceleration"])
-        optFilter.empirical_acceleration = parameter.as<bool>();
-    if (parameter = propFilterSettings["satellite_manoeuvre"])
-        optFilter.satellite_manoeuvre = parameter.as<bool>();
-    if (parameter = propFilterSettings["satMass"])
-        optFilter.satMass = parameter.as<double>();
-    if (parameter = propFilterSettings["srpArea"])
-        optFilter.srpArea = parameter.as<double>();
-    if (parameter = propFilterSettings["srpCoef"])
-        optFilter.srpCoef = parameter.as<double>();
-    if (parameter = propFilterSettings["dragArea"])
-        optFilter.dragArea = parameter.as<double>();
-    if (parameter = propFilterSettings["dragCoef"])
-        optFilter.dragCoef = parameter.as<double>();
-
-    // read file options for info/data that are relied on
-    YAML::Node fileOpt = config["supporting_files"];
-    suppFiles.erpFile = fileOpt["ERP_file"].as<string>();
-    suppFiles.grvFile = fileOpt["gravity_file"].as<string>();
-    suppFiles.ephFile = fileOpt["ephemeris_file"].as<string>();
 }
 
 VectorXd stdVec2EigenVec(const vector<double> &stdVec)
@@ -427,10 +505,11 @@ VectorXd stdVec2EigenVec(const vector<double> &stdVec)
     return eigenVec;
 }
 
-bool initEGMCoef(const string& filename)
+bool initEGMCoef(const string &filename)
 {
     ifstream file(filename);
-    if (!file.is_open()) {
+    if (!file.is_open())
+    {
         cerr << "Failed to open file: " << filename << endl;
         return false; // Indicate failure to open the file
     }
@@ -457,24 +536,24 @@ bool initEGMCoef(const string& filename)
 // void initGlobalVariables(struct InitialState &initialState, struct FileInfo &suppFiles)
 void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, MatrixXd &procNoiseCov, string stateType, struct FileInfo &suppFiles)
 {
-    // string stateType = initialState.initialStateType;
-    // VectorXd initialStateVec = initialState.initialStateVec;
-    // MatrixXd initialCov = initialState.initialCovarianceMat;
-    // MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
-
+    cout << "Initializing EGM coefficients..." << endl;
     initEGMCoef(suppFiles.grvFile);
 
     erpt = {.n = 0};
     // cout << suppFiles.erpFile << endl;
+    cout << "Reading ERP file: " << suppFiles.erpFile << endl;
     readerp(suppFiles.erpFile, &erpt);
 
     // set up the IERS instance
+    cout << "Setting up IERS instance..." << endl;
     getIERS(epoch.startMJD);
 
     const char *ephFile = suppFiles.ephFile.c_str();
+    cout << "Initializing JPL ephemeris with file: " << ephFile << endl;
     pJPLEph = jpl_init_ephemeris(ephFile, nullptr, nullptr);
 
     double dimState = initialStateVec.size();
+    cout << "State type: " << stateType << endl;
     if (stateType == "ecef")
     {
         cout << "Converted state from ECEF to ECI\n";
@@ -498,14 +577,24 @@ void initGlobalVariables(VectorXd &initialStateVec, MatrixXd &initialCov, Matrix
             // Perform coordinate transformation and return the result
             return eci2mee(satECI, mu);
         };
+
         // convert procNoiseCov from RIC to ECI first
+        cout << "Converting process noise covariance from RIC to ECI..." << endl;
         procNoiseCov = ric2eci(procNoiseCov, initialStateVec);
         // calcualte the process noise cov first as the initialStateVec will be overwritten
+        cout << "Calculating process noise covariance..." << endl;
         UT utECI2MEENoise(coorTransECI2MEE, false, 0, initialStateVec, rvCov, procNoiseCov, UT::sig_type::JU, 1);
         utECI2MEENoise(procNoiseCov);
+        cout << "Calculating state covariance..." << endl;
         UT utECI2MEEStateCov(coorTransECI2MEE, false, 0, initialStateVec, rvCov, MatrixXd::Zero(dimState, dimState), UT::sig_type::JU, 1);
         utECI2MEEStateCov(initialStateVec, initialCov);
     }
+    cout << "initialStateVec size: " << initialStateVec.size() << endl;
+    cout << "initialCov rows: " << initialCov.rows() << ", cols: " << initialCov.cols() << endl;
+    cout << "procNoiseCov rows: " << procNoiseCov.rows() << ", cols: " << procNoiseCov.cols() << endl;
+    cout << "stateType size: " << stateType.size() << endl;
+    cout << "stateType data: " << stateType.data() << endl;
+    cout << "Finished running initGlobalVariables" << endl;
 }
 
 int findClosestIndex(const VectorXd &tSec, double target)
@@ -543,7 +632,6 @@ int main(int argc, char *argv[])
         exit(1);
         break;
     }
-    cout << "Reading configuration from file: " << configFilename << endl;
 
     struct ForceModels forceModelsPropOpt;
     struct ScenarioInfo snrInfo;
@@ -551,6 +639,7 @@ int main(int argc, char *argv[])
     struct Filters filters;
     struct InitialState initialState;
     struct FileInfo suppFiles;
+
     // read parameter/settings from config file
     readConfigFile(configFilename, forceModelsPropOpt, snrInfo, initialState, measMdl, filters, suppFiles);
     epoch = snrInfo.epoch;
@@ -559,21 +648,38 @@ int main(int argc, char *argv[])
     // Convert string to lowercase
     for (char &c : initialStateType)
         c = tolower(c);
-    VectorXd initialStateVec = initialState.initialStateVec;
-    MatrixXd initialCov = initialState.initialCovarianceMat;
+
+    VectorXd initialStateVec(dimState);
+    initialStateVec = initialState.initialStateVec;
+    MatrixXd initialCov(dimState, dimState);
+    initialCov = initialState.initialCovarianceMat;
     double initialSkewness = initialState.initialSkewness;
     double initialKurtosis = initialState.initialKurtosis;
     // process noise covariance
-    MatrixXd procNoiseCov = initialState.processNoiseCovarianceMat;
+    MatrixXd procNoiseCov(dimState, dimState);
+    procNoiseCov = initialState.processNoiseCovarianceMat;
     const VectorXd groundStation = measMdl.groundStation;
     // Find the position of the dot (file type extension)
     size_t dotPos = measMdl.measFile.find_last_of('.');
     // Extract the last five characters without the file type extension
     string noradID = measMdl.measFile.substr(dotPos - 5, 5);
+    cout << "initialStateVec size: " << initialStateVec.size() << endl;
+    cout << "initialCov rows: " << initialCov.rows() << ", cols: " << initialCov.cols() << endl;
+    cout << "procNoiseCov rows: " << procNoiseCov.rows() << ", cols: " << procNoiseCov.cols() << endl;
+    cout << "initialStateType size: " << initialStateType.size() << endl;
+    cout << "suppFiles.grvFile: " << suppFiles.grvFile << endl;
+    cout << "suppFiles.ephFile: " << suppFiles.ephFile << endl;
+    cout << "suppFiles.erpFile: " << suppFiles.erpFile << endl;
 
-    // initGlobalVariables(initialState, suppFiles);
+    // Call the function
+    cout << "Calling initGlobalVariables" << endl;
+    cout << "initialStateType:\t" << initialStateType << endl;
     initGlobalVariables(initialStateVec, initialCov, procNoiseCov, initialStateType, suppFiles);
-    cout << "initialStateVec:\t\n"
+    cout << "Returned from initGlobalVariables" << endl;
+
+    cout << "initialStateType:\t"
+         << initialStateType << endl;
+    cout << "initialStateVec:\t"
          << initialStateVec.transpose() << endl;
     cout << "initialCov:\t\n"
          << initialCov << endl;
