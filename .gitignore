@@ -56,3 +56,8 @@ CUT/pts_4_20.csv
 
 makefile
 yaml-cpp/
+
+
+bin/scripts/debug_segmentation_fault
+scripts/debug_segmentation_fault.cpp
+yamls/test_config.yml
