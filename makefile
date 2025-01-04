@@ -80,6 +80,6 @@ $(OBJDIR)/scripts/%.o: scripts/%.cpp | $(OBJDIR)/scripts
 
 # Clean up build files
 clean:
-    rm -rf $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(OBJDIR)/orbmdl/nrlmsise-00/*.o $(OBJDIR)/filter/*.o $(OBJDIR)/scripts/*.o $(ORBMDL_AR) $(NRLMSISE00_AR) $(FILTER_AR) $(OBJDIR)/scripts/*
-    rm -rf $(OBJDIR)/orbmdl/*.a $(OBJDIR)/orbmdl/nrlmsise-00/*.a $(OBJDIR)/filter/*.a 
-    rm -rf orbmdl/*.o orbmdl/3rdparty/*.o orbmdl/sofa/*.o orbmdl/nrlmsise-00/*.o  filter/*.o
+	rm -rf $(OBJDIR)/orbmdl/*.o $(OBJDIR)/orbmdl/3rdparty/*.o $(OBJDIR)/orbmdl/sofa/*.o $(OBJDIR)/orbmdl/nrlmsise-00/*.o $(OBJDIR)/filter/*.o $(OBJDIR)/scripts/*.o $(ORBMDL_AR) $(NRLMSISE00_AR) $(FILTER_AR) $(OBJDIR)/scripts/*
+	rm -rf $(OBJDIR)/orbmdl/*.a $(OBJDIR)/orbmdl/nrlmsise-00/*.a $(OBJDIR)/filter/*.a 
+	rm -rf orbmdl/*.o orbmdl/3rdparty/*.o orbmdl/sofa/*.o orbmdl/nrlmsise-00/*.o  filter/*.o
