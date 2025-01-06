@@ -253,11 +253,13 @@ int main(int argc, char *argv[])
 
     cout << "flag\t" << flagGPS << "\t" << flagCPF << endl;
     erpt = {.n = 0};
-    string erpFile = "auxdata/cod21587.erp";
+    // string erpFile = "auxdata/cod21587.erp";
+    string erpFile = "auxdata/COD0MGXFIN_GPSW2330.ERP";
     readerp(erpFile, &erpt);
 
     // read angular measurements from the exiting file
-    string measFile = "ccdata/meas_data_id_46984.csv";
+    // string measFile = "ccdata/meas_data_id_46984.csv";
+    string measFile = "mqdata/SL-2469(NORAD-48128)_data.csv";
     int headerLinesToSkip = 1; // Number of lines to skip as header
     MatrixXd matMeas = readCSV(measFile, headerLinesToSkip);
 
@@ -265,10 +267,12 @@ int main(int argc, char *argv[])
     VectorXd tMJD = matMeas.col(6).array();
     // cout << setprecision(18) << tMJD << endl;
 
-    // Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
+    // // Jinlin, Jinlin, ECEF coordinate, unit: m, m/s
+    // VectorXd stnECEF(6);
+    // stnECEF << -2730000, 3714000, 4393000, 0, 0, 0;
+    // MQ Observatory ECEF coordinate, unit: m, m/s
     VectorXd stnECEF(6);
-    stnECEF << -2730000, 3714000, 4393000, 0, 0, 0;
-    // cout << stnECEF << endl;
+    stnECEF << -4647033.545, 2564115.259, -3525323.307, 0, 0, 0;
 
     // Create a matrix to store MJD and sntECI values
     MatrixXd stnECIData(tMJD.size(), 7);
@@ -308,7 +312,8 @@ int main(int argc, char *argv[])
     vector<string> header = {"MJD", "X_ECI", "Y_ECI", "Z_ECI", "VX_ECI", "VY_ECI", "VZ_ECI"};
 
     // Write MJD and stnECI to CSV file
-    writeCSV("ccdata/stn_eci_coordinates.csv", stnECIData, header);
+    // writeCSV("ccdata/stn_eci_coordinates.csv", stnECIData, header);
+    writeCSV("mqdata/stn_eci_coordinates.csv", stnECIData, header);
 
     // perform coordinate transformation for satellite via a CPF file
     if (flagGPS)

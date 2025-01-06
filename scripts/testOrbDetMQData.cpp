@@ -299,17 +299,17 @@ void readConfigFile(const string &fileName, ForceModels &optFilter, struct Scena
     filters.initNoise = false;
     filters.numTrials = 1;
 
-    snrInfo.epoch.startMJD = 59349.51137986922;
-    snrInfo.epoch.endMJD = 59351.54470621643;
+    snrInfo.epoch.startMJD = 60556.358628590496664;
+    snrInfo.epoch.endMJD = 60557.355557376497018;
     snrInfo.epoch.maxTimeStep = 180;
-    snrInfo.outDir = "out/out_ccdata";
+    snrInfo.outDir = "out/out_mqdata";
 
     initialState.dimState = 6;
     initialState.initialStateType = "MEE";
-    initialState.initialStateVec = (VectorXd(6) << -3669575.62359752, 1040418.51432516, 6705990.19621435, -5051.32766883, -4686.71761172, -2035.77367562).finished();
+    initialState.initialStateVec = (VectorXd(6) << -2196926.9886391685, -6252094.5050897735, -2022945.07923127, 5065.375854623842, 40.3815260689233, -5646.229733110455).finished();
     initialState.initialCovarianceMat = (MatrixXd(6, 6) << 1.0e+6, 0, 0, 0, 0, 0,
-                                         0, 1.0e+4, 0, 0, 0, 0,
-                                         0, 0, 4.0e+4, 0, 0, 0,
+                                         0, 1.0e+6, 0, 0, 0, 0,
+                                         0, 0, 1.0e+6, 0, 0, 0,
                                          0, 0, 0, 0.01, 0, 0,
                                          0, 0, 0, 0, 0.25, 0,
                                          0, 0, 0, 0, 0, 0.04)
@@ -331,8 +331,8 @@ void readConfigFile(const string &fileName, ForceModels &optFilter, struct Scena
     VectorXd kurtVec(2);
     kurtVec << 3, 3;
 
-    measMdl.measFile = "ccdata/meas_data_id_46984.csv";
-    measMdl.groundStation = (VectorXd(6) << -2730000, 3714000, 4394000, 0, 0, 0).finished();
+    measMdl.measFile = "mqdata/SL-2469(NORAD-48128)_data.csv";
+    measMdl.groundStation = (VectorXd(6) << -4647033.545, 2564115.259, -3525323.307, 0, 0, 0).finished();
     measMdl.dimMeas = 2;
     measMdl.errorStatistics.stdVec = stdVec;
     measMdl.errorStatistics.skewVec = skewVec;
@@ -364,7 +364,7 @@ void readConfigFile(const string &fileName, ForceModels &optFilter, struct Scena
 
     suppFiles.grvFile = "./auxdata/GGM03S.txt";
     suppFiles.ephFile = "./auxdata/linux_p1550p2650.440";
-    suppFiles.erpFile = "./auxdata/cod21587.erp";
+    suppFiles.erpFile = "./auxdata/COD0MGXFIN_GPSW2330.ERP";
 
     // Output the hardcoded values to verify
     cout << "Filters:" << endl;
