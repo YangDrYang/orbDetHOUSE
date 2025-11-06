@@ -15,6 +15,7 @@ Dependencies of C++ codes:
 - Eigen: https://eigen.tuxfamily.org/
 - Boost Installation: https://www.boost.org/doc/libs/1_69_0/more/getting_started/unix-variants.html#easy-build-and-install
 - Yaml-cpp: https://github.com/jbeder/yaml-cpp
+- Installing Eigen and Yaml-cpp on WSL can be done by "sudo apt-get install libyaml-cpp-dev" and "sudo apt-get install libeigen3-dev"
 
 Compiling:
 
