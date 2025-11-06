@@ -6,23 +6,34 @@ CC = gcc
 
 # Set SDKROOT (not needed for WSL)
 # SDKROOT = $(shell xcrun --sdk macosx --show-sdk-path)
-PYBIND11_INCLUDE := $(shell python3 -m pybind11 --includes)
+
+PYTHON ?= $(if $(wildcard ../.venv/bin/python),../.venv/bin/python,python3)
+PYBIND11_INCLUDE := $(shell $(PYTHON) -m pybind11 --includes)
+PYTHON_VERSION := $(shell $(PYTHON) -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+PYTHON_LIBDIR := $(shell $(PYTHON) -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR"))')
+PYTHON_LIBS := $(shell $(PYTHON) -c "import sysconfig; libs = sysconfig.get_config_var('LIBS') or ''; syslibs = sysconfig.get_config_var('SYSLIBS') or ''; print((libs + ' ' + syslibs).strip())")
 
 # Compiler and flags
 CXXFLAGS = --std=c++11 -Wall -pedantic -g -fPIC
 CFLAGS = -Wall -pedantic -g -fPIC
+
 LDFLAGS = -L/usr/wsllib \
 			-L/usr/local/wsllib \
 			-L./wsllib \
-			-lpython3.10 -v
+		-L$(PYTHON_LIBDIR) \
+		-lpython$(PYTHON_VERSION)
+
+ifneq ($(strip $(PYTHON_LIBS)),)
+LDFLAGS += $(PYTHON_LIBS)
+endif
 
 INCLUDES = -I/usr/include/c++/v1 \
-           -I/usr/local/include -I/usr/include/eigen3 \
-           -I$(PYBIND11_INCLUDE) \
-           -I/home/yang_space_yang/github/orbDetHOUSE-1/.venv/lib/python3.10/site-packages/pybind11/include \
-           -I/usr/include/python3.10 \
-		   -I/usr/include/yaml-cpp \
-           -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter 
+		   -I/usr/local/include \
+		   -I/usr/include/eigen3 \
+	   -I/usr/include/yaml-cpp \
+		   -I./orbmdl -I./orbmdl/3rdparty -I./orbmdl/sofa -I./orbmdl/nrlmsise-00 -I./filter
+
+INCLUDES += $(PYBIND11_INCLUDE)
 
 
 # Source files
